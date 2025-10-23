@@ -1,0 +1,14 @@
+# Binaries
+api
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Air temporary directory
+tmp/
+
+# Go workspace file
+go.work

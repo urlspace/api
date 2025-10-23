@@ -10,9 +10,31 @@ This is a Go HTTP API server (`github.com/zapi-sh/api`) that provides a simple R
 
 **Prefer standard library**: Always use Go's standard library over third-party dependencies unless explicitly stated otherwise. This project prioritizes simplicity and minimizes external dependencies.
 
+**Learning project - no command execution**: This is a learning project. NEVER execute commands (using Bash tool) on behalf of the user. Always provide instructions and let the user type commands themselves to build muscle memory. Only provide guidance, code suggestions, and explanations.
+
+## Development Tools
+
+This project uses `air` for live reloading during development. Install it globally:
+
+```bash
+go install github.com/air-verse/air@latest
+```
+
+Then initialize air configuration (creates `.air.toml`):
+```bash
+air init
+```
+
+**Note**: Go development tools are installed globally, not per-project. They won't appear in `go.mod` since they're not runtime dependencies.
+
 ## Development Commands
 
-### Running the server
+### Running the server with live reload (recommended for development)
+```bash
+air
+```
+
+### Running the server (manual)
 ```bash
 go run main.go
 ```

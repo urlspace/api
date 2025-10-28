@@ -10,10 +10,6 @@ import (
 	"github.com/zapi-sh/api/internal/middlewares"
 )
 
-const (
-	port = ":8080"
-)
-
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {

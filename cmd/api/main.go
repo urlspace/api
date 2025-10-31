@@ -1,37 +1,17 @@
 package main
 
 import (
+	"github.com/zapi-sh/api/internal/server"
 	"log"
 	"net/http"
-	"os"
-	"time"
-
-	"github.com/zapi-sh/api/internal/handlers"
-	"github.com/zapi-sh/api/internal/middlewares"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	s := server.New()
+
+	log.Printf("Starting server on %s", s.Addr)
+
+	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Server failed: %v", err)
 	}
-
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /status", handlers.Status)
-
-	handler := middlewares.CommonHeaders(mux)
-
-	s := &http.Server{
-		Addr:              ":" + port,
-		Handler:           handler,
-		ReadTimeout:       10 * time.Second,
-		ReadHeaderTimeout: 5 * time.Second,
-		WriteTimeout:      10 * time.Second,
-		IdleTimeout:       120 * time.Second,
-	}
-
-	log.Printf("Starting server on %s", port)
-
-	log.Fatal(s.ListenAndServe())
 }

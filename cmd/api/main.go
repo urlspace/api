@@ -28,7 +28,9 @@ func main() {
 	log.Println("Server shutting down.")
 	ctxTimeout, stop := context.WithTimeout(context.Background(), 10*time.Second)
 	defer stop()
-	s.Shutdown(ctxTimeout)
+	if err := s.Shutdown(ctxTimeout); err != nil {
+		log.Printf("Server forced to shutdown: %v", err)
+	}
 	log.Println("Server closed.")
 
 }

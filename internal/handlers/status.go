@@ -16,5 +16,7 @@ func Status(w http.ResponseWriter, r *http.Request) {
 		Data:   "Service is running",
 	}
 
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

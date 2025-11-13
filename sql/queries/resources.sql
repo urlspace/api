@@ -16,7 +16,7 @@ RETURNING *;
 
 -- name: UpdateResource :one
 UPDATE resources
-  set title = $2,
+  SET title = $2,
   url = $3
 WHERE id = $1
 RETURNING *;

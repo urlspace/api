@@ -35,5 +35,17 @@ install-tools:
 gen:
 	sqlc generate
 
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down
+
+lint:
+	golangci-lint run ./...
+
+format:
+	golangci-lint fmt ./...
+
 # Default target (what runs when you just type 'make')
 .PHONY: build run dev clean test test-coverage install-tools gen

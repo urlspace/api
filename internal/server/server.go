@@ -19,11 +19,14 @@ func New(store *store.Store) *http.Server {
 
 	// routes
 	mux := http.NewServeMux()
+	// status
 	mux.HandleFunc("GET /status", handlers.Status)
-	mux.HandleFunc("GET /resources", handlers.ResourcesGet(store))
-	// mux.HandleFunc("GET /resources/{{id}}", handlers.ResourcesGet(store))
+	// resources
+	mux.HandleFunc("GET /resources", handlers.ResourcesList(store))
+	mux.HandleFunc("GET /resources/{id}", handlers.ResourcesGet(store))
 	mux.HandleFunc("POST /resources", handlers.ResourcesCreate(store))
-	mux.HandleFunc("DELETE /resources/{{id}}", handlers.ResourcesDelete(store))
+	mux.HandleFunc("PUT /resources/{id}", handlers.ResourcesUpdate(store))
+	mux.HandleFunc("DELETE /resources/{id}", handlers.ResourcesDelete(store))
 
 	// version api
 	v1 := http.NewServeMux()

@@ -8,9 +8,10 @@ import (
 
 type ResourceStore interface {
 	List(ctx context.Context) ([]db.Resource, error)
-	Create(ctx context.Context, title string, url string) (db.Resource, error)
 	Get(ctx context.Context, id int64) (db.Resource, error)
-	Delete(ctx context.Context, id int64) (db.Resource, error)
+	Create(ctx context.Context, title string, url string) (db.Resource, error)
+	Update(ctx context.Context, id int64, title string, url string) (db.Resource, error)
+	Delete(ctx context.Context, id int64) error
 }
 
 type resourceStore struct {
@@ -41,4 +42,14 @@ func (r *resourceStore) Get(ctx context.Context, id int64) (db.Resource, error) 
 
 func (r *resourceStore) Delete(ctx context.Context, id int64) error {
 	return r.queries.DeleteResource(ctx, id)
+}
+
+func (r *resourceStore) Update(ctx context.Context, id int64, title string, url string) (db.Resource, error) {
+
+	args := db.UpdateResourceParams{
+		ID:    id,
+		Title: title,
+		Url:   url,
+	}
+	return r.queries.UpdateResource(ctx, args)
 }

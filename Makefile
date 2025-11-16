@@ -42,6 +42,9 @@ docker-up:
 docker-down:
 	docker compose down
 
+docker-down-all:
+	docker compose down -v --rmi all
+
 lint:
 	golangci-lint run ./...
 

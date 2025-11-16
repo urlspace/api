@@ -13,6 +13,10 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/zapi-sh/api/internal/server"
 	"github.com/zapi-sh/api/internal/store"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
@@ -35,6 +39,16 @@ func main() {
 	// verify the db connectoin
 	if err := pool.Ping(); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
+	}
+
+	m, err := migrate.New(
+		"file://sql/migrations",
+		"postgres://postgres:postgres@localhost:5432/zapishdb?sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := m.Up(); err != nil {
+		log.Fatal(err)
 	}
 
 	store := store.NewStore(pool)

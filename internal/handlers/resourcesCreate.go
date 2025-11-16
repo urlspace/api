@@ -39,6 +39,7 @@ func ResourcesCreate(store *store.Store) http.HandlerFunc {
 			Data:   rr,
 		}
 
+		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

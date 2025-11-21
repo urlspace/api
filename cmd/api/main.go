@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -19,8 +20,14 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func main() {
-	pool, err := sql.Open("pgx", "postgres://postgres:postgres@localhost:5432/zapishdb?sslmode=disable")
+const (
+	// TODO: this this should come from env
+	databaseUrl    = "postgres://postgres:postgres@localhost:5432/zapishdb?sslmode=disable"
+	pathMigrations = "file://sql/migrations"
+)
+
+func run(ctx context.Context) error {
+	pool, err := sql.Open("pgx", databaseUrl)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -41,9 +48,7 @@ func main() {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
-	m, err := migrate.New(
-		"file://sql/migrations",
-		"postgres://postgres:postgres@localhost:5432/zapishdb?sslmode=disable")
+	m, err := migrate.New(pathMigrations, databaseUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,29 +58,51 @@ func main() {
 
 	store := store.NewStore(pool)
 
-	s := server.New(store)
+	srv := server.New(store)
 
+	chServer := make(chan error, 1)
+
+	log.Println("Starting server on :8080")
 	go func() {
-		log.Printf("Starting server on %s", s.Addr)
-
-		if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Server failed: %v", err)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			chServer <- err
 		}
+		close(chServer)
 	}()
 
-	ctxSignal, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctxSignal, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	<-ctxSignal.Done()
-
-	log.Println("Server shutting down.")
-
-	ctxTimeout, stop := context.WithTimeout(context.Background(), 10*time.Second)
-	defer stop()
-
-	if err := s.Shutdown(ctxTimeout); err != nil {
-		log.Printf("Server forced to shutdown: %v", err)
+	select {
+	case <-ctxSignal.Done():
+		log.Printf("Server shutting down due to signal: %v", context.Cause(ctxSignal))
+	case err := <-chServer:
+		log.Printf("Server error: %v", err)
+		return err
 	}
 
-	log.Println("Server closed.")
+	ctxTimeout, stop := context.WithTimeout(context.Background(), 5*time.Second)
+	defer stop()
+
+	if err := srv.Shutdown(ctxTimeout); err != nil {
+		log.Printf("Server shutdown failed: %v", err)
+
+		if closeErr := srv.Close(); closeErr != nil {
+			log.Printf("Server close failed: %v", closeErr)
+			return errors.Join(err, closeErr)
+		}
+
+		return err
+	}
+
+	log.Println("Server exited gracefully")
+	return nil
+}
+
+func main() {
+	ctx := context.Background()
+
+	if err := run(ctx); err != nil {
+		log.Fatal(err)
+	}
 }

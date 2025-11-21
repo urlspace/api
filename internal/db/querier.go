@@ -6,12 +6,14 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error)
-	DeleteResource(ctx context.Context, id int64) error
-	GetResource(ctx context.Context, id int64) (Resource, error)
+	DeleteResource(ctx context.Context, id uuid.UUID) error
+	GetResource(ctx context.Context, id uuid.UUID) (Resource, error)
 	ListResources(ctx context.Context) ([]Resource, error)
 	UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error)
 }

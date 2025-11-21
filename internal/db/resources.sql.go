@@ -7,26 +7,46 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createResource = `-- name: CreateResource :one
 INSERT INTO resources (
-  title, url
+  title, description, url, favourite, read_later
 ) VALUES (
-  $1, $2
+  $1, $2, $3, $4, $5
 )
-RETURNING id, title, url
+RETURNING id, title, description, url, favourite, read_later, created_at, updated_at
 `
 
 type CreateResourceParams struct {
-	Title string `json:"title"`
-	Url   string `json:"url"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Url         string `json:"url"`
+	Favourite   bool   `json:"favourite"`
+	ReadLater   bool   `json:"readLater"`
 }
 
 func (q *Queries) CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error) {
-	row := q.db.QueryRowContext(ctx, createResource, arg.Title, arg.Url)
+	row := q.db.QueryRowContext(ctx, createResource,
+		arg.Title,
+		arg.Description,
+		arg.Url,
+		arg.Favourite,
+		arg.ReadLater,
+	)
 	var i Resource
-	err := row.Scan(&i.ID, &i.Title, &i.Url)
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Url,
+		&i.Favourite,
+		&i.ReadLater,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 
@@ -35,25 +55,35 @@ DELETE FROM resources
 WHERE id = $1
 `
 
-func (q *Queries) DeleteResource(ctx context.Context, id int64) error {
+func (q *Queries) DeleteResource(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteResource, id)
 	return err
 }
 
 const getResource = `-- name: GetResource :one
-SELECT id, title, url FROM resources
-WHERE id = $1 LIMIT 1
+SELECT id, title, description, url, favourite, read_later, created_at, updated_at FROM resources
+WHERE id =
+$1 LIMIT 1
 `
 
-func (q *Queries) GetResource(ctx context.Context, id int64) (Resource, error) {
+func (q *Queries) GetResource(ctx context.Context, id uuid.UUID) (Resource, error) {
 	row := q.db.QueryRowContext(ctx, getResource, id)
 	var i Resource
-	err := row.Scan(&i.ID, &i.Title, &i.Url)
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Url,
+		&i.Favourite,
+		&i.ReadLater,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 
 const listResources = `-- name: ListResources :many
-SELECT id, title, url FROM resources
+SELECT id, title, description, url, favourite, read_later, created_at, updated_at FROM resources
 ORDER BY title
 `
 
@@ -66,7 +96,16 @@ func (q *Queries) ListResources(ctx context.Context) ([]Resource, error) {
 	items := []Resource{}
 	for rows.Next() {
 		var i Resource
-		if err := rows.Scan(&i.ID, &i.Title, &i.Url); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Url,
+			&i.Favourite,
+			&i.ReadLater,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -83,20 +122,42 @@ func (q *Queries) ListResources(ctx context.Context) ([]Resource, error) {
 const updateResource = `-- name: UpdateResource :one
 UPDATE resources
   SET title = $2,
-  url = $3
+  description = $3,
+  url = $4,
+  favourite = $5,
+  read_later = $6
 WHERE id = $1
-RETURNING id, title, url
+RETURNING id, title, description, url, favourite, read_later, created_at, updated_at
 `
 
 type UpdateResourceParams struct {
-	ID    int64  `json:"id"`
-	Title string `json:"title"`
-	Url   string `json:"url"`
+	ID          uuid.UUID `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Url         string    `json:"url"`
+	Favourite   bool      `json:"favourite"`
+	ReadLater   bool      `json:"readLater"`
 }
 
 func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error) {
-	row := q.db.QueryRowContext(ctx, updateResource, arg.ID, arg.Title, arg.Url)
+	row := q.db.QueryRowContext(ctx, updateResource,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.Url,
+		arg.Favourite,
+		arg.ReadLater,
+	)
 	var i Resource
-	err := row.Scan(&i.ID, &i.Title, &i.Url)
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Url,
+		&i.Favourite,
+		&i.ReadLater,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }

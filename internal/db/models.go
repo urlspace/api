@@ -4,8 +4,19 @@
 
 package db
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
 type Resource struct {
-	ID    int64  `json:"id"`
-	Title string `json:"title"`
-	Url   string `json:"url"`
+	ID          uuid.UUID `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Url         string    `json:"url"`
+	Favourite   bool      `json:"favourite"`
+	ReadLater   bool      `json:"readLater"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }

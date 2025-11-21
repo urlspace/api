@@ -4,15 +4,18 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/zapi-sh/api/internal/db"
 	"github.com/zapi-sh/api/internal/store"
 )
 
 type ResourceUpdateBody struct {
-	Title string `json:"title"`
-	URL   string `json:"url"`
+	Title       string `json:"title"`
+	URL         string `json:"url"`
+	Description string `json:"description"`
+	Favourite   bool   `json:"favourite"`
+	ReadLater   bool   `json:"read_later"`
 }
 
 type ResourceUpdateResponse struct {
@@ -24,7 +27,7 @@ func ResourcesUpdate(store *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		id := r.PathValue("id")
-		idInt64, err := strconv.ParseInt(id, 10, 64)
+		idUuid, err := uuid.Parse(id)
 		if err != nil {
 			http.Error(w, "invalid id parameter", http.StatusBadRequest)
 			return
@@ -36,7 +39,7 @@ func ResourcesUpdate(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := store.Resources.Update(r.Context(), idInt64, body.Title, body.URL)
+		rr, err := store.Resources.Update(r.Context(), idUuid, body.Title, body.Description, body.URL, body.Favourite, body.ReadLater)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

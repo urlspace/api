@@ -10,8 +10,11 @@ import (
 )
 
 type ResourceCreateBody struct {
-	Title string `json:"title"`
-	URL   string `json:"url"`
+	Title       string `json:"title"`
+	URL         string `json:"url"`
+	Description string `json:"description"`
+	Favourite   bool   `json:"favourite"`
+	ReadLater   bool   `json:"read_later"`
 }
 
 type ResourceCreateResponse struct {
@@ -28,7 +31,7 @@ func ResourcesCreate(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := store.Resources.Create(r.Context(), body.Title, body.URL)
+		rr, err := store.Resources.Create(r.Context(), body.Title, body.Description, body.URL, body.Favourite, body.ReadLater)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

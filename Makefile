@@ -42,8 +42,8 @@ docker-up:
 docker-down:
 	docker compose down
 
-docker-down-all:
-	docker compose down -v --rmi all
+docker-down-v:
+	docker compose down -v
 
 lint:
 	golangci-lint run ./...
@@ -54,6 +54,15 @@ format:
 # you run this thig like that
 # make migration name=create_users_table
 migration:
+	migrate create -dir ./sql/migrations -ext sql -seq $(name)
+
+migration-up:
+	migrate -path ./sql/migrations -database $(db_url) up
+
+migration-down:
+	migrate -path ./sql/migrations -database $(db_url) down
+
+migration-create:
 	migrate create -dir ./sql/migrations -ext sql -seq $(name)
 
 # Default target (what runs when you just type 'make')

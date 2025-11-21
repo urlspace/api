@@ -3,8 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/zapi-sh/api/internal/db"
 	"github.com/zapi-sh/api/internal/store"
 )
@@ -17,13 +17,13 @@ type ResourcesGetResponse struct {
 func ResourcesGet(store *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
-		idInt64, err := strconv.ParseInt(id, 10, 64)
+		idUuid, err := uuid.Parse(id)
 		if err != nil {
 			http.Error(w, "invalid id parameter", http.StatusBadRequest)
 			return
 		}
 
-		rr, err := store.Resources.Get(r.Context(), idInt64)
+		rr, err := store.Resources.Get(r.Context(), idUuid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

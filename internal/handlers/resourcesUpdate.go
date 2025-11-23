@@ -41,7 +41,8 @@ func ResourcesUpdate(store *store.Store) http.HandlerFunc {
 		}
 
 		rr, err := store.Resources.Update(r.Context(), idUuid, body.Title, body.Description, body.URL, body.Favourite, body.ReadLater)
-		if HandleError(w, err) {
+		if err != nil {
+			HandleDbError(w, err)
 			return
 		}
 

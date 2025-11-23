@@ -24,12 +24,14 @@ func ResourcesDelete(store *store.Store) http.HandlerFunc {
 		}
 
 		rr, err := store.Resources.Get(r.Context(), idUuid)
-		if HandleError(w, err) {
+		if err != nil {
+			HandleDbError(w, err)
 			return
 		}
 
 		err = store.Resources.Delete(r.Context(), idUuid)
-		if HandleError(w, err) {
+		if err != nil {
+			HandleDbError(w, err)
 			return
 		}
 

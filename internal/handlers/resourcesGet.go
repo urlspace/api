@@ -24,7 +24,8 @@ func ResourcesGet(store *store.Store) http.HandlerFunc {
 		}
 
 		rr, err := store.Resources.Get(r.Context(), idUuid)
-		if HandleError(w, err) {
+		if err != nil {
+			HandleDbError(w, err)
 			return
 		}
 

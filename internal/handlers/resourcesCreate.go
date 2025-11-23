@@ -32,7 +32,8 @@ func ResourcesCreate(store *store.Store) http.HandlerFunc {
 		}
 
 		rr, err := store.Resources.Create(r.Context(), body.Title, body.Description, body.URL, body.Favourite, body.ReadLater)
-		if HandleError(w, err) {
+		if err != nil {
+			HandleDbError(w, err)
 			return
 		}
 

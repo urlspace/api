@@ -14,38 +14,40 @@ type ErrorResponse struct {
 	Data   string `json:"data"`
 }
 
-func HandleError(w http.ResponseWriter, err error) bool {
-	if err == nil {
-		return false
-	}
-
-	var data string
-	var statusCode int
-
+func HandleDbError(w http.ResponseWriter, err error) {
 	if errors.Is(err, sql.ErrNoRows) {
-		statusCode = http.StatusNotFound
-		data = "resource not found"
-	} else if errors.Is(err, context.DeadlineExceeded) {
-		statusCode = http.StatusInternalServerError
-		data = "request timeout"
-	} else if errors.Is(err, context.Canceled) {
-		statusCode = 499
-		data = "request cancelled"
-	} else {
-		statusCode = http.StatusInternalServerError
-		data = "internal server error"
-		log.Printf("Internal server error: %v", err)
+		writeJSONError(w, http.StatusNotFound, "resource not found")
+		return
 	}
 
+	if errors.Is(err, context.DeadlineExceeded) {
+		writeJSONError(w, http.StatusRequestTimeout, "request timeout")
+		return
+	}
+
+	if errors.Is(err, context.Canceled) {
+		writeJSONError(w, 499, "request cancelled")
+		return
+	}
+
+	log.Printf("Database error: %v", err)
+	writeJSONError(w, http.StatusInternalServerError, "internal server error")
+}
+
+func HandleClientError(w http.ResponseWriter, err error, message string) {
+	log.Printf("Client error: %v", err)
+	writeJSONError(w, http.StatusBadRequest, message)
+}
+
+func writeJSONError(w http.ResponseWriter, statusCode int, message string) {
 	w.WriteHeader(statusCode)
+
 	response := &ErrorResponse{
 		Status: "error",
-		Data:   data,
+		Data:   message,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Error encoding error response: %v", err)
 	}
-
-	return true
 }

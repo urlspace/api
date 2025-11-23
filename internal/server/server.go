@@ -19,6 +19,9 @@ func New(store *store.Store) *http.Server {
 
 	// routes
 	mux := http.NewServeMux()
+
+	// not found
+	mux.HandleFunc("/", handlers.NotFound)
 	// status
 	mux.HandleFunc("GET /status", handlers.Status)
 	// resources

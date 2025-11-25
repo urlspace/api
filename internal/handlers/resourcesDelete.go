@@ -19,7 +19,7 @@ func ResourcesDelete(store *store.Store) http.HandlerFunc {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
 		if err != nil {
-			http.Error(w, "invalid id parameter", http.StatusBadRequest)
+			HandleClientError(w, err, "invalid id parameter")
 			return
 		}
 

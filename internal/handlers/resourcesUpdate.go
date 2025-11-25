@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -29,14 +28,13 @@ func ResourcesUpdate(store *store.Store) http.HandlerFunc {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
 		if err != nil {
-			http.Error(w, "invalid id parameter", http.StatusBadRequest)
+			HandleClientError(w, err, "invalid id parameter")
 			return
 		}
 
 		var body ResourceUpdateBody
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			log.Printf("Error decoding request body: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			HandleClientError(w, err, "invalid request body")
 			return
 		}
 

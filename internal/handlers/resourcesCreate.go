@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/zapi-sh/api/internal/db"
@@ -26,8 +25,7 @@ func ResourcesCreate(store *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body ResourceCreateBody
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			log.Printf("Error decoding request body: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			HandleClientError(w, err, "invalid request body")
 			return
 		}
 

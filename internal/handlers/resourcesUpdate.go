@@ -17,7 +17,7 @@ type ResourceUpdateBody struct {
 	URL         string `json:"url"`
 	Description string `json:"description"`
 	Favourite   *bool  `json:"favourite"`
-	ReadLater   *bool  `json:"read_later"`
+	ReadLater   *bool  `json:"readLater"`
 }
 
 func (b *ResourceUpdateBody) Validate() error {

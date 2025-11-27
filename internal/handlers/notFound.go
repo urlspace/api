@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
-	"github.com/zapi-sh/api/internal/models"
 )
+
+type NotFoundResponse struct {
+	Status string `json:"status"`
+	Data   string `json:"data"`
+}
 
 func NotFound(w http.ResponseWriter, r *http.Request) {
 
-	response := models.ResponseSuccess{
+	response := &NotFoundResponse{
 		Status: "error",
 		Data:   "endpoint not found",
 	}

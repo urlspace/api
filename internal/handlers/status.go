@@ -3,14 +3,16 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/zapi-sh/api/internal/models"
 )
 
-func Status(w http.ResponseWriter, r *http.Request) {
+type StatusResponse struct {
+	Status string `json:"status"`
+	Data   string `json:"data"`
+}
 
-	response := models.ResponseSuccess{
-		Status: "success",
+func Status(w http.ResponseWriter, r *http.Request) {
+	response := &StatusResponse{
+		Status: "ok",
 		Data:   "service is running",
 	}
 

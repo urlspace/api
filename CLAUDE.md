@@ -21,6 +21,7 @@ go install github.com/air-verse/air@latest
 ```
 
 Then initialize air configuration (creates `.air.toml`):
+
 ```bash
 air init
 ```
@@ -30,16 +31,19 @@ air init
 ## Development Commands
 
 ### Running the server with live reload (recommended for development)
+
 ```bash
 air
 ```
 
 ### Running the server (manual)
+
 ```bash
 go run cmd/api/main.go
 ```
 
 ### Using Makefile (recommended)
+
 ```bash
 make build  # Build the binary
 make run    # Build and run (production-like)
@@ -49,6 +53,7 @@ make clean  # Clean build artifacts
 ```
 
 The server starts on port 8080 with these configured timeouts:
+
 - ReadTimeout: 10s
 - ReadHeaderTimeout: 5s
 - WriteTimeout: 10s
@@ -76,6 +81,7 @@ api/
 ## Architecture
 
 **Standard Go project layout**: Following Go community conventions:
+
 - `cmd/api/` - Application entry point, minimal logic
 - `internal/` - Private packages (can't be imported by external projects)
 - `internal/handlers/` - HTTP handler functions (easy to test)
@@ -83,15 +89,18 @@ api/
 - `internal/models/` - Shared data structures
 
 **HTTP Server Setup**:
+
 - Uses `http.Server` with explicit timeouts for security
 - Route-based handlers using `http.ServeMux` with method prefixes (e.g., `GET /status`)
 - Middleware chain applies common headers (security, CORS, Content-Type)
 
 **Response Structure**: All JSON responses follow a structured format:
-- Success: `{"status": "success", "data": "..."}`
+
+- Success: `{"status": "ok", "data": "..."}`
 - Error: `{"status": "error", "error": "..."}`
 
 **Security Headers**: All responses include:
+
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
 - `X-XSS-Protection: 1; mode=block`

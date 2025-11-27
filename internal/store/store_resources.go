@@ -7,6 +7,12 @@ import (
 	"github.com/zapi-sh/api/internal/db"
 )
 
+const (
+	ResourceTitleLengthMin       = 3
+	ResourceTitleLengthMax       = 255
+	ResourceDescriptionLengthMax = 512
+)
+
 type ResourceStore interface {
 	List(ctx context.Context) ([]db.Resource, error)
 	Get(ctx context.Context, id uuid.UUID) (db.Resource, error)

@@ -12,9 +12,13 @@ import (
 
 type Querier interface {
 	CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteResource(ctx context.Context, id uuid.UUID) error
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetResource(ctx context.Context, id uuid.UUID) (Resource, error)
+	GetUser(ctx context.Context, id uuid.UUID) (User, error)
 	ListResources(ctx context.Context) ([]Resource, error)
+	ListUsers(ctx context.Context) ([]User, error)
 	UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error)
 }
 

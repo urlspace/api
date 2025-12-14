@@ -84,7 +84,7 @@ func (q *Queries) GetResource(ctx context.Context, id uuid.UUID) (Resource, erro
 
 const listResources = `-- name: ListResources :many
 SELECT id, title, description, url, favourite, read_later, created_at, updated_at FROM resources
-ORDER BY title
+ORDER BY created_at
 `
 
 func (q *Queries) ListResources(ctx context.Context) ([]Resource, error) {

@@ -5,7 +5,7 @@ $1 LIMIT 1;
 
 -- name: ListResources :many
 SELECT * FROM resources
-ORDER BY title;
+ORDER BY created_at;
 
 -- name: CreateResource :one
 INSERT INTO resources (

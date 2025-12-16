@@ -5,7 +5,6 @@
 package db
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,15 +22,15 @@ type Resource struct {
 }
 
 type User struct {
-	ID                              uuid.UUID      `json:"id"`
-	Email                           string         `json:"email"`
-	EmailVerified                   bool           `json:"emailVerified"`
-	EmailVerificationToken          sql.NullString `json:"emailVerificationToken"`
-	EmailVerificationTokenExpiresAt sql.NullTime   `json:"emailVerificationTokenExpiresAt"`
-	Password                        string         `json:"password"`
-	Username                        string         `json:"username"`
-	IsAdmin                         bool           `json:"isAdmin"`
-	IsPro                           bool           `json:"isPro"`
-	CreatedAt                       time.Time      `json:"createdAt"`
-	UpdatedAt                       time.Time      `json:"updatedAt"`
+	ID                              uuid.UUID     `json:"id"`
+	Email                           string        `json:"email"`
+	EmailVerified                   bool          `json:"emailVerified"`
+	EmailVerificationToken          uuid.NullUUID `json:"emailVerificationToken"`
+	EmailVerificationTokenExpiresAt *time.Time    `json:"emailVerificationTokenExpiresAt"`
+	Password                        string        `json:"password"`
+	Username                        string        `json:"username"`
+	IsAdmin                         bool          `json:"isAdmin"`
+	IsPro                           bool          `json:"isPro"`
+	CreatedAt                       time.Time     `json:"createdAt"`
+	UpdatedAt                       time.Time     `json:"updatedAt"`
 }

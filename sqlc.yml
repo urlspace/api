@@ -12,5 +12,19 @@ sql:
         emit_interface: true
         emit_empty_slices: true
         overrides:
-          - db_type: "pg_catalog.timestamptz"
-            go_type: "time.Time"
+          - column: "resources.created_at"
+            go_type:
+              type: "time.Time"
+          - column: "resources.updated_at"
+            go_type:
+              type: "time.Time"
+          - column: "users.created_at"
+            go_type:
+              type: "time.Time"
+          - column: "users.updated_at"
+            go_type:
+              type: "time.Time"
+          - column: "users.email_verification_token_expires_at"
+            go_type:
+              type: "time.Time"
+              pointer: true

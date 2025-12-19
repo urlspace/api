@@ -10,9 +10,9 @@ import (
 	"github.com/jumplist/api/internal/store"
 )
 
-type UserDeleteResponse struct {
-	Status string  `json:"status"`
-	Data   db.User `json:"data"`
+type ResourceDeleteResponse struct {
+	Status string      `json:"status"`
+	Data   db.Resource `json:"data"`
 }
 
 func ResourcesDelete(store *store.Store) http.HandlerFunc {
@@ -24,7 +24,7 @@ func ResourcesDelete(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		u, err := store.Users.Get(r.Context(), idUuid)
+		rr, err := store.Resources.Get(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
@@ -36,9 +36,9 @@ func ResourcesDelete(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		response := &UsersDeleteResponse{
+		response := &ResourceDeleteResponse{
 			Status: "ok",
-			Data:   u,
+			Data:   rr,
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {

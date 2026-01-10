@@ -1,7 +1,8 @@
 -- name: GetUser :one
 SELECT * FROM users
 WHERE
-    id =
+    id
+    =
     $1
 LIMIT 1;
 
@@ -11,9 +12,16 @@ ORDER BY created_at;
 
 -- name: CreateUser :one
 INSERT INTO users (
-    email, username, password, email_verification_token_expires_at
+    email,
+    email_verified,
+    email_verification_token,
+    email_verification_token_expires_at,
+    password,
+    username,
+    is_admin,
+    is_pro
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5, $6, $7, $8
 )
 RETURNING *;
 

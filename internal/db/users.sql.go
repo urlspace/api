@@ -14,26 +14,41 @@ import (
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
-    email, username, password, email_verification_token_expires_at
+    email,
+    email_verified,
+    email_verification_token,
+    email_verification_token_expires_at,
+    password,
+    username,
+    is_admin,
+    is_pro
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5, $6, $7, $8
 )
 RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, username, is_admin, is_pro, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Email                           string     `json:"email"`
-	Username                        string     `json:"username"`
-	Password                        string     `json:"-"`
-	EmailVerificationTokenExpiresAt *time.Time `json:"-"`
+	Email                           string        `json:"email"`
+	EmailVerified                   bool          `json:"-"`
+	EmailVerificationToken          uuid.NullUUID `json:"-"`
+	EmailVerificationTokenExpiresAt *time.Time    `json:"-"`
+	Password                        string        `json:"-"`
+	Username                        string        `json:"username"`
+	IsAdmin                         bool          `json:"-"`
+	IsPro                           bool          `json:"-"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.Email,
-		arg.Username,
-		arg.Password,
+		arg.EmailVerified,
+		arg.EmailVerificationToken,
 		arg.EmailVerificationTokenExpiresAt,
+		arg.Password,
+		arg.Username,
+		arg.IsAdmin,
+		arg.IsPro,
 	)
 	var i User
 	err := row.Scan(
@@ -65,7 +80,8 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 const getUser = `-- name: GetUser :one
 SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, username, is_admin, is_pro, created_at, updated_at FROM users
 WHERE
-    id =
+    id
+    =
     $1
 LIMIT 1
 `

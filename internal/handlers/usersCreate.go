@@ -7,8 +7,8 @@ import (
 	"net/mail"
 	"regexp"
 	"strings"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/jumplist/api/internal/db"
 	"github.com/jumplist/api/internal/response"
 	"github.com/jumplist/api/internal/store"
@@ -19,6 +19,8 @@ type UserCreateBody struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	IsAdmin  *bool  `json:"isAdmin"`
+	IsPro    *bool  `json:"isPro"`
 }
 
 var reservedUsernames = map[string]bool{
@@ -87,6 +89,14 @@ func (b *UserCreateBody) Validate() error {
 		return errors.New("email must be at most 254 characters")
 	}
 
+	if b.IsAdmin == nil {
+		return errors.New("isAdmin field is required")
+	}
+
+	if b.IsPro == nil {
+		return errors.New("isPro field is required")
+	}
+
 	return nil
 }
 
@@ -115,14 +125,11 @@ func UserCreate(store *store.Store) http.HandlerFunc {
 			response.HandleClientError(w, err, "failed to hash password")
 			return
 		}
-
-		u, err := store.Users.Create(r.Context(), strings.TrimSpace(body.Username), strings.TrimSpace(body.Email), passwordHash, time.Now().Add(time.Hour*48))
+		u, err := store.Users.Create(r.Context(), strings.TrimSpace(body.Email), true, uuid.NullUUID{}, nil, passwordHash, strings.TrimSpace(body.Username), *body.IsAdmin, *body.IsPro)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
 		}
-
-		// send email to the user with the link to confirm an account here
 
 		response := &UserCreateResponse{
 			Status: "ok",

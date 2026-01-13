@@ -16,8 +16,10 @@ const (
 
 type UserStore interface {
 	List(ctx context.Context) ([]db.User, error)
-	Get(ctx context.Context, id uuid.UUID) (db.User, error)
+	GetById(ctx context.Context, id uuid.UUID) (db.User, error)
+	GetByEmailVerificationToken(ctx context.Context, id uuid.UUID) (db.User, error)
 	Create(ctx context.Context, email string, emailVerified bool, emailVerificatinToken uuid.NullUUID, emailVerificationTokenExpiresAt *time.Time, password string, username string, isAdmin bool, isPro bool) (db.User, error)
+	Verify(ctx context.Context, id uuid.UUID) (db.User, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -35,8 +37,11 @@ func (r *userStore) List(ctx context.Context) ([]db.User, error) {
 	return r.queries.ListUsers(ctx)
 }
 
-func (r *userStore) Get(ctx context.Context, id uuid.UUID) (db.User, error) {
-	return r.queries.GetUser(ctx, id)
+func (r *userStore) GetById(ctx context.Context, id uuid.UUID) (db.User, error) {
+	return r.queries.GetUserById(ctx, id)
+}
+func (r *userStore) GetByEmailVerificationToken(ctx context.Context, emailVerificationToken uuid.UUID) (db.User, error) {
+	return r.queries.GetUserByEmailVerificationToken(ctx, uuid.NullUUID{Valid: true, UUID: emailVerificationToken})
 }
 
 func (r *userStore) Create(ctx context.Context, email string, emailVerified bool, emailVerificatinToken uuid.NullUUID, emailVerificationTokenExpiresAt *time.Time, password string, username string, isAdmin bool, isPro bool) (db.User, error) {
@@ -52,6 +57,11 @@ func (r *userStore) Create(ctx context.Context, email string, emailVerified bool
 	}
 
 	return r.queries.CreateUser(ctx, args)
+}
+
+func (r *userStore) Verify(ctx context.Context, id uuid.UUID) (db.User, error) {
+
+	return r.queries.VerifyUser(ctx, id)
 }
 
 func (r *userStore) Delete(ctx context.Context, id uuid.UUID) error {

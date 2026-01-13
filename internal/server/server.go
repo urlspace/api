@@ -46,7 +46,9 @@ func New(store *store.Store, resendClient *resend.Client) *http.Server {
 	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(store, resendClient))
 	// mux.HandleFunc("POST /auth/signin", handlers.xxx(store))
 	// mux.HandleFunc("POST /auth/signout", handlers.xxx(store))
-	// mux.HandleFunc("POST /auth/verify", handlers.xxx(store))
+	mux.HandleFunc("POST /auth/verify", handlers.AuthVerify(store))
+	// TODO: implement this one to trigger resending a new verification email in case the old token exired
+	// mux.HandleFunc("POST /auth/verify-again", handlers.AuthVerifyAgain(store))
 
 	// version api
 	v1 := http.NewServeMux()

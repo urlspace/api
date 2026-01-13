@@ -1,0 +1,86 @@
+package handlers
+
+import (
+	"encoding/json"
+	"errors"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jumplist/api/internal/db"
+	"github.com/jumplist/api/internal/response"
+	"github.com/jumplist/api/internal/store"
+)
+
+type AuthVerifyBody struct {
+	Token string `json:"token"`
+}
+
+func (b *AuthVerifyBody) Validate() error {
+	b.Token = strings.TrimSpace(b.Token)
+
+	if len(b.Token) == 0 {
+		return errors.New("token is required")
+	}
+
+	if _, err := uuid.Parse(b.Token); err != nil {
+		return errors.New("token is invalid")
+	}
+
+	return nil
+}
+
+type AuthVerifyResponse struct {
+	Status string  `json:"status"`
+	Data   db.User `json:"data"`
+}
+
+func AuthVerify(store *store.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body AuthVerifyBody
+		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&body); err != nil {
+			response.HandleClientError(w, err, "invalid request body")
+			return
+		}
+
+		if err := body.Validate(); err != nil {
+			response.HandleClientError(w, err, err.Error())
+			return
+		}
+
+		token, err := uuid.Parse(body.Token)
+		if err != nil {
+			response.HandleClientError(w, err, "token is invalid")
+			return
+		}
+		u, err := store.Users.GetByEmailVerificationToken(r.Context(), token)
+		if err != nil {
+			response.HandleDbError(w, err)
+			return
+		}
+
+		if u.EmailVerificationTokenExpiresAt != nil && u.EmailVerificationTokenExpiresAt.Before(time.Now()) {
+			response.HandleClientError(w, errors.New("token has expired"), "token has expired")
+			return
+		}
+
+		u, err = store.Users.Verify(r.Context(), u.ID)
+		if err != nil {
+			response.HandleDbError(w, err)
+			return
+		}
+
+		response := &AuthVerifyResponse{
+			Status: "ok",
+			Data:   u,
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}

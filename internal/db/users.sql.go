@@ -77,7 +77,35 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const getUser = `-- name: GetUser :one
+const getUserByEmailVerificationToken = `-- name: GetUserByEmailVerificationToken :one
+SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, username, is_admin, is_pro, created_at, updated_at FROM users
+WHERE
+    email_verification_token
+    =
+    $1
+LIMIT 1
+`
+
+func (q *Queries) GetUserByEmailVerificationToken(ctx context.Context, emailVerificationToken uuid.NullUUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmailVerificationToken, emailVerificationToken)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.EmailVerified,
+		&i.EmailVerificationToken,
+		&i.EmailVerificationTokenExpiresAt,
+		&i.Password,
+		&i.Username,
+		&i.IsAdmin,
+		&i.IsPro,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserById = `-- name: GetUserById :one
 SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, username, is_admin, is_pro, created_at, updated_at FROM users
 WHERE
     id
@@ -86,8 +114,8 @@ WHERE
 LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, id)
+func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserById, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -143,4 +171,33 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const verifyUser = `-- name: VerifyUser :one
+UPDATE users
+SET
+    email_verified = TRUE,
+    email_verification_token = NULL,
+    email_verification_token_expires_at = NULL
+WHERE id = $1
+RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, username, is_admin, is_pro, created_at, updated_at
+`
+
+func (q *Queries) VerifyUser(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, verifyUser, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.EmailVerified,
+		&i.EmailVerificationToken,
+		&i.EmailVerificationTokenExpiresAt,
+		&i.Password,
+		&i.Username,
+		&i.IsAdmin,
+		&i.IsPro,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

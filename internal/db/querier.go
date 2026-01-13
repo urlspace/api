@@ -16,10 +16,12 @@ type Querier interface {
 	DeleteResource(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetResource(ctx context.Context, id uuid.UUID) (Resource, error)
-	GetUser(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserByEmailVerificationToken(ctx context.Context, emailVerificationToken uuid.NullUUID) (User, error)
+	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	ListResources(ctx context.Context) ([]Resource, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error)
+	VerifyUser(ctx context.Context, id uuid.UUID) (User, error)
 }
 
 var _ Querier = (*Queries)(nil)

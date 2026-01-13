@@ -16,7 +16,7 @@ type ErrorResponse struct {
 
 func HandleDbError(w http.ResponseWriter, err error) {
 	if errors.Is(err, sql.ErrNoRows) {
-		writeJSONError(w, http.StatusNotFound, "resource not found")
+		writeJSONError(w, http.StatusNotFound, "entry not found")
 		return
 	}
 

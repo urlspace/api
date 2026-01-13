@@ -24,7 +24,7 @@ func UsersGet(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		u, err := store.Users.Get(r.Context(), idUuid)
+		u, err := store.Users.GetById(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

@@ -8,9 +8,10 @@ import (
 	"github.com/jumplist/api/internal/handlers"
 	"github.com/jumplist/api/internal/middlewares"
 	"github.com/jumplist/api/internal/store"
+	"github.com/resend/resend-go/v3"
 )
 
-func New(store *store.Store) *http.Server {
+func New(store *store.Store, resendClient *resend.Client) *http.Server {
 	port := os.Getenv("PORT")
 
 	if port == "" {
@@ -42,7 +43,7 @@ func New(store *store.Store) *http.Server {
 	mux.HandleFunc("DELETE /users/{id}", handlers.UsersDelete(store))
 
 	// auth
-	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(store))
+	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(store, resendClient))
 	// mux.HandleFunc("POST /auth/signin", handlers.xxx(store))
 	// mux.HandleFunc("POST /auth/signout", handlers.xxx(store))
 	// mux.HandleFunc("POST /auth/verify", handlers.xxx(store))

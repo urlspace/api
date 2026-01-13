@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/mail"
 	"regexp"
@@ -14,6 +15,7 @@ import (
 	"github.com/jumplist/api/internal/response"
 	"github.com/jumplist/api/internal/store"
 	"github.com/jumplist/api/internal/utils"
+	"github.com/resend/resend-go/v3"
 )
 
 type AuthSignupBody struct {
@@ -92,7 +94,7 @@ type AuthSignupResponse struct {
 	Data   db.User `json:"data"`
 }
 
-func AuthSignup(store *store.Store) http.HandlerFunc {
+func AuthSignup(store *store.Store, resendClient *resend.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body AuthSignupBody
 		decoder := json.NewDecoder(r.Body)
@@ -112,10 +114,27 @@ func AuthSignup(store *store.Store) http.HandlerFunc {
 			response.HandleClientError(w, err, "failed to hash password")
 			return
 		}
-		tokenExpiresAt := time.Now().Add(24 * time.Hour)
-		u, err := store.Users.Create(r.Context(), strings.TrimSpace(body.Email), false, uuid.NullUUID{Valid: true, UUID: uuid.New()}, &tokenExpiresAt, passwordHash, strings.TrimSpace(body.Username), false, false)
+		email := strings.TrimSpace(body.Email)
+		emailVerificationToken := uuid.New()
+		emailVerificationTokenExpiresAt := time.Now().Add(24 * time.Hour)
+		username := strings.TrimSpace(body.Username)
+		u, err := store.Users.Create(r.Context(), email, false, uuid.NullUUID{Valid: true, UUID: emailVerificationToken}, &emailVerificationTokenExpiresAt, passwordHash, username, false, false)
 		if err != nil {
 			response.HandleDbError(w, err)
+			return
+		}
+
+		params := &resend.SendEmailRequest{
+			From:    "Jumplist <auth@mail.jumplist.app>",
+			To:      []string{email},
+			Text:    fmt.Sprintf("Welcome to Jumplist!\n\nYour username: %s\nYour email: %s\n\nPlease verify your email using the following token: %s\nThis token will expire on %s.\n\nThank you for joining Jumplist!", username, email, emailVerificationToken.String(), emailVerificationTokenExpiresAt.Format(time.RFC1123)),
+			Subject: "Hello from Jumplist",
+			ReplyTo: "club@nn1.dev",
+		}
+
+		_, err = resendClient.Emails.Send(params)
+		if err != nil {
+			response.HandleClientError(w, err, err.Error())
 			return
 		}
 

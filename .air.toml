@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 
 [build]
   cmd = "go build -o ./tmp/main ./cmd/api"
-  full_bin = "PORT=3000 DATABASE_URL=postgres://postgres:postgres@localhost:5432/jumplist?sslmode=disable ./tmp/main"
+  full_bin = "sh -c 'set -a; [ -f .env ] && . .env; set +a; exec ./tmp/main'"
 
 [log]
   silent = true

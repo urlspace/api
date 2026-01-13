@@ -3,9 +3,9 @@ BINARY_NAME=api
 .SILENT:
 
 # Build the application
-# make build port=3000 db_url=postgres://user:password@localhost:5432/dbname
+# make build port=port db_url=db_url resend_api_key=resend_api_key
 build:
-	PORT=$(port) DATABASE_URL=$(db_url) go build -o ${BINARY_NAME} cmd/api/main.go
+	PORT=$(port) DATABASE_URL=$(db_url) RESEND_API_KEY=$(resend_api_key) go build -o ${BINARY_NAME} cmd/api/main.go
 
 # Run the built binary (production-like)
 run: build

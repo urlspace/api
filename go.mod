@@ -5,6 +5,7 @@ go 1.25.3
 require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
+	github.com/resend/resend-go/v3 v3.0.0
 	golang.org/x/crypto v0.46.0
 )
 

@@ -14,11 +14,13 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jumplist/api/internal/server"
 	"github.com/jumplist/api/internal/store"
+	"github.com/resend/resend-go/v3"
 )
 
 func run(ctx context.Context) error {
 	port := os.Getenv("PORT")
 	databaseUrl := os.Getenv("DATABASE_URL")
+	resendApiKey := os.Getenv("RESEND_API_KEY")
 
 	if port == "" {
 		log.Fatal("DATABASE_URL environment variable is required")
@@ -49,8 +51,9 @@ func run(ctx context.Context) error {
 	}
 
 	store := store.NewStore(pool)
+	resendClient := resend.NewClient(resendApiKey)
 
-	srv := server.New(store)
+	srv := server.New(store, resendClient)
 
 	chServer := make(chan error, 1)
 

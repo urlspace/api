@@ -7,6 +7,7 @@ import (
 	"net/mail"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jumplist/api/internal/db"
@@ -15,15 +16,13 @@ import (
 	"github.com/jumplist/api/internal/utils"
 )
 
-type UserCreateBody struct {
+type AuthSignupBody struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	IsAdmin  *bool  `json:"isAdmin"`
-	IsPro    *bool  `json:"isPro"`
 }
 
-func (b *UserCreateBody) Validate() error {
+func (b *AuthSignupBody) Validate() error {
 	// username
 	b.Username = strings.TrimSpace(b.Username)
 
@@ -85,25 +84,17 @@ func (b *UserCreateBody) Validate() error {
 		return errors.New("email must be at most 254 characters")
 	}
 
-	if b.IsAdmin == nil {
-		return errors.New("isAdmin field is required")
-	}
-
-	if b.IsPro == nil {
-		return errors.New("isPro field is required")
-	}
-
 	return nil
 }
 
-type UserCreateResponse struct {
+type AuthSignupResponse struct {
 	Status string  `json:"status"`
 	Data   db.User `json:"data"`
 }
 
-func UserCreate(store *store.Store) http.HandlerFunc {
+func AuthSignup(store *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var body UserCreateBody
+		var body AuthSignupBody
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
@@ -121,13 +112,14 @@ func UserCreate(store *store.Store) http.HandlerFunc {
 			response.HandleClientError(w, err, "failed to hash password")
 			return
 		}
-		u, err := store.Users.Create(r.Context(), strings.TrimSpace(body.Email), true, uuid.NullUUID{}, nil, passwordHash, strings.TrimSpace(body.Username), *body.IsAdmin, *body.IsPro)
+		tokenExpiresAt := time.Now().Add(24 * time.Hour)
+		u, err := store.Users.Create(r.Context(), strings.TrimSpace(body.Email), false, uuid.NullUUID{Valid: true, UUID: uuid.New()}, &tokenExpiresAt, passwordHash, strings.TrimSpace(body.Username), false, false)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
 		}
 
-		response := &UserCreateResponse{
+		response := &AuthSignupResponse{
 			Status: "ok",
 			Data:   u,
 		}

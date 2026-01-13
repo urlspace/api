@@ -27,6 +27,7 @@ func New(store *store.Store) *http.Server {
 	mux.HandleFunc("GET /status", handlers.Status)
 
 	// resources
+	// this requires an authentication, middlware to come later here
 	mux.HandleFunc("GET /resources", handlers.ResourcesList(store))
 	mux.HandleFunc("GET /resources/{id}", handlers.ResourcesGet(store))
 	mux.HandleFunc("POST /resources", handlers.ResourcesCreate(store))
@@ -34,10 +35,17 @@ func New(store *store.Store) *http.Server {
 	mux.HandleFunc("DELETE /resources/{id}", handlers.ResourcesDelete(store))
 
 	// users
+	// this is for admins only, middleware to come later here
 	mux.HandleFunc("GET /users", handlers.UsersList(store))
 	mux.HandleFunc("GET /users/{id}", handlers.UsersGet(store))
 	mux.HandleFunc("POST /users", handlers.UserCreate(store))
 	mux.HandleFunc("DELETE /users/{id}", handlers.UsersDelete(store))
+
+	// auth
+	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(store))
+	// mux.HandleFunc("POST /auth/signin", handlers.xxx(store))
+	// mux.HandleFunc("POST /auth/signout", handlers.xxx(store))
+	// mux.HandleFunc("POST /auth/verify", handlers.xxx(store))
 
 	// version api
 	v1 := http.NewServeMux()

@@ -2,21 +2,11 @@ package store
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/db"
 )
-
-const (
-	UserUsernameLengthMin           = 3
-	UserUsernameLengthMax           = 32
-	UserPasswordLengthMin           = 12
-	UserVerificationTokenExpiration = time.Hour * 24
-)
-
-var UserPattern = regexp.MustCompile(`^[a-z0-9_-]+$`)
 
 type UserStore interface {
 	List(ctx context.Context) ([]db.User, error)

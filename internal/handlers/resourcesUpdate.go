@@ -71,7 +71,15 @@ func ResourcesUpdate(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := s.Resources.Update(r.Context(), idUuid, body.Title, body.Description, body.URL, *body.Favourite, *body.ReadLater)
+		params := store.ResourceUpdateParams{
+			ID:          idUuid,
+			Title:       body.Title,
+			Url:         body.URL,
+			Description: body.Description,
+			Favourite:   *body.Favourite,
+			ReadLater:   *body.ReadLater,
+		}
+		rr, err := s.Resources.Update(r.Context(), params)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

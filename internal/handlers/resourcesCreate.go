@@ -63,7 +63,14 @@ func ResourcesCreate(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := s.Resources.Create(r.Context(), body.Title, body.Description, body.URL, *body.Favourite, *body.ReadLater)
+		params := store.ResourceCreateParams{
+			Title:       body.Title,
+			Url:         body.URL,
+			Description: body.Description,
+			Favourite:   *body.Favourite,
+			ReadLater:   *body.ReadLater,
+		}
+		rr, err := s.Resources.Create(r.Context(), params)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

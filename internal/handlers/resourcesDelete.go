@@ -15,7 +15,7 @@ type ResourceDeleteResponse struct {
 	Data   db.Resource `json:"data"`
 }
 
-func ResourcesDelete(store *store.Store) http.HandlerFunc {
+func ResourcesDelete(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
@@ -24,13 +24,13 @@ func ResourcesDelete(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := store.Resources.Get(r.Context(), idUuid)
+		rr, err := s.Resources.Get(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
 		}
 
-		err = store.Resources.Delete(r.Context(), idUuid)
+		err = s.Resources.Delete(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

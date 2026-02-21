@@ -11,7 +11,7 @@ import (
 	"github.com/hreftools/api/internal/store"
 )
 
-func New(store *store.Store, emailSender emails.EmailSender) *http.Server {
+func New(s *store.Store, emailSender emails.EmailSender) *http.Server {
 	port := os.Getenv("PORT")
 
 	if port == "" {
@@ -29,25 +29,25 @@ func New(store *store.Store, emailSender emails.EmailSender) *http.Server {
 
 	// resources
 	// this requires an authentication, middlware to come later here
-	mux.HandleFunc("GET /resources", handlers.ResourcesList(store))
-	mux.HandleFunc("GET /resources/{id}", handlers.ResourcesGet(store))
-	mux.HandleFunc("POST /resources", handlers.ResourcesCreate(store))
-	mux.HandleFunc("PUT /resources/{id}", handlers.ResourcesUpdate(store))
-	mux.HandleFunc("DELETE /resources/{id}", handlers.ResourcesDelete(store))
+	mux.HandleFunc("GET /resources", handlers.ResourcesList(s))
+	mux.HandleFunc("GET /resources/{id}", handlers.ResourcesGet(s))
+	mux.HandleFunc("POST /resources", handlers.ResourcesCreate(s))
+	mux.HandleFunc("PUT /resources/{id}", handlers.ResourcesUpdate(s))
+	mux.HandleFunc("DELETE /resources/{id}", handlers.ResourcesDelete(s))
 
 	// users
 	// this is for admins only, middleware to come later here
-	mux.HandleFunc("GET /users", handlers.UsersList(store))
-	mux.HandleFunc("GET /users/{id}", handlers.UsersGet(store))
-	mux.HandleFunc("POST /users", handlers.UserCreate(store))
-	mux.HandleFunc("DELETE /users/{id}", handlers.UsersDelete(store))
+	mux.HandleFunc("GET /users", handlers.UsersList(s))
+	mux.HandleFunc("GET /users/{id}", handlers.UsersGet(s))
+	mux.HandleFunc("POST /users", handlers.UserCreate(s))
+	mux.HandleFunc("DELETE /users/{id}", handlers.UsersDelete(s))
 
 	// auth
-	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(store, emailSender))
+	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(s, emailSender))
 	// mux.HandleFunc("POST /auth/signin", handlers.xxx(store))
 	// mux.HandleFunc("POST /auth/signout", handlers.xxx(store))
-	mux.HandleFunc("POST /auth/verify", handlers.AuthVerify(store))
-	mux.HandleFunc("POST /auth/resend-verification", handlers.AuthResendVerification(store, emailSender))
+	mux.HandleFunc("POST /auth/verify", handlers.AuthVerify(s))
+	mux.HandleFunc("POST /auth/resend-verification", handlers.AuthResendVerification(s, emailSender))
 
 	// version api
 	v1 := http.NewServeMux()

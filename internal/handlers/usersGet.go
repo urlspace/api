@@ -15,7 +15,7 @@ type UsersGetResponse struct {
 	Data   db.User `json:"data"`
 }
 
-func UsersGet(store *store.Store) http.HandlerFunc {
+func UsersGet(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
@@ -24,7 +24,7 @@ func UsersGet(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		u, err := store.Users.GetById(r.Context(), idUuid)
+		u, err := s.Users.GetById(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

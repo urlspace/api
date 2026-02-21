@@ -14,9 +14,9 @@ type UsersListResponse struct {
 	Data   []db.User `json:"data"`
 }
 
-func UsersList(store *store.Store) http.HandlerFunc {
+func UsersList(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		list, err := store.Users.List(r.Context())
+		list, err := s.Users.List(r.Context())
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

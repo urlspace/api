@@ -14,9 +14,9 @@ type ResourcesListResponse struct {
 	Data   []db.Resource `json:"data"`
 }
 
-func ResourcesList(store *store.Store) http.HandlerFunc {
+func ResourcesList(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		list, err := store.Resources.List(r.Context())
+		list, err := s.Resources.List(r.Context())
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

@@ -49,7 +49,7 @@ type ResourceUpdateResponse struct {
 	Data   db.Resource `json:"data"`
 }
 
-func ResourcesUpdate(store *store.Store) http.HandlerFunc {
+func ResourcesUpdate(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
@@ -71,7 +71,7 @@ func ResourcesUpdate(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := store.Resources.Update(r.Context(), idUuid, body.Title, body.Description, body.URL, *body.Favourite, *body.ReadLater)
+		rr, err := s.Resources.Update(r.Context(), idUuid, body.Title, body.Description, body.URL, *body.Favourite, *body.ReadLater)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

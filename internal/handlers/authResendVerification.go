@@ -48,7 +48,7 @@ type AuthResendVerificationResponse struct {
 	Data   db.User `json:"data"`
 }
 
-func AuthResendVerification(store *store.Store, emailSender emails.EmailSender) http.HandlerFunc {
+func AuthResendVerification(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body AuthResendVerificationBody
 		decoder := json.NewDecoder(r.Body)
@@ -65,7 +65,7 @@ func AuthResendVerification(store *store.Store, emailSender emails.EmailSender) 
 
 		email := strings.TrimSpace(body.Email)
 
-		u, err := store.Users.GetByEmail(r.Context(), email)
+		u, err := s.Users.GetByEmail(r.Context(), email)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

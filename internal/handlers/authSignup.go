@@ -70,24 +70,29 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			return
 		}
 
-		email := body.Email
-		username := body.Username
-		emailVerified := false
-		emailVerificationToken := uuid.NullUUID{Valid: true, UUID: uuid.New()}
-		emailVerificationTokenExpiresAt := time.Now().Add(time.Hour * 24)
-		isAdmin := false
-		isPro := false
-		u, err := s.Users.Create(r.Context(), email, emailVerified, emailVerificationToken, &emailVerificationTokenExpiresAt, passwordHash, username, isAdmin, isPro)
+		expiresAt := time.Now().Add(time.Hour * 24)
+		token := uuid.NullUUID{Valid: true, UUID: uuid.New()}
+		params := store.UserCreateParams{
+			Email:                           body.Email,
+			EmailVerified:                   false,
+			EmailVerificationToken:          token,
+			EmailVerificationTokenExpiresAt: &expiresAt,
+			Password:                        passwordHash,
+			Username:                        body.Username,
+			IsAdmin:                         false,
+			IsPro:                           false,
+		}
+		u, err := s.Users.Create(r.Context(), params)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
 		}
 
 		emailVerifyData := EmailVerifyData{
-			Username:  username,
-			Email:     email,
-			Token:     emailVerificationToken.UUID.String(),
-			ExpiresAt: emailVerificationTokenExpiresAt.Format(time.RFC1123),
+			Username:  body.Username,
+			Email:     body.Email,
+			Token:     token.UUID.String(),
+			ExpiresAt: expiresAt.Format(time.RFC1123),
 		}
 		bodyHtml, err := emailVerifyRenderHtml(emailVerifyData)
 		if err != nil {
@@ -99,16 +104,16 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			response.HandleClientError(w, err, "failed to render text email template")
 			return
 		}
-		params := emails.EmailSendParams{
+		emailParams := emails.EmailSendParams{
 			From:    "href.tools <auth@mail.href.tools>",
-			To:      []string{email},
+			To:      []string{body.Email},
 			Text:    bodyText,
 			Html:    bodyHtml,
 			Subject: "Hello from href.tools",
 			ReplyTo: "auth@mail.href.tools",
 		}
 
-		err = emailSender.Send(params)
+		err = emailSender.Send(emailParams)
 		if err != nil {
 			response.HandleClientError(w, err, err.Error())
 			return

@@ -15,7 +15,7 @@ type ResourcesGetResponse struct {
 	Data   db.Resource `json:"data"`
 }
 
-func ResourcesGet(store *store.Store) http.HandlerFunc {
+func ResourcesGet(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
@@ -24,7 +24,7 @@ func ResourcesGet(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := store.Resources.Get(r.Context(), idUuid)
+		rr, err := s.Resources.Get(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

@@ -48,7 +48,7 @@ type ResourceCreateResponse struct {
 	Data   db.Resource `json:"data"`
 }
 
-func ResourcesCreate(store *store.Store) http.HandlerFunc {
+func ResourcesCreate(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body ResourceCreateBody
 		decoder := json.NewDecoder(r.Body)
@@ -63,7 +63,7 @@ func ResourcesCreate(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := store.Resources.Create(r.Context(), body.Title, body.Description, body.URL, *body.Favourite, *body.ReadLater)
+		rr, err := s.Resources.Create(r.Context(), body.Title, body.Description, body.URL, *body.Favourite, *body.ReadLater)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

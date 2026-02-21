@@ -8,14 +8,31 @@ import (
 	"github.com/hreftools/api/internal/db"
 )
 
+type UserCreateParams struct {
+	Email                           string
+	EmailVerified                   bool
+	EmailVerificationToken          uuid.NullUUID
+	EmailVerificationTokenExpiresAt *time.Time
+	Password                        string
+	Username                        string
+	IsAdmin                         bool
+	IsPro                           bool
+}
+
+type UserUpdateVerificationTokenParams struct {
+	id                              uuid.UUID
+	emailVerificationToken          uuid.NullUUID
+	emailVerificationTokenExpiresAt *time.Time
+}
+
 type UserStore interface {
 	List(ctx context.Context) ([]db.User, error)
 	GetById(ctx context.Context, id uuid.UUID) (db.User, error)
 	GetByEmail(ctx context.Context, email string) (db.User, error)
 	GetByEmailVerificationToken(ctx context.Context, id uuid.UUID) (db.User, error)
-	Create(ctx context.Context, email string, emailVerified bool, emailVerificationToken uuid.NullUUID, emailVerificationTokenExpiresAt *time.Time, password string, username string, isAdmin bool, isPro bool) (db.User, error)
+	Create(ctx context.Context, params UserCreateParams) (db.User, error)
 	Verify(ctx context.Context, id uuid.UUID) (db.User, error)
-	UpdateVerificationToken(ctx context.Context, id uuid.UUID, emailVerificatinToken uuid.NullUUID, emailVerificationTokenExpiresAt *time.Time) (db.User, error)
+	UpdateVerificationToken(ctx context.Context, params UserUpdateVerificationTokenParams) (db.User, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -45,16 +62,16 @@ func (r *userStore) GetByEmailVerificationToken(ctx context.Context, emailVerifi
 	return r.queries.GetUserByEmailVerificationToken(ctx, uuid.NullUUID{Valid: true, UUID: emailVerificationToken})
 }
 
-func (r *userStore) Create(ctx context.Context, email string, emailVerified bool, emailVerificationToken uuid.NullUUID, emailVerificationTokenExpiresAt *time.Time, password string, username string, isAdmin bool, isPro bool) (db.User, error) {
+func (r *userStore) Create(ctx context.Context, params UserCreateParams) (db.User, error) {
 	args := db.CreateUserParams{
-		Email:                           email,
-		EmailVerified:                   emailVerified,
-		EmailVerificationToken:          emailVerificationToken,
-		EmailVerificationTokenExpiresAt: emailVerificationTokenExpiresAt,
-		Password:                        password,
-		Username:                        username,
-		IsAdmin:                         isAdmin,
-		IsPro:                           isPro,
+		Email:                           params.Email,
+		EmailVerified:                   params.EmailVerified,
+		EmailVerificationToken:          params.EmailVerificationToken,
+		EmailVerificationTokenExpiresAt: params.EmailVerificationTokenExpiresAt,
+		Password:                        params.Password,
+		Username:                        params.Username,
+		IsAdmin:                         params.IsAdmin,
+		IsPro:                           params.IsPro,
 	}
 
 	return r.queries.CreateUser(ctx, args)
@@ -64,11 +81,11 @@ func (r *userStore) Verify(ctx context.Context, id uuid.UUID) (db.User, error) {
 	return r.queries.VerifyUser(ctx, id)
 }
 
-func (r *userStore) UpdateVerificationToken(ctx context.Context, id uuid.UUID, emailVerificatinToken uuid.NullUUID, emailVerificationTokenExpiresAt *time.Time) (db.User, error) {
+func (r *userStore) UpdateVerificationToken(ctx context.Context, params UserUpdateVerificationTokenParams) (db.User, error) {
 	args := db.UpdateVerificationTokenParams{
-		ID:                              id,
-		EmailVerificationToken:          emailVerificatinToken,
-		EmailVerificationTokenExpiresAt: emailVerificationTokenExpiresAt,
+		ID:                              params.id,
+		EmailVerificationToken:          params.emailVerificationToken,
+		EmailVerificationTokenExpiresAt: params.emailVerificationTokenExpiresAt,
 	}
 	return r.queries.UpdateVerificationToken(ctx, args)
 }

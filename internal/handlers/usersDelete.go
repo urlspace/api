@@ -15,7 +15,7 @@ type UsersDeleteResponse struct {
 	Data   db.User `json:"data"`
 }
 
-func UsersDelete(store *store.Store) http.HandlerFunc {
+func UsersDelete(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
@@ -24,13 +24,13 @@ func UsersDelete(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		u, err := store.Users.GetById(r.Context(), idUuid)
+		u, err := s.Users.GetById(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
 		}
 
-		err = store.Users.Delete(r.Context(), idUuid)
+		err = s.Users.Delete(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

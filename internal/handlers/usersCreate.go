@@ -22,6 +22,11 @@ type UserCreateBody struct {
 	IsPro    *bool  `json:"isPro"`
 }
 
+func (b *UserCreateBody) Normalize() {
+	b.Username = strings.ToLower(strings.TrimSpace(b.Username))
+	b.Email = strings.ToLower(strings.TrimSpace(b.Email))
+}
+
 func (b *UserCreateBody) Validate() error {
 	if err := validator.Username(b.Username); err != nil {
 		return err
@@ -51,7 +56,7 @@ type UserCreateResponse struct {
 	Data   db.User `json:"data"`
 }
 
-func UserCreate(store *store.Store) http.HandlerFunc {
+func UserCreate(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body UserCreateBody
 		decoder := json.NewDecoder(r.Body)
@@ -60,6 +65,8 @@ func UserCreate(store *store.Store) http.HandlerFunc {
 			response.HandleClientError(w, err, "invalid request body")
 			return
 		}
+
+		body.Normalize()
 
 		if err := body.Validate(); err != nil {
 			response.HandleClientError(w, err, err.Error())
@@ -71,7 +78,17 @@ func UserCreate(store *store.Store) http.HandlerFunc {
 			response.HandleClientError(w, err, "failed to hash password")
 			return
 		}
-		u, err := store.Users.Create(r.Context(), strings.TrimSpace(body.Email), true, uuid.NullUUID{}, nil, passwordHash, strings.TrimSpace(body.Username), *body.IsAdmin, *body.IsPro)
+		params := store.UserCreateParams{
+			Email:                           body.Email,
+			EmailVerified:                   true,
+			EmailVerificationToken:          uuid.NullUUID{},
+			EmailVerificationTokenExpiresAt: nil,
+			Password:                        passwordHash,
+			Username:                        body.Username,
+			IsAdmin:                         *body.IsAdmin,
+			IsPro:                           *body.IsPro,
+		}
+		u, err := s.Users.Create(r.Context(), params)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

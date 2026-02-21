@@ -36,7 +36,7 @@ type AuthVerifyResponse struct {
 	Data   db.User `json:"data"`
 }
 
-func AuthVerify(store *store.Store) http.HandlerFunc {
+func AuthVerify(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body AuthVerifyBody
 		decoder := json.NewDecoder(r.Body)
@@ -56,7 +56,7 @@ func AuthVerify(store *store.Store) http.HandlerFunc {
 			response.HandleClientError(w, err, "token is invalid")
 			return
 		}
-		u, err := store.Users.GetByEmailVerificationToken(r.Context(), token)
+		u, err := s.Users.GetByEmailVerificationToken(r.Context(), token)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
@@ -67,7 +67,7 @@ func AuthVerify(store *store.Store) http.HandlerFunc {
 			return
 		}
 
-		u, err = store.Users.Verify(r.Context(), u.ID)
+		u, err = s.Users.Verify(r.Context(), u.ID)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

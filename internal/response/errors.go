@@ -7,6 +7,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type ErrorResponse struct {
@@ -27,6 +29,13 @@ func HandleDbError(w http.ResponseWriter, err error) {
 
 	if errors.Is(err, context.Canceled) {
 		writeJSONError(w, 499, "request cancelled")
+		return
+	}
+
+	// db constraint violation (e.g. unique constraint)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		writeJSONError(w, http.StatusConflict, "request conflict")
 		return
 	}
 

@@ -11,7 +11,7 @@ type Store struct {
 	Users     UserStore
 }
 
-func NewStore(pool *sql.DB) *Store {
+func New(pool *sql.DB) *Store {
 	queries := db.New(pool)
 
 	return &Store{

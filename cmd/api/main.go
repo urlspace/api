@@ -51,7 +51,7 @@ func run(ctx context.Context) error {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
-	store := store.NewStore(pool)
+	store := store.New(pool)
 	resendClient := resend.NewClient(resendApiKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
 

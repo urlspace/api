@@ -29,14 +29,14 @@ RETURNING id, email, email_verified, email_verification_token, email_verificatio
 `
 
 type CreateUserParams struct {
-	Email                           string        `json:"email"`
-	EmailVerified                   bool          `json:"-"`
-	EmailVerificationToken          uuid.NullUUID `json:"-"`
-	EmailVerificationTokenExpiresAt *time.Time    `json:"-"`
-	Password                        string        `json:"-"`
-	Username                        string        `json:"username"`
-	IsAdmin                         bool          `json:"-"`
-	IsPro                           bool          `json:"-"`
+	Email                           string
+	EmailVerified                   bool
+	EmailVerificationToken          uuid.NullUUID
+	EmailVerificationTokenExpiresAt *time.Time
+	Password                        string
+	Username                        string
+	IsAdmin                         bool
+	IsPro                           bool
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -211,9 +211,9 @@ RETURNING id, email, email_verified, email_verification_token, email_verificatio
 `
 
 type UpdateVerificationTokenParams struct {
-	ID                              uuid.UUID     `json:"id"`
-	EmailVerificationToken          uuid.NullUUID `json:"-"`
-	EmailVerificationTokenExpiresAt *time.Time    `json:"-"`
+	ID                              uuid.UUID
+	EmailVerificationToken          uuid.NullUUID
+	EmailVerificationTokenExpiresAt *time.Time
 }
 
 func (q *Queries) UpdateVerificationToken(ctx context.Context, arg UpdateVerificationTokenParams) (User, error) {

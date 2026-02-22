@@ -11,26 +11,26 @@ import (
 )
 
 type Resource struct {
-	ID          uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Url         string    `json:"url"`
-	Favourite   bool      `json:"favourite"`
-	ReadLater   bool      `json:"readLater"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          uuid.UUID
+	Title       string
+	Description string
+	Url         string
+	Favourite   bool
+	ReadLater   bool
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type User struct {
-	ID                              uuid.UUID     `json:"id"`
-	Email                           string        `json:"email"`
-	EmailVerified                   bool          `json:"-"`
-	EmailVerificationToken          uuid.NullUUID `json:"-"`
-	EmailVerificationTokenExpiresAt *time.Time    `json:"-"`
-	Password                        string        `json:"-"`
-	Username                        string        `json:"username"`
-	IsAdmin                         bool          `json:"-"`
-	IsPro                           bool          `json:"-"`
-	CreatedAt                       time.Time     `json:"createdAt"`
-	UpdatedAt                       time.Time     `json:"updatedAt"`
+	ID                              uuid.UUID
+	Email                           string
+	EmailVerified                   bool
+	EmailVerificationToken          uuid.NullUUID
+	EmailVerificationTokenExpiresAt *time.Time
+	Password                        string
+	Username                        string
+	IsAdmin                         bool
+	IsPro                           bool
+	CreatedAt                       time.Time
+	UpdatedAt                       time.Time
 }

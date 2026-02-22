@@ -21,11 +21,11 @@ RETURNING id, title, description, url, favourite, read_later, created_at, update
 `
 
 type CreateResourceParams struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Url         string `json:"url"`
-	Favourite   bool   `json:"favourite"`
-	ReadLater   bool   `json:"readLater"`
+	Title       string
+	Description string
+	Url         string
+	Favourite   bool
+	ReadLater   bool
 }
 
 func (q *Queries) CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error) {
@@ -134,12 +134,12 @@ RETURNING id, title, description, url, favourite, read_later, created_at, update
 `
 
 type UpdateResourceParams struct {
-	ID          uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Url         string    `json:"url"`
-	Favourite   bool      `json:"favourite"`
-	ReadLater   bool      `json:"readLater"`
+	ID          uuid.UUID
+	Title       string
+	Description string
+	Url         string
+	Favourite   bool
+	ReadLater   bool
 }
 
 func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error) {

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/db"
+	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
 )
@@ -32,8 +32,8 @@ func (b *AuthVerifyBody) Validate() error {
 }
 
 type AuthVerifyResponse struct {
-	Status string  `json:"status"`
-	Data   db.User `json:"data"`
+	Status string              `json:"status"`
+	Data   models.ResponseUser `json:"data"`
 }
 
 func AuthVerify(s *store.Store) http.HandlerFunc {
@@ -73,13 +73,13 @@ func AuthVerify(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		response := &AuthVerifyResponse{
+		res := &AuthVerifyResponse{
 			Status: "ok",
-			Data:   u,
+			Data:   models.NewResponseUser(u),
 		}
 
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(response); err != nil {
+		if err := json.NewEncoder(w).Encode(res); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

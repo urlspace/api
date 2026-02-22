@@ -72,21 +72,6 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 		}
 
 		token := uuid.NullUUID{Valid: true, UUID: uuid.New()}
-		params := store.UserCreateParams{
-			Email:                           body.Email,
-			EmailVerified:                   false,
-			EmailVerificationToken:          token,
-			EmailVerificationTokenExpiresAt: new(time.Now().Add(time.Hour * 24)),
-			Password:                        passwordHash,
-			Username:                        body.Username,
-			IsAdmin:                         false,
-			IsPro:                           false,
-		}
-		u, err := s.Users.Create(r.Context(), params)
-		if err != nil {
-			response.HandleDbError(w, err)
-			return
-		}
 
 		emailVerifyData := EmailVerifyData{
 			Username: body.Username,
@@ -103,6 +88,23 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			response.HandleServerError(w, err, "failed to render text email template")
 			return
 		}
+
+		params := store.UserCreateParams{
+			Email:                           body.Email,
+			EmailVerified:                   false,
+			EmailVerificationToken:          token,
+			EmailVerificationTokenExpiresAt: new(time.Now().Add(time.Hour * 24)),
+			Password:                        passwordHash,
+			Username:                        body.Username,
+			IsAdmin:                         false,
+			IsPro:                           false,
+		}
+		u, err := s.Users.Create(r.Context(), params)
+		if err != nil {
+			response.HandleDbError(w, err)
+			return
+		}
+
 		emailParams := emails.EmailSendParams{
 			To:      []string{body.Email},
 			Text:    bodyText,
@@ -115,19 +117,9 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			log.Printf("Failed to send email: %v", err)
 		}
 
-		resUser := models.ResponseUser{
-			ID:            u.ID,
-			Email:         u.Email,
-			EmailVerified: u.EmailVerified,
-			Username:      u.Username,
-			IsAdmin:       u.IsAdmin,
-			IsPro:         u.IsPro,
-			CreatedAt:     u.CreatedAt,
-			UpdatedAt:     u.UpdatedAt,
-		}
-		res := &AuthSignupResponse{
+		res := AuthSignupResponse{
 			Status: "ok",
-			Data:   resUser,
+			Data:   models.NewResponseUser(u),
 		}
 
 		w.WriteHeader(http.StatusCreated)

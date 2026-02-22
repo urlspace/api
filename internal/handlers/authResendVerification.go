@@ -88,19 +88,9 @@ func AuthResendVerification(s *store.Store, emailSender emails.EmailSender) http
 			log.Printf("Failed to send email: %v", err)
 		}
 
-		resUser := models.ResponseUser{
-			ID:            u.ID,
-			Email:         u.Email,
-			EmailVerified: u.EmailVerified,
-			Username:      u.Username,
-			IsAdmin:       u.IsAdmin,
-			IsPro:         u.IsPro,
-			CreatedAt:     u.CreatedAt,
-			UpdatedAt:     u.UpdatedAt,
-		}
 		response := &AuthResendVerificationResponse{
 			Status: "ok",
-			Data:   resUser,
+			Data:   models.NewResponseUser(u),
 		}
 
 		w.WriteHeader(http.StatusCreated)

@@ -70,13 +70,12 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			return
 		}
 
-		expiresAt := time.Now().Add(time.Hour * 24)
 		token := uuid.NullUUID{Valid: true, UUID: uuid.New()}
 		params := store.UserCreateParams{
 			Email:                           body.Email,
 			EmailVerified:                   false,
 			EmailVerificationToken:          token,
-			EmailVerificationTokenExpiresAt: &expiresAt,
+			EmailVerificationTokenExpiresAt: new(time.Now().Add(time.Hour * 24)),
 			Password:                        passwordHash,
 			Username:                        body.Username,
 			IsAdmin:                         false,
@@ -89,10 +88,9 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 		}
 
 		emailVerifyData := EmailVerifyData{
-			Username:  body.Username,
-			Email:     body.Email,
-			Token:     token.UUID.String(),
-			ExpiresAt: expiresAt.Format(time.RFC1123),
+			Username: body.Username,
+			Email:    body.Email,
+			Token:    token.UUID.String(),
 		}
 		bodyHtml, err := emailVerifyRenderHtml(emailVerifyData)
 		if err != nil {
@@ -110,7 +108,7 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			Text:    bodyText,
 			Html:    bodyHtml,
 			Subject: "Hello from href.tools",
-			ReplyTo: "auth@mail.href.tools",
+			ReplyTo: "mail@href.tools",
 		}
 
 		err = emailSender.Send(emailParams)

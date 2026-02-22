@@ -16,7 +16,7 @@ const emailVerifyTemplateHtml = `
 				<li>Your email: {{.Email}}</li>
 				<li>Please verify your email using the following token:</li>
 				<li><a href="https://href.tools/verify?token={{.Token}}">https://href.tools/verify?token={{.Token}}</a></li>
-				<li>This token will expire on {{.ExpiresAt}}</li>
+				<li>This token will expire in 24 hours.</li>
 			</ul> 
 		</body>
   </html>
@@ -28,13 +28,12 @@ Welcome to href.tools!
 Your username: {{.Username}}
 Your email: {{.Email}}
 Please verify your email using the following token: https://href.tools/verify?token={{.Token}}
-This token will expire on {{.ExpiresAt}}`
+This token will expire in 24 hours.`
 
 type EmailVerifyData struct {
-	Username  string
-	Email     string
-	Token     string
-	ExpiresAt string
+	Username string
+	Email    string
+	Token    string
 }
 
 func emailVerifyRenderHtml(data EmailVerifyData) (string, error) {

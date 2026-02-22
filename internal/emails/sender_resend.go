@@ -10,12 +10,12 @@ type ResendEmailSender struct {
 
 func (s *ResendEmailSender) Send(params EmailSendParams) error {
 	_, err := s.client.Emails.Send(&resend.SendEmailRequest{
-		From:    params.From,
+		From:    "href.tools <auth@mail.href.tools>",
 		To:      params.To,
 		Html:    params.Html,
 		Text:    params.Text,
 		Subject: params.Subject,
-		ReplyTo: params.ReplyTo,
+		ReplyTo: "mail@href.tools",
 	})
 
 	return err

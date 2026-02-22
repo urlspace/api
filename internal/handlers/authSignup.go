@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -103,27 +104,24 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			return
 		}
 		emailParams := emails.EmailSendParams{
-			From:    "href.tools <auth@mail.href.tools>",
 			To:      []string{body.Email},
 			Text:    bodyText,
 			Html:    bodyHtml,
 			Subject: "Hello from href.tools",
-			ReplyTo: "mail@href.tools",
 		}
 
 		err = emailSender.Send(emailParams)
 		if err != nil {
-			response.HandleClientError(w, err, err.Error())
-			return
+			log.Printf("Failed to send email: %v", err)
 		}
 
-		response := &AuthSignupResponse{
+		res := &AuthSignupResponse{
 			Status: "ok",
 			Data:   u,
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(response); err != nil {
+		if err := json.NewEncoder(w).Encode(res); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

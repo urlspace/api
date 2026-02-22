@@ -81,11 +81,9 @@ func AuthResendVerification(s *store.Store, emailSender emails.EmailSender) http
 		}
 
 		params := emails.EmailSendParams{
-			From: "href.tools <auth@mail.href.tools>",
-			To:   []string{email},
+			To: []string{email},
 			// Text:    fmt.Sprintf("Welcome to href.tools!\n\nYour username: %s\nYour email: %s\n\nPlease verify your email using the following token: %s\nThis token will expire on %s.\n\nThank you for joining href.tools!", u.Username, email, emailVerificationToken.String(), emailVerificationTokenExpiresAt.Format(time.RFC1123)),
 			Subject: "Hello from href.tools",
-			ReplyTo: "auth@mail.href.tools",
 		}
 
 		err = emailSender.Send(params)

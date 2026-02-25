@@ -93,7 +93,7 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			Email:                           body.Email,
 			EmailVerified:                   false,
 			EmailVerificationToken:          token,
-			EmailVerificationTokenExpiresAt: new(time.Now().Add(time.Hour * 24)),
+			EmailVerificationTokenExpiresAt: new(time.Now().Add(TokenExpiryDuration)),
 			Password:                        passwordHash,
 			Username:                        body.Username,
 			IsAdmin:                         false,

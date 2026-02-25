@@ -1,47 +1,51 @@
 package validator_test
 
 import (
-	"github.com/hreftools/api/internal/validator"
 	"testing"
+
+	"github.com/hreftools/api/internal/validator"
 )
 
 func TestUrl(t *testing.T) {
 	tests := []struct {
 		name       string
-		uri        string
+		input      string
 		wantErr    bool
 		wantErrMsg string
 	}{
 		{
 			name:    "Valid URL",
-			uri:     "https://example.com",
+			input:   "https://example.com",
 			wantErr: false,
 		},
 		{
 			name:       "Empty URL",
-			uri:        "",
+			input:      "",
 			wantErr:    true,
 			wantErrMsg: "url is invalid",
 		},
 		{
 			name:       "URL without scheme",
-			uri:        "example.com/path",
+			input:      "example.com/path",
 			wantErr:    true,
 			wantErrMsg: "url is invalid",
 		},
 		{
 			name:       "URL without host",
-			uri:        "http://",
+			input:      "http://",
 			wantErr:    true,
 			wantErrMsg: "url is invalid",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotErr := validator.Url(tt.uri)
+			gotErr := validator.Url(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("Url() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("Url() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
 				}
 				return
 			}

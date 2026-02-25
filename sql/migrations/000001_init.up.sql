@@ -14,7 +14,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
     email TEXT NOT NULL UNIQUE,
     email_verified BOOLEAN NOT NULL DEFAULT FALSE,
-    email_verification_token UUID DEFAULT uuidv7(),
+    email_verification_token UUID,
     email_verification_token_expires_at TIMESTAMPTZ,
     password TEXT NOT NULL,
     username TEXT NOT NULL UNIQUE,

@@ -65,10 +65,9 @@ func TestAuthSignupBody_Normalize(t *testing.T) {
 
 func TestAuthSignupBody_Validate(t *testing.T) {
 	tests := []struct {
-		name       string
-		input      handlers.AuthSignupBody
-		wantErr    bool
-		wantErrMsg string
+		name    string
+		input   handlers.AuthSignupBody
+		wantErr bool
 	}{
 		{
 			name: "Valid input",
@@ -77,8 +76,7 @@ func TestAuthSignupBody_Validate(t *testing.T) {
 				Email:    "valid@email.com",
 				Password: "strongpassword",
 			},
-			wantErr:    false,
-			wantErrMsg: "",
+			wantErr: false,
 		},
 	}
 
@@ -90,9 +88,6 @@ func TestAuthSignupBody_Validate(t *testing.T) {
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("Validate() failed: %v", gotErr)
-				}
-				if gotErr.Error() != tt.wantErrMsg {
-					t.Errorf("Validate() error = %q, want %q", gotErr.Error(), tt.wantErrMsg)
 				}
 				return
 			}

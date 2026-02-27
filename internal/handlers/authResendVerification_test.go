@@ -55,18 +55,16 @@ func TestAuthResendVerificationBody_Normalize(t *testing.T) {
 
 func TestAuthResendVerificationBody_Validate(t *testing.T) {
 	tests := []struct {
-		name       string
-		input      handlers.AuthResendVerificationBody
-		wantErr    bool
-		wantErrMsg string
+		name    string
+		input   handlers.AuthResendVerificationBody
+		wantErr bool
 	}{
 		{
 			name: "Valid input",
 			input: handlers.AuthResendVerificationBody{
 				Email: "valid@email.com",
 			},
-			wantErr:    false,
-			wantErrMsg: "",
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -77,9 +75,6 @@ func TestAuthResendVerificationBody_Validate(t *testing.T) {
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("Validate() failed: %v", gotErr)
-				}
-				if gotErr.Error() != tt.wantErrMsg {
-					t.Errorf("Validate() error = %q, want %q", gotErr.Error(), tt.wantErrMsg)
 				}
 				return
 			}

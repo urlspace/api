@@ -11,21 +11,20 @@ import (
 	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/validator"
 )
 
 type AuthVerifyBody struct {
 	Token string `json:"token"`
 }
 
-func (b *AuthVerifyBody) Validate() error {
+func (b *AuthVerifyBody) Normalize() {
 	b.Token = strings.TrimSpace(b.Token)
+}
 
-	if len(b.Token) == 0 {
-		return errors.New("token is required")
-	}
-
-	if _, err := uuid.Parse(b.Token); err != nil {
-		return errors.New("token is invalid")
+func (b *AuthVerifyBody) Validate() error {
+	if err := validator.Token(b.Token); err != nil {
+		return err
 	}
 
 	return nil
@@ -46,16 +45,17 @@ func AuthVerify(s *store.Store) http.HandlerFunc {
 			return
 		}
 
+		body.Normalize()
+
 		if err := body.Validate(); err != nil {
 			response.HandleClientError(w, err, err.Error())
 			return
 		}
 
-		token, err := uuid.Parse(body.Token)
-		if err != nil {
-			response.HandleClientError(w, err, "token is invalid")
-			return
-		}
+		// im swallowing the error here as the token is already
+		// validated as a uuid, so it should never fail to parse
+		token, _ := uuid.Parse(body.Token)
+
 		u, err := s.Users.GetByEmailVerificationToken(r.Context(), token)
 		if err != nil {
 			response.HandleDbError(w, err)
@@ -78,9 +78,6 @@ func AuthVerify(s *store.Store) http.HandlerFunc {
 			Data:   models.NewResponseUser(u),
 		}
 
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		response.WriteJSONSuccess(w, http.StatusOK, res)
 	}
 }

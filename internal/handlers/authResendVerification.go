@@ -128,9 +128,11 @@ func AuthResendVerification(s *store.Store, emailSender emails.EmailSender) http
 			log.Printf("Failed to send email: %v", err)
 		}
 
-		response.WriteJSONSuccess(w, http.StatusOK, &AuthResendVerificationResponse{
+		res := AuthResendVerificationResponse{
 			Status: "ok",
 			Data:   "ok",
-		})
+		}
+
+		response.WriteJSONSuccess(w, http.StatusOK, res)
 	}
 }

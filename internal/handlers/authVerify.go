@@ -73,7 +73,7 @@ func AuthVerify(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		res := &AuthVerifyResponse{
+		res := AuthVerifyResponse{
 			Status: "ok",
 			Data:   models.NewResponseUser(u),
 		}

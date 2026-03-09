@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Go HTTP API server (`github.com/hreftools/api`) that provides a simple REST API. The codebase uses Go 1.25.3 and the standard library's `net/http` package.
+This is a Go HTTP API server (`github.com/hreftools/api`) that provides a REST API. The codebase uses Go 1.26.0 and the standard library's `net/http` package, with a PostgreSQL database backend.
 
 ## Development Philosophy
 
@@ -27,6 +27,8 @@ air init
 ```
 
 **Note**: Go development tools are installed globally, not per-project. They won't appear in `go.mod` since they're not runtime dependencies.
+
+The database layer uses `sqlc` for type-safe query generation. Generated files live in `internal/db/` and should not be edited manually.
 
 ## Development Commands
 
@@ -52,12 +54,20 @@ make test   # Run tests
 make clean  # Clean build artifacts
 ```
 
-The server starts on port 8080 with these configured timeouts:
+The server starts on port 8080 by default (configurable via `PORT` env var) with these configured timeouts:
 
 - ReadTimeout: 10s
 - ReadHeaderTimeout: 5s
 - WriteTimeout: 10s
 - IdleTimeout: 120s
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `PORT` | Yes | Port the server listens on |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `RESEND_API_KEY` | No | Resend API key for sending emails |
 
 ## Project Structure
 
@@ -65,14 +75,59 @@ The server starts on port 8080 with these configured timeouts:
 api/
 ├── cmd/
 │   └── api/
-│       └── main.go          # Entry point - wires everything together
+│       └── main.go                    # Entry point - wires everything together
 ├── internal/
-│   ├── handlers/
-│   │   └── status.go        # HTTP handlers (one per resource)
-│   ├── middleware/
-│   │   └── common.go        # Middleware (security headers, CORS, etc.)
-│   └── models/
-│       └── response.go      # Shared structs (requests/responses)
+│   ├── db/                            # sqlc-generated database code (do not edit)
+│   │   ├── db.go
+│   │   ├── models.go
+│   │   ├── querier.go
+│   │   ├── resources.sql.go
+│   │   └── users.sql.go
+│   ├── emails/                        # Email sending abstraction
+│   │   ├── sender.go                  # EmailSender interface
+│   │   ├── sender_resend.go           # Resend implementation
+│   │   └── render.go                  # Email template rendering
+│   ├── handlers/                      # HTTP handlers (one file per endpoint)
+│   │   ├── authSignup.go
+│   │   ├── authVerify.go
+│   │   ├── authResendVerification.go
+│   │   ├── resourcesCreate.go
+│   │   ├── resourcesDelete.go
+│   │   ├── resourcesGet.go
+│   │   ├── resourcesList.go
+│   │   ├── resourcesUpdate.go
+│   │   ├── usersCreate.go
+│   │   ├── usersDelete.go
+│   │   ├── usersGet.go
+│   │   ├── usersList.go
+│   │   ├── status.go
+│   │   ├── notFound.go
+│   │   └── constants.go
+│   ├── middlewares/                   # Middleware functions
+│   │   ├── common.go                  # Security headers, CORS, Content-Type
+│   │   ├── logging.go                 # Request logging
+│   │   └── middlewares_stack.go       # Middleware chaining helper
+│   ├── models/
+│   │   └── models.go                  # Response structs (ResponseResource, ResponseUser)
+│   ├── response/                      # JSON response helpers
+│   │   ├── success.go                 # WriteJSONSuccess
+│   │   └── errors.go                  # WriteJSONError, HandleDbError, etc.
+│   ├── server/
+│   │   └── server.go                  # HTTP server setup and route registration
+│   ├── store/                         # Database access layer
+│   │   ├── store.go                   # Store struct wiring db queries
+│   │   ├── store_resources.go
+│   │   └── store_users.go
+│   ├── utils/
+│   │   └── utils.go
+│   └── validator/                     # Input validation
+│       ├── email.go
+│       ├── password.go
+│       ├── username.go
+│       ├── url.go
+│       ├── resourceTitle.go
+│       ├── resourceDescription.go
+│       └── token.go
 ├── go.mod
 ├── Makefile
 └── CLAUDE.md
@@ -82,22 +137,28 @@ api/
 
 **Standard Go project layout**: Following Go community conventions:
 
-- `cmd/api/` - Application entry point, minimal logic
+- `cmd/api/` - Application entry point, minimal logic; wires store, email sender, and server
 - `internal/` - Private packages (can't be imported by external projects)
-- `internal/handlers/` - HTTP handler functions (easy to test)
-- `internal/middleware/` - Reusable middleware (headers, auth, logging)
-- `internal/models/` - Shared data structures
+- `internal/db/` - sqlc-generated type-safe query code; backed by PostgreSQL via `pgx`
+- `internal/store/` - Thin layer over `internal/db`; the only place handlers interact with the database
+- `internal/handlers/` - HTTP handler functions (one file per endpoint, easy to test)
+- `internal/middlewares/` - Reusable middleware (headers, logging); composed via `MiddlewareStack`
+- `internal/models/` - Response structs that map db models to JSON-safe shapes
+- `internal/response/` - Helpers for writing JSON success/error responses and handling DB errors
+- `internal/emails/` - `EmailSender` interface + Resend implementation for transactional email
+- `internal/validator/` - Pure validation functions used in handlers
 
 **HTTP Server Setup**:
 
 - Uses `http.Server` with explicit timeouts for security
+- All routes are prefixed with `/v1/` (e.g. `GET /v1/status`)
 - Route-based handlers using `http.ServeMux` with method prefixes (e.g., `GET /status`)
-- Middleware chain applies common headers (security, CORS, Content-Type)
+- Middleware chain: `Logging` → `CommonHeaders`
 
 **Response Structure**: All JSON responses follow a structured format:
 
 - Success: `{"status": "ok", "data": "..."}`
-- Error: `{"status": "error", "error": "..."}`
+- Error: `{"status": "error", "data": "..."}`
 
 **Security Headers**: All responses include:
 
@@ -108,6 +169,31 @@ api/
 
 **CORS**: Configured for open/public API with `Access-Control-Allow-Origin: *`
 
+## Key Dependencies
+
+| Package | Purpose |
+|---|---|
+| `github.com/jackc/pgx/v5` | PostgreSQL driver |
+| `github.com/google/uuid` | UUID types |
+| `github.com/resend/resend-go/v3` | Transactional email via Resend |
+| `golang.org/x/crypto` | Password hashing |
+
 ## API Endpoints
 
-- `GET /status` - Health check endpoint returning service status
+All endpoints are prefixed with `/v1`.
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/v1/status` | Health check |
+| `POST` | `/v1/auth/signup` | Register a new user |
+| `POST` | `/v1/auth/verify` | Verify email with token |
+| `POST` | `/v1/auth/resend-verification` | Resend verification email |
+| `GET` | `/v1/users` | List all users (admin) |
+| `GET` | `/v1/users/{id}` | Get a user by ID (admin) |
+| `POST` | `/v1/users` | Create a user (admin) |
+| `DELETE` | `/v1/users/{id}` | Delete a user (admin) |
+| `GET` | `/v1/resources` | List resources |
+| `GET` | `/v1/resources/{id}` | Get a resource by ID |
+| `POST` | `/v1/resources` | Create a resource |
+| `PUT` | `/v1/resources/{id}` | Update a resource |
+| `DELETE` | `/v1/resources/{id}` | Delete a resource |

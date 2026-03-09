@@ -4,104 +4,173 @@
 
 The API has signup, email verification, and resend verification handlers. The next step is login. The user wants session-based auth with HttpOnly cookies. API tokens for third-party/plugin use will be a separate feature later.
 
+Everything is stored in a single `tokens` table — a browser session and a user-managed API token are both tokens. The `type` column distinguishes the origin, and a nullable `description` column allows tokens to be labelled (e.g. `"Token to interact with browser extension"`). The same auth middleware can later validate both (cookie or Authorization header).
+
 **Key decisions:**
 - Cookie-only — no token in response body
 - Require verified email to log in
-- Sliding expiration: 30 days of inactivity → session expires. Refresh is throttled (future middleware concern, not part of this handler)
+- Sliding expiration: 30 days of inactivity → token expires. Refresh is throttled (future middleware concern, not part of this handler)
 - Generic error message ("invalid email or password") for both wrong email and wrong password
+- `type TEXT NOT NULL DEFAULT 'session' CHECK (type IN ('session', 'token'))` — extensible without a PostgreSQL ENUM; `'session'` = created by sign-in, `'token'` = created manually via UI
+- `description TEXT` — nullable; sign-in creates tokens without one, manual token creation will supply a string
+- Index on `user_id` for listing/invalidating a user's tokens
+
+---
 
 ## Steps
 
-### 1. `sql/migrations/000001_init.up.sql` (modify)
-Append the sessions table and trigger after the resources section:
+### Step 1 — `sql/migrations/000001_init.up.sql` (modify)
+Append the tokens table and its trigger at the end of the file, after the resources section.
+
 ```sql
--- sessions
-CREATE TABLE sessions (
+-- tokens
+CREATE TABLE tokens (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type TEXT NOT NULL DEFAULT 'session' CHECK (type IN ('session', 'token')),
+    description TEXT,
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER update_sessions_updated_at
-BEFORE UPDATE ON sessions
+CREATE INDEX ON tokens (user_id);
+
+CREATE TRIGGER update_tokens_updated_at
+BEFORE UPDATE ON tokens
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 ```
 
-### 2. `sql/migrations/000001_init.down.sql` (modify)
-Add drops for sessions trigger and table (before the existing drops, since sessions references users).
+### Step 2 — `sql/migrations/000001_init.down.sql` (modify)
+Add drops for tokens **before** the existing drops (tokens references users):
 
-### 3. `sql/queries/sessions.sql` (create)
-Queries following the formatting style in `sql/queries/users.sql`:
-- `CreateSession :one` — INSERT user_id + expires_at, RETURNING *
-- `GetSessionById :one` — SELECT by id
-- `UpdateSessionExpiresAt :one` — UPDATE expires_at WHERE id, RETURNING * (for future sliding expiration middleware)
-- `DeleteSession :exec` — DELETE by id (for future signout)
+```sql
+DROP TRIGGER IF EXISTS update_tokens_updated_at ON tokens;
+DROP TABLE IF EXISTS tokens;
+```
 
-### 4. `sqlc.yml` (modify)
-Add overrides for sessions timestamp columns (non-pointer `time.Time`, matching resources/users pattern):
-- `sessions.expires_at`
-- `sessions.created_at`
-- `sessions.updated_at`
+Insert these two lines at the top, before the existing trigger/table drops.
 
-### 5. `internal/store/store_sessions.go` (create)
+### Step 3 — `sql/queries/tokens.sql` (create)
+New file following the formatting style in `sql/queries/users.sql`:
+
+```sql
+-- name: CreateToken :one
+INSERT INTO tokens (user_id, type, description, expires_at)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: GetTokenById :one
+SELECT * FROM tokens
+WHERE id = $1
+LIMIT 1;
+
+-- name: UpdateTokenExpiresAt :one
+UPDATE tokens
+SET expires_at = $2
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteToken :exec
+DELETE FROM tokens
+WHERE id = $1;
+```
+
+### Step 4 — `sqlc.yml` (modify)
+Add overrides for tokens timestamp columns (non-pointer `time.Time`, matching resources/users pattern):
+
+```yaml
+- column: "tokens.expires_at"
+  go_type:
+    type: "time.Time"
+- column: "tokens.created_at"
+  go_type:
+    type: "time.Time"
+- column: "tokens.updated_at"
+  go_type:
+    type: "time.Time"
+```
+
+After this step, run `sqlc generate` to produce `internal/db/tokens.sql.go`, update `internal/db/models.go` with the `Token` struct, and update `internal/db/querier.go` with token methods.
+
+### Step 5 — `internal/store/store_tokens.go` (create)
 Following the exact pattern of `internal/store/store_users.go`:
-- `SessionCreateParams` and `SessionUpdateExpiresAtParams` structs
-- `SessionStore` interface with `Create`, `GetById`, `UpdateExpiresAt`, `Delete`
-- `sessionStore` concrete type backed by `db.Querier`
-- `NewSessionStore(queries db.Querier) SessionStore` constructor
 
-### 6. `internal/store/store.go` (modify)
-Add `Sessions SessionStore` field to `Store` struct (alphabetically between Resources and Users) and wire `NewSessionStore(queries)` in `New()`.
+- `TokenCreateParams` struct: `UserID uuid.UUID`, `Type string` (`"session"` or `"token"`), `Description *string` (pointer, nullable), `ExpiresAt time.Time`
+- `TokenUpdateExpiresAtParams` struct: `ID uuid.UUID`, `ExpiresAt time.Time`
+- `TokenStore` interface with `Create`, `GetById`, `UpdateExpiresAt`, `Delete`
+- `tokenStore` concrete type backed by `db.Querier`
+- `NewTokenStore(queries db.Querier) TokenStore` constructor
 
-### 7. `internal/handlers/constants.go` (modify)
-Add two constants:
-- `SessionExpiryDuration = 30 * 24 * time.Hour`
-- `SessionCookieName = "session_id"`
+### Step 6 — `internal/store/store.go` (modify)
+- Add `Tokens TokenStore` field to `Store` struct (alphabetically: after Resources, before Users)
+- Wire `NewTokenStore(queries)` in `New()`
 
-### 8. `internal/handlers/authSignin.go` (create)
+### Step 7 — `internal/handlers/constants.go` (modify)
+Add alongside the existing `TokenExpiryDuration`:
+
+```go
+const SessionExpiryDuration = 30 * 24 * time.Hour
+const SessionCookieName = "session_id"
+const TokenTypeSession = "session"
+const TokenTypeManaged = "token"
+```
+
+Note: `SessionExpiryDuration` and `SessionCookieName` refer to the browser session concept (the cookie); `TokenTypeSession`/`TokenTypeManaged` are the values stored in the `tokens.type` column.
+
+### Step 8 — `internal/handlers/authSignin.go` (create)
 Handler following the established pattern (decode → normalize → validate → business logic → response):
+
 - `AuthSigninBody` with `Email` and `Password` fields
 - `Normalize()` — lowercase + trim email, leave password untouched
 - `Validate()` — reuse `validator.Email()` and `validator.Password()`
 - `AuthSigninResponse` with `Status string` and `Data string`
 - Handler flow:
-  1. Decode + DisallowUnknownFields
-  2. Normalize + Validate
-  3. `s.Users.GetByEmail()` → on error, return 401 "invalid email or password"
-  4. `utils.PasswordValidate()` → on failure, return 401 "invalid email or password"
-  5. Check `u.EmailVerified` → if false, return 403 "email not verified"
-  6. `s.Sessions.Create()` with expires_at = now + 30 days
-  7. `http.SetCookie()` — HttpOnly, Secure, SameSite=Lax, Path="/", name="session_id"
+  1. Decode + `DisallowUnknownFields`
+  2. `Normalize()` + `Validate()`
+  3. `s.Users.GetByEmail()` → on any error, return 401 `"invalid email or password"`
+  4. `utils.PasswordValidate()` → on failure, return 401 `"invalid email or password"`
+  5. Check `u.EmailVerified` → if false, return 403 `"email not verified"`
+  6. Read `r.Header.Get("User-Agent")` into a local variable; pass it as `Description` (as a `*string`) to `s.Tokens.Create()` with `Type = TokenTypeSession`, `ExpiresAt = time.Now().Add(SessionExpiryDuration)`
+  7. `http.SetCookie()` — `HttpOnly: true`, `Secure: true`, `SameSite: http.SameSiteLaxMode`, `Path: "/"`, `Name: SessionCookieName`, `Value: token.ID.String()`, `Expires: token.ExpiresAt`
   8. Respond 200 `{"status":"ok","data":"ok"}`
 
-### 9. `internal/handlers/authSignin_test.go` (create)
-Integration tests matching the pattern in `authSignup_test.go`:
-- "fails on incorrect body" → 400
-- "fails on unexpected field in body" → 400
-- "fails on invalid request body" (empty email) → 400
-- "fails on non-existent email" → 401 "invalid email or password"
-- "fails on wrong password" → 401 "invalid email or password"
-- "fails on unverified email" → 403 "email not verified"
-- "success" → 200, check response body + Set-Cookie header (name, HttpOnly, Secure, valid UUID value, Expires ~30 days)
+### Step 9 — `internal/handlers/authSignin_test.go` (create)
+Integration tests matching the pattern in `authSignup_test.go`.
 
 Test users seeded via `s.Users.Create()` with pre-hashed passwords using `utils.PasswordHash()`.
 
-### 10. `internal/handlers/helpers_test.go` (modify)
-Add `sessions` to the TRUNCATE statement: `"TRUNCATE users, resources, sessions RESTART IDENTITY CASCADE"`
+- `"fails on incorrect body"` → 400
+- `"fails on unexpected field in body"` → 400
+- `"fails on invalid request body"` (empty email) → 400
+- `"fails on non-existent email"` → 401, `"invalid email or password"`
+- `"fails on wrong password"` → 401, `"invalid email or password"`
+- `"fails on unverified email"` → 403, `"email not verified"`
+- `"success"` → 200, check response body + `Set-Cookie` header (name=`session_id`, HttpOnly, Secure, valid UUID value, Expires ~30 days)
 
-### 11. `internal/server/server.go` (modify)
+### Step 10 — `internal/handlers/helpers_test.go` (modify)
+Update the TRUNCATE statement to include tokens:
+
+```go
+pool.Exec("TRUNCATE users, resources, tokens RESTART IDENTITY CASCADE")
+```
+
+### Step 11 — `internal/server/server.go` (modify)
 Uncomment and wire the signin route:
+
 ```go
 mux.HandleFunc("POST /auth/signin", handlers.AuthSignin(s))
 ```
 
+---
+
 ## Files auto-generated (by sqlc generate, not manually edited)
-- `internal/db/models.go` — gains `Session` struct
-- `internal/db/querier.go` — gains session methods
-- `internal/db/sessions.sql.go` — new file
+- `internal/db/models.go` — gains `Token` struct
+- `internal/db/querier.go` — gains token methods
+- `internal/db/tokens.sql.go` — new file
+
+---
 
 ## Verification
 
@@ -110,3 +179,4 @@ After implementation, the user should run:
 2. `sqlc generate`
 3. `go build ./...`
 4. `make test`
+5. Manual: `curl -i -X POST http://localhost:8080/v1/auth/signin -d '{"email":"...","password":"..."}'` and confirm `Set-Cookie: session_id=...` in response headers

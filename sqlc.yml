@@ -25,3 +25,16 @@ sql:
             go_type:
               type: "time.Time"
               pointer: true
+          - column: "tokens.description"
+            go_type:
+              type: "string"
+              pointer: true
+          - column: "tokens.expires_at"
+            go_type:
+              type: "time.Time"
+          - column: "tokens.created_at"
+            go_type:
+              type: "time.Time"
+          - column: "tokens.updated_at"
+            go_type:
+              type: "time.Time"

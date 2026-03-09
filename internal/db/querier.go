@@ -12,16 +12,20 @@ import (
 
 type Querier interface {
 	CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error)
+	CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteResource(ctx context.Context, id uuid.UUID) error
+	DeleteToken(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetResource(ctx context.Context, id uuid.UUID) (Resource, error)
+	GetTokenById(ctx context.Context, id uuid.UUID) (Token, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByEmailVerificationToken(ctx context.Context, emailVerificationToken uuid.NullUUID) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	ListResources(ctx context.Context) ([]Resource, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error)
+	UpdateTokenExpiresAt(ctx context.Context, arg UpdateTokenExpiresAtParams) (Token, error)
 	UpdateVerificationToken(ctx context.Context, arg UpdateVerificationTokenParams) (User, error)
 	VerifyUser(ctx context.Context, id uuid.UUID) (User, error)
 }

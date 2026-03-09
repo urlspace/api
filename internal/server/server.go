@@ -44,7 +44,7 @@ func New(s *store.Store, emailSender emails.EmailSender) *http.Server {
 
 	// auth
 	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(s, emailSender))
-	// mux.HandleFunc("POST /auth/signin", handlers.xxx(store))
+	mux.HandleFunc("POST /auth/signin", handlers.AuthSignin(s))
 	// mux.HandleFunc("POST /auth/signout", handlers.xxx(store))
 	mux.HandleFunc("POST /auth/verify", handlers.AuthVerify(s))
 	mux.HandleFunc("POST /auth/resend-verification", handlers.AuthResendVerification(s, emailSender))

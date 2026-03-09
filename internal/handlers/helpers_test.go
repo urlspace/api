@@ -24,7 +24,7 @@ func setupTestStore(t *testing.T) *store.Store {
 	}
 
 	t.Cleanup(func() {
-		pool.Exec("TRUNCATE users, resources RESTART IDENTITY CASCADE")
+		pool.Exec("TRUNCATE users, resources, tokens RESTART IDENTITY CASCADE")
 		pool.Close()
 	})
 

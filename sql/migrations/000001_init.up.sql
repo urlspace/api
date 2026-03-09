@@ -45,3 +45,21 @@ CREATE TRIGGER update_resources_updated_at
 BEFORE UPDATE ON resources
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
+
+-- tokens
+CREATE TABLE tokens (
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type TEXT NOT NULL DEFAULT 'session' CHECK (type IN ('session', 'token')),
+    description TEXT,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON tokens (user_id);
+
+CREATE TRIGGER update_tokens_updated_at
+BEFORE UPDATE ON tokens
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();

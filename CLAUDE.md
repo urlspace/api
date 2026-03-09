@@ -82,12 +82,14 @@ api/
 │   │   ├── models.go
 │   │   ├── querier.go
 │   │   ├── resources.sql.go
+│   │   ├── tokens.sql.go
 │   │   └── users.sql.go
 │   ├── emails/                        # Email sending abstraction
 │   │   ├── sender.go                  # EmailSender interface
 │   │   ├── sender_resend.go           # Resend implementation
 │   │   └── render.go                  # Email template rendering
 │   ├── handlers/                      # HTTP handlers (one file per endpoint)
+│   │   ├── authSignin.go
 │   │   ├── authSignup.go
 │   │   ├── authVerify.go
 │   │   ├── authResendVerification.go
@@ -117,6 +119,7 @@ api/
 │   ├── store/                         # Database access layer
 │   │   ├── store.go                   # Store struct wiring db queries
 │   │   ├── store_resources.go
+│   │   ├── store_tokens.go
 │   │   └── store_users.go
 │   ├── utils/
 │   │   └── utils.go
@@ -128,8 +131,18 @@ api/
 │       ├── resourceTitle.go
 │       ├── resourceDescription.go
 │       └── token.go
+├── sql/
+│   ├── migrations/                    # Database migration files
+│   │   ├── 000001_init.up.sql
+│   │   └── 000001_init.down.sql
+│   └── queries/                       # SQL queries for sqlc
+│       ├── resources.sql
+│       ├── tokens.sql
+│       └── users.sql
+├── .air.toml                          # Air live reload configuration
 ├── go.mod
 ├── Makefile
+├── sqlc.yml                           # sqlc code generation config
 └── CLAUDE.md
 ```
 
@@ -169,6 +182,11 @@ api/
 
 **CORS**: Configured for open/public API with `Access-Control-Allow-Origin: *`
 
+**Session Tokens**: Sign-in creates a session token stored in the `tokens` table. The token is set as an HTTP-only `session_id` cookie with a 30-day expiry. The `tokens` table supports two token types (defined in `handlers/constants.go`):
+
+- `TokenTypeSession` (`"session"`) — created on sign-in, used to authenticate requests
+- `TokenTypeAPI` (`"token"`) — for programmatic API access
+
 ## Key Dependencies
 
 | Package | Purpose |
@@ -188,6 +206,7 @@ All endpoints are prefixed with `/v1`.
 | `POST` | `/v1/auth/signup` | Register a new user |
 | `POST` | `/v1/auth/verify` | Verify email with token |
 | `POST` | `/v1/auth/resend-verification` | Resend verification email |
+| `POST` | `/v1/auth/signin` | Sign in and create session |
 | `GET` | `/v1/users` | List all users (admin) |
 | `GET` | `/v1/users/{id}` | Get a user by ID (admin) |
 | `POST` | `/v1/users` | Create a user (admin) |

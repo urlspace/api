@@ -105,7 +105,11 @@ api/
 │   │   ├── status.go
 │   │   ├── notFound.go
 │   │   └── constants.go
+│   ├── config/
+│   │   └── config.go                  # Shared constants (session durations, context keys)
 │   ├── middlewares/                   # Middleware functions
+│   │   ├── auth.go                    # Auth middleware — validates session/Bearer token
+│   │   ├── admin.go                   # Admin middleware — requires IsAdmin on authenticated user
 │   │   ├── common.go                  # Security headers, CORS, Content-Type
 │   │   ├── logging.go                 # Request logging
 │   │   └── middlewares_stack.go       # Middleware chaining helper
@@ -155,7 +159,8 @@ api/
 - `internal/db/` - sqlc-generated type-safe query code; backed by PostgreSQL via `pgx`
 - `internal/store/` - Thin layer over `internal/db`; the only place handlers interact with the database
 - `internal/handlers/` - HTTP handler functions (one file per endpoint, easy to test)
-- `internal/middlewares/` - Reusable middleware (headers, logging); composed via `MiddlewareStack`
+- `internal/config/` - Shared constants (`SessionExpiryDuration`, `SessionRenewalThreshold`, `UserIDContextKey`)
+- `internal/middlewares/` - Reusable middleware (headers, logging, auth, admin); composed via `MiddlewareStack`
 - `internal/models/` - Response structs that map db models to JSON-safe shapes
 - `internal/response/` - Helpers for writing JSON success/error responses and handling DB errors
 - `internal/emails/` - `EmailSender` interface + Resend implementation for transactional email
@@ -166,7 +171,8 @@ api/
 - Uses `http.Server` with explicit timeouts for security
 - All routes are prefixed with `/v1/` (e.g. `GET /v1/status`)
 - Route-based handlers using `http.ServeMux` with method prefixes (e.g., `GET /status`)
-- Middleware chain: `Logging` → `CommonHeaders`
+- Global middleware chain: `Logging` → `CommonHeaders`
+- Route-level middleware: `Auth` (authenticated routes), `Auth` → `Admin` (admin-only routes)
 
 **Response Structure**: All JSON responses follow a structured format:
 
@@ -186,6 +192,10 @@ api/
 
 - `TokenTypeSession` (`"session"`) — created on sign-in, used to authenticate requests
 - `TokenTypeAPI` (`"token"`) — for programmatic API access
+
+**Authentication**: The `Auth` middleware (`middlewares/auth.go`) validates a token from the `Authorization: Bearer <uuid>` header or the `session_id` cookie. On success it stores the authenticated user's ID in the request context under `config.UserIDContextKey`. Use `utils.UserIDFromContext(ctx)` to read it in handlers. Sessions approaching expiry (< 15 days remaining) are renewed automatically via a background goroutine (sliding expiry).
+
+**Admin routes**: The `Admin` middleware (`middlewares/admin.go`) reads the user ID set by `Auth`, fetches the user, and returns 403 if `IsAdmin` is false. Admin-only routes are protected with `MiddlewareStack(auth, admin)` (exposed as `adminOnly` in `server.go`).
 
 ## Key Dependencies
 

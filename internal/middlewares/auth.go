@@ -5,19 +5,18 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/utils"
 )
 
 func Auth(s *store.Store) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tokenID, ok := resolveTokenID(r)
+			tokenID, ok := utils.ResolveTokenID(r)
 			if !ok {
 				response.WriteJSONError(w, http.StatusUnauthorized, "unauthorized")
 				return
@@ -40,6 +39,7 @@ func Auth(s *store.Store) Middleware {
 					Path:     "/",
 					HttpOnly: true,
 					Secure:   true,
+					SameSite: http.SameSiteLaxMode,
 				})
 				response.WriteJSONError(w, http.StatusUnauthorized, "unauthorized")
 				return
@@ -63,25 +63,4 @@ func Auth(s *store.Store) Middleware {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
-}
-
-// resolveTokenID extracts the token UUID from the Authorization header (Bearer scheme)
-// or falls back to the session_id cookie.
-func resolveTokenID(r *http.Request) (uuid.UUID, bool) {
-	if authHeader := r.Header.Get("Authorization"); authHeader != "" {
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
-			if id, err := uuid.Parse(strings.TrimSpace(parts[1])); err == nil {
-				return id, true
-			}
-		}
-	}
-
-	if cookie, err := r.Cookie(config.SessionCookieName); err == nil {
-		if id, err := uuid.Parse(cookie.Value); err == nil {
-			return id, true
-		}
-	}
-
-	return uuid.UUID{}, false
 }

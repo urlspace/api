@@ -9,6 +9,7 @@ import (
 	"github.com/hreftools/api/internal/db"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/utils"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -51,6 +52,8 @@ type ResourceUpdateResponse struct {
 
 func ResourcesUpdate(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID, _ := utils.UserIDFromContext(r.Context())
+
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
 		if err != nil {
@@ -73,6 +76,7 @@ func ResourcesUpdate(s *store.Store) http.HandlerFunc {
 
 		params := store.ResourceUpdateParams{
 			ID:          idUuid,
+			UserID:      userID,
 			Title:       body.Title,
 			Url:         body.URL,
 			Description: body.Description,

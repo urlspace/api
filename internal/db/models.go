@@ -12,6 +12,7 @@ import (
 
 type Resource struct {
 	ID          uuid.UUID
+	UserID      uuid.UUID
 	Title       string
 	Description string
 	Url         string

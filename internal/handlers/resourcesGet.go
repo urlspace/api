@@ -8,6 +8,7 @@ import (
 	"github.com/hreftools/api/internal/db"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/utils"
 )
 
 type ResourcesGetResponse struct {
@@ -17,6 +18,8 @@ type ResourcesGetResponse struct {
 
 func ResourcesGet(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID, _ := utils.UserIDFromContext(r.Context())
+
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
 		if err != nil {
@@ -24,7 +27,7 @@ func ResourcesGet(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := s.Resources.Get(r.Context(), idUuid)
+		rr, err := s.Resources.Get(r.Context(), idUuid, userID)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

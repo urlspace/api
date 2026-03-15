@@ -7,6 +7,7 @@ import (
 	"github.com/hreftools/api/internal/db"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/utils"
 )
 
 type ResourcesListResponse struct {
@@ -16,7 +17,9 @@ type ResourcesListResponse struct {
 
 func ResourcesList(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		list, err := s.Resources.List(r.Context())
+		userID, _ := utils.UserIDFromContext(r.Context())
+
+		list, err := s.Resources.List(r.Context(), userID)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

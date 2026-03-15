@@ -8,6 +8,7 @@ import (
 	"github.com/hreftools/api/internal/db"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/utils"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -50,6 +51,8 @@ type ResourceCreateResponse struct {
 
 func ResourcesCreate(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID, _ := utils.UserIDFromContext(r.Context())
+
 		var body ResourceCreateBody
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
@@ -64,6 +67,7 @@ func ResourcesCreate(s *store.Store) http.HandlerFunc {
 		}
 
 		params := store.ResourceCreateParams{
+			UserID:      userID,
 			Title:       body.Title,
 			Url:         body.URL,
 			Description: body.Description,

@@ -1,33 +1,33 @@
 -- name: GetResource :one
 SELECT * FROM resources
 WHERE
-    id =
-    $1
+    id = $1 AND user_id = $2
 LIMIT 1;
 
 -- name: ListResources :many
 SELECT * FROM resources
+WHERE user_id = $1
 ORDER BY created_at;
 
 -- name: CreateResource :one
 INSERT INTO resources (
-    title, description, url, favourite, read_later
+    user_id, title, description, url, favourite, read_later
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6
 )
 RETURNING *;
 
 -- name: UpdateResource :one
 UPDATE resources
 SET
-    title = $2,
-    description = $3,
-    url = $4,
-    favourite = $5,
-    read_later = $6
-WHERE id = $1
+    title = $3,
+    description = $4,
+    url = $5,
+    favourite = $6,
+    read_later = $7
+WHERE id = $1 AND user_id = $2
 RETURNING *;
 
 -- name: DeleteResource :exec
 DELETE FROM resources
-WHERE id = $1;
+WHERE id = $1 AND user_id = $2;

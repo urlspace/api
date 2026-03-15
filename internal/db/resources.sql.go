@@ -13,14 +13,15 @@ import (
 
 const createResource = `-- name: CreateResource :one
 INSERT INTO resources (
-    title, description, url, favourite, read_later
+    user_id, title, description, url, favourite, read_later
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6
 )
-RETURNING id, title, description, url, favourite, read_later, created_at, updated_at
+RETURNING id, user_id, title, description, url, favourite, read_later, created_at, updated_at
 `
 
 type CreateResourceParams struct {
+	UserID      uuid.UUID
 	Title       string
 	Description string
 	Url         string
@@ -30,6 +31,7 @@ type CreateResourceParams struct {
 
 func (q *Queries) CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error) {
 	row := q.db.QueryRowContext(ctx, createResource,
+		arg.UserID,
 		arg.Title,
 		arg.Description,
 		arg.Url,
@@ -39,6 +41,7 @@ func (q *Queries) CreateResource(ctx context.Context, arg CreateResourceParams) 
 	var i Resource
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Title,
 		&i.Description,
 		&i.Url,
@@ -52,27 +55,37 @@ func (q *Queries) CreateResource(ctx context.Context, arg CreateResourceParams) 
 
 const deleteResource = `-- name: DeleteResource :exec
 DELETE FROM resources
-WHERE id = $1
+WHERE id = $1 AND user_id = $2
 `
 
-func (q *Queries) DeleteResource(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteResource, id)
+type DeleteResourceParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteResource(ctx context.Context, arg DeleteResourceParams) error {
+	_, err := q.db.ExecContext(ctx, deleteResource, arg.ID, arg.UserID)
 	return err
 }
 
 const getResource = `-- name: GetResource :one
-SELECT id, title, description, url, favourite, read_later, created_at, updated_at FROM resources
+SELECT id, user_id, title, description, url, favourite, read_later, created_at, updated_at FROM resources
 WHERE
-    id =
-    $1
+    id = $1 AND user_id = $2
 LIMIT 1
 `
 
-func (q *Queries) GetResource(ctx context.Context, id uuid.UUID) (Resource, error) {
-	row := q.db.QueryRowContext(ctx, getResource, id)
+type GetResourceParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) GetResource(ctx context.Context, arg GetResourceParams) (Resource, error) {
+	row := q.db.QueryRowContext(ctx, getResource, arg.ID, arg.UserID)
 	var i Resource
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Title,
 		&i.Description,
 		&i.Url,
@@ -85,12 +98,13 @@ func (q *Queries) GetResource(ctx context.Context, id uuid.UUID) (Resource, erro
 }
 
 const listResources = `-- name: ListResources :many
-SELECT id, title, description, url, favourite, read_later, created_at, updated_at FROM resources
+SELECT id, user_id, title, description, url, favourite, read_later, created_at, updated_at FROM resources
+WHERE user_id = $1
 ORDER BY created_at
 `
 
-func (q *Queries) ListResources(ctx context.Context) ([]Resource, error) {
-	rows, err := q.db.QueryContext(ctx, listResources)
+func (q *Queries) ListResources(ctx context.Context, userID uuid.UUID) ([]Resource, error) {
+	rows, err := q.db.QueryContext(ctx, listResources, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +114,7 @@ func (q *Queries) ListResources(ctx context.Context) ([]Resource, error) {
 		var i Resource
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Title,
 			&i.Description,
 			&i.Url,
@@ -124,17 +139,18 @@ func (q *Queries) ListResources(ctx context.Context) ([]Resource, error) {
 const updateResource = `-- name: UpdateResource :one
 UPDATE resources
 SET
-    title = $2,
-    description = $3,
-    url = $4,
-    favourite = $5,
-    read_later = $6
-WHERE id = $1
-RETURNING id, title, description, url, favourite, read_later, created_at, updated_at
+    title = $3,
+    description = $4,
+    url = $5,
+    favourite = $6,
+    read_later = $7
+WHERE id = $1 AND user_id = $2
+RETURNING id, user_id, title, description, url, favourite, read_later, created_at, updated_at
 `
 
 type UpdateResourceParams struct {
 	ID          uuid.UUID
+	UserID      uuid.UUID
 	Title       string
 	Description string
 	Url         string
@@ -145,6 +161,7 @@ type UpdateResourceParams struct {
 func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error) {
 	row := q.db.QueryRowContext(ctx, updateResource,
 		arg.ID,
+		arg.UserID,
 		arg.Title,
 		arg.Description,
 		arg.Url,
@@ -154,6 +171,7 @@ func (q *Queries) UpdateResource(ctx context.Context, arg UpdateResourceParams) 
 	var i Resource
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Title,
 		&i.Description,
 		&i.Url,

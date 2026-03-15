@@ -32,6 +32,7 @@ EXECUTE FUNCTION update_updated_at_column();
 -- resources
 CREATE TABLE resources (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     url TEXT NOT NULL,
@@ -41,6 +42,8 @@ CREATE TABLE resources (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE INDEX ON resources (user_id);
+
 CREATE TRIGGER update_resources_updated_at
 BEFORE UPDATE ON resources
 FOR EACH ROW
@@ -49,7 +52,7 @@ EXECUTE FUNCTION update_updated_at_column();
 -- tokens
 CREATE TABLE tokens (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     type TEXT NOT NULL DEFAULT 'session' CHECK (type IN ('session', 'token')),
     description TEXT,
     expires_at TIMESTAMPTZ NOT NULL,

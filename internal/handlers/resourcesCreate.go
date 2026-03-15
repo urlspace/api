@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/hreftools/api/internal/db"
@@ -33,12 +32,12 @@ func (b *ResourceCreateBody) Validate() error {
 		return err
 	}
 
-	if b.Favourite == nil {
-		return errors.New("favourite field is required")
+	if err := validator.ResourceFavourite(b.Favourite); err != nil {
+		return err
 	}
 
-	if b.ReadLater == nil {
-		return errors.New("readLater field is required")
+	if err := validator.ResourceReadLater(b.ReadLater); err != nil {
+		return err
 	}
 
 	return nil

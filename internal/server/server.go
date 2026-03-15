@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/hreftools/api/internal/emails"
@@ -11,13 +10,7 @@ import (
 	"github.com/hreftools/api/internal/store"
 )
 
-func New(s *store.Store, emailSender emails.EmailSender) *http.Server {
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		port = "8080"
-	}
-
+func New(port string, s *store.Store, emailSender emails.EmailSender) *http.Server {
 	// routes
 	mux := http.NewServeMux()
 
@@ -63,6 +56,7 @@ func New(s *store.Store, emailSender emails.EmailSender) *http.Server {
 	middlewaresStack := middlewares.MiddlewareStack(
 		middlewares.Logging,
 		middlewares.CommonHeaders,
+		middlewares.MaxBodySize,
 	)
 
 	return &http.Server{

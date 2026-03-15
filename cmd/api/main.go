@@ -24,7 +24,7 @@ func run(ctx context.Context) error {
 	resendApiKey := os.Getenv("RESEND_API_KEY")
 
 	if port == "" {
-		log.Fatal("DATABASE_URL environment variable is required")
+		log.Fatal("PORT environment variable is required")
 	}
 	if databaseUrl == "" {
 		log.Fatal("DATABASE_URL environment variable is required")
@@ -55,7 +55,7 @@ func run(ctx context.Context) error {
 	resendClient := resend.NewClient(resendApiKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
 
-	srv := server.New(store, emailSender)
+	srv := server.New(port, store, emailSender)
 
 	chServer := make(chan error, 1)
 

@@ -52,8 +52,8 @@ func (b *UserCreateBody) Validate() error {
 }
 
 type UserCreateResponse struct {
-	Status string              `json:"status"`
-	Data   models.ResponseUser `json:"data"`
+	Status string                   `json:"status"`
+	Data   models.ResponseUserAdmin `json:"data"`
 }
 
 func UserCreate(s *store.Store) http.HandlerFunc {
@@ -96,7 +96,7 @@ func UserCreate(s *store.Store) http.HandlerFunc {
 
 		response := &UserCreateResponse{
 			Status: "ok",
-			Data:   models.NewResponseUser(u),
+			Data:   models.NewResponseUserAdmin(u),
 		}
 
 		w.WriteHeader(http.StatusCreated)

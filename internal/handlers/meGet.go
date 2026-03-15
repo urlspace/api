@@ -4,35 +4,34 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/utils"
 )
 
-type UsersGetResponse struct {
-	Status string                   `json:"status"`
-	Data   models.ResponseUserAdmin `json:"data"`
+type MeGetResponse struct {
+	Status string              `json:"status"`
+	Data   models.ResponseUser `json:"data"`
 }
 
-func UsersGet(s *store.Store) http.HandlerFunc {
+func MeGet(s *store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-		idUuid, err := uuid.Parse(id)
-		if err != nil {
-			response.HandleClientError(w, err, "invalid id parameter")
+		userID, ok := utils.UserIDFromContext(r.Context())
+		if !ok {
+			response.WriteJSONError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
-		u, err := s.Users.GetById(r.Context(), idUuid)
+		u, err := s.Users.GetById(r.Context(), userID)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
 		}
 
-		response := &UsersGetResponse{
+		response := &MeGetResponse{
 			Status: "ok",
-			Data:   models.NewResponseUserAdmin(u),
+			Data:   models.NewResponseUser(u),
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {

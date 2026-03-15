@@ -11,8 +11,8 @@ import (
 )
 
 type UsersDeleteResponse struct {
-	Status string              `json:"status"`
-	Data   models.ResponseUser `json:"data"`
+	Status string                   `json:"status"`
+	Data   models.ResponseUserAdmin `json:"data"`
 }
 
 func UsersDelete(s *store.Store) http.HandlerFunc {
@@ -32,7 +32,7 @@ func UsersDelete(s *store.Store) http.HandlerFunc {
 
 		response := &UsersDeleteResponse{
 			Status: "ok",
-			Data:   models.NewResponseUser(u),
+			Data:   models.NewResponseUserAdmin(u),
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {

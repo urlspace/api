@@ -10,8 +10,8 @@ import (
 )
 
 type UsersListResponse struct {
-	Status string                `json:"status"`
-	Data   []models.ResponseUser `json:"data"`
+	Status string                     `json:"status"`
+	Data   []models.ResponseUserAdmin `json:"data"`
 }
 
 func UsersList(s *store.Store) http.HandlerFunc {
@@ -22,9 +22,9 @@ func UsersList(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		items := make([]models.ResponseUser, len(list))
+		items := make([]models.ResponseUserAdmin, len(list))
 		for i, item := range list {
-			items[i] = models.NewResponseUser(item)
+			items[i] = models.NewResponseUserAdmin(item)
 		}
 
 		response := &UsersListResponse{

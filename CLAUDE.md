@@ -102,6 +102,7 @@ api/
 │   │   ├── usersDelete.go
 │   │   ├── usersGet.go
 │   │   ├── usersList.go
+│   │   ├── meGet.go
 │   │   ├── status.go
 │   │   ├── notFound.go
 │   ├── config/
@@ -113,7 +114,7 @@ api/
 │   │   ├── logging.go                 # Request logging
 │   │   └── middlewares_stack.go       # Middleware chaining helper
 │   ├── models/
-│   │   └── models.go                  # Response structs (ResponseResource, ResponseUser)
+│   │   └── models.go                  # Response structs (ResponseResource, ResponseUser, ResponseUserAdmin)
 │   ├── response/                      # JSON response helpers
 │   │   ├── success.go                 # WriteJSONSuccess
 │   │   └── errors.go                  # WriteJSONError, HandleDbError, etc.
@@ -218,6 +219,7 @@ All endpoints are prefixed with `/v1`.
 | `POST` | `/v1/auth/verify` | Verify email with token |
 | `POST` | `/v1/auth/resend-verification` | Resend verification email |
 | `POST` | `/v1/auth/signin` | Sign in and create session |
+| `GET` | `/v1/me` | Get current authenticated user |
 | `GET` | `/v1/users` | List all users (admin) |
 | `GET` | `/v1/users/{id}` | Get a user by ID (admin) |
 | `POST` | `/v1/users` | Create a user (admin) |

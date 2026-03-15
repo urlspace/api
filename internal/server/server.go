@@ -30,6 +30,9 @@ func New(s *store.Store, emailSender emails.EmailSender) *http.Server {
 	auth := middlewares.Auth(s)
 	adminOnly := middlewares.MiddlewareStack(auth, middlewares.Admin(s))
 
+	// me (authenticated)
+	mux.Handle("GET /me", auth(handlers.MeGet(s)))
+
 	// resources (protected)
 	mux.Handle("GET /resources", auth(handlers.ResourcesList(s)))
 	mux.Handle("GET /resources/{id}", auth(handlers.ResourcesGet(s)))

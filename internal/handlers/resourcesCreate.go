@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/hreftools/api/internal/db"
+	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
@@ -44,8 +44,8 @@ func (b *ResourceCreateBody) Validate() error {
 }
 
 type ResourceCreateResponse struct {
-	Status string      `json:"status"`
-	Data   db.Resource `json:"data"`
+	Status string                  `json:"status"`
+	Data   models.ResponseResource `json:"data"`
 }
 
 func ResourcesCreate(s *store.Store) http.HandlerFunc {
@@ -81,7 +81,7 @@ func ResourcesCreate(s *store.Store) http.HandlerFunc {
 
 		response := &ResourceCreateResponse{
 			Status: "ok",
-			Data:   rr,
+			Data:   models.NewResponseResource(rr),
 		}
 
 		w.WriteHeader(http.StatusCreated)

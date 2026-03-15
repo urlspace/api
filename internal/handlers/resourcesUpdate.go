@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/db"
+	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
@@ -45,8 +45,8 @@ func (b *ResourceUpdateBody) Validate() error {
 }
 
 type ResourceUpdateResponse struct {
-	Status string      `json:"status"`
-	Data   db.Resource `json:"data"`
+	Status string                  `json:"status"`
+	Data   models.ResponseResource `json:"data"`
 }
 
 func ResourcesUpdate(s *store.Store) http.HandlerFunc {
@@ -90,7 +90,7 @@ func ResourcesUpdate(s *store.Store) http.HandlerFunc {
 
 		response := &ResourceUpdateResponse{
 			Status: "ok",
-			Data:   rr,
+			Data:   models.NewResponseResource(rr),
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {

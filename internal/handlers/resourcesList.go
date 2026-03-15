@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/hreftools/api/internal/db"
+	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
 )
 
 type ResourcesListResponse struct {
-	Status string        `json:"status"`
-	Data   []db.Resource `json:"data"`
+	Status string                    `json:"status"`
+	Data   []models.ResponseResource `json:"data"`
 }
 
 func ResourcesList(s *store.Store) http.HandlerFunc {
@@ -25,9 +25,14 @@ func ResourcesList(s *store.Store) http.HandlerFunc {
 			return
 		}
 
+		items := make([]models.ResponseResource, len(list))
+		for i, item := range list {
+			items[i] = models.NewResponseResource(item)
+		}
+
 		response := &ResourcesListResponse{
 			Status: "ok",
-			Data:   list,
+			Data:   items,
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {

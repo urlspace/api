@@ -9,10 +9,9 @@ import (
 
 type ResponseResource struct {
 	ID          uuid.UUID `json:"id"`
-	UserID      uuid.UUID `json:"userId"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
-	Url         string    `json:"url"`
+	URL         string    `json:"url"`
 	Favourite   bool      `json:"favourite"`
 	ReadLater   bool      `json:"readLater"`
 	CreatedAt   time.Time `json:"createdAt"`
@@ -22,10 +21,9 @@ type ResponseResource struct {
 func NewResponseResource(u db.Resource) ResponseResource {
 	return ResponseResource{
 		ID:          u.ID,
-		UserID:      u.UserID,
 		Title:       u.Title,
 		Description: u.Description,
-		Url:         u.Url,
+		URL:         u.Url,
 		Favourite:   u.Favourite,
 		ReadLater:   u.ReadLater,
 		CreatedAt:   u.CreatedAt,

@@ -5,15 +5,15 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/db"
+	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
 )
 
 type ResourcesGetResponse struct {
-	Status string      `json:"status"`
-	Data   db.Resource `json:"data"`
+	Status string                  `json:"status"`
+	Data   models.ResponseResource `json:"data"`
 }
 
 func ResourcesGet(s *store.Store) http.HandlerFunc {
@@ -35,7 +35,7 @@ func ResourcesGet(s *store.Store) http.HandlerFunc {
 
 		response := &ResourcesGetResponse{
 			Status: "ok",
-			Data:   rr,
+			Data:   models.NewResponseResource(rr),
 		}
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {

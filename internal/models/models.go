@@ -32,25 +32,30 @@ func NewResponseResource(u db.Resource) ResponseResource {
 }
 
 type ResponseUser struct {
-	ID            uuid.UUID `json:"id"`
-	Email         string    `json:"email"`
-	EmailVerified bool      `json:"emailVerified"`
-	Username      string    `json:"username"`
-	IsAdmin       bool      `json:"isAdmin"`
-	IsPro         bool      `json:"isPro"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID                              uuid.UUID     `json:"id"`
+	Email                           string        `json:"email"`
+	EmailVerified                   bool          `json:"emailVerified"`
+	EmailVerificationToken          uuid.NullUUID `json:"emailVerifcationToken"`
+	EmailVerificationTokenExpiresAt *time.Time    `json:"emailVerificationTokenExpiresAt"`
+	Username                        string        `json:"username"`
+	IsAdmin                         bool          `json:"isAdmin"`
+	IsPro                           bool          `json:"isPro"`
+	CreatedAt                       time.Time     `json:"createdAt"`
+	UpdatedAt                       time.Time     `json:"updatedAt"`
 }
 
 func NewResponseUser(u db.User) ResponseUser {
 	return ResponseUser{
-		ID:            u.ID,
-		Email:         u.Email,
-		EmailVerified: u.EmailVerified,
-		Username:      u.Username,
-		IsAdmin:       u.IsAdmin,
-		IsPro:         u.IsPro,
-		CreatedAt:     u.CreatedAt,
-		UpdatedAt:     u.UpdatedAt,
+		ID:                              u.ID,
+		Email:                           u.Email,
+		EmailVerified:                   u.EmailVerified,
+		EmailVerificationToken:          u.EmailVerificationToken,
+		EmailVerificationTokenExpiresAt: u.EmailVerificationTokenExpiresAt,
+
+		Username:  u.Username,
+		IsAdmin:   u.IsAdmin,
+		IsPro:     u.IsPro,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
 	}
 }

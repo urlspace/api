@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/db"
+	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
@@ -52,8 +52,8 @@ func (b *UserCreateBody) Validate() error {
 }
 
 type UserCreateResponse struct {
-	Status string  `json:"status"`
-	Data   db.User `json:"data"`
+	Status string              `json:"status"`
+	Data   models.ResponseUser `json:"data"`
 }
 
 func UserCreate(s *store.Store) http.HandlerFunc {
@@ -96,7 +96,7 @@ func UserCreate(s *store.Store) http.HandlerFunc {
 
 		response := &UserCreateResponse{
 			Status: "ok",
-			Data:   u,
+			Data:   models.NewResponseUser(u),
 		}
 
 		w.WriteHeader(http.StatusCreated)

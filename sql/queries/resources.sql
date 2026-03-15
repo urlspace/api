@@ -28,6 +28,7 @@ SET
 WHERE id = $1 AND user_id = $2
 RETURNING *;
 
--- name: DeleteResource :exec
+-- name: DeleteResource :one
 DELETE FROM resources
-WHERE id = $1 AND user_id = $2;
+WHERE id = $1 AND user_id = $2
+RETURNING *;

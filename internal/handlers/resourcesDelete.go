@@ -27,13 +27,7 @@ func ResourcesDelete(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := s.Resources.Get(r.Context(), idUuid, userID)
-		if err != nil {
-			response.HandleDbError(w, err)
-			return
-		}
-
-		err = s.Resources.Delete(r.Context(), idUuid, userID)
+		rr, err := s.Resources.Delete(r.Context(), idUuid, userID)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

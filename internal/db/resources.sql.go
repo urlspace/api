@@ -53,9 +53,10 @@ func (q *Queries) CreateResource(ctx context.Context, arg CreateResourceParams) 
 	return i, err
 }
 
-const deleteResource = `-- name: DeleteResource :exec
+const deleteResource = `-- name: DeleteResource :one
 DELETE FROM resources
 WHERE id = $1 AND user_id = $2
+RETURNING id, user_id, title, description, url, favourite, read_later, created_at, updated_at
 `
 
 type DeleteResourceParams struct {
@@ -63,9 +64,21 @@ type DeleteResourceParams struct {
 	UserID uuid.UUID
 }
 
-func (q *Queries) DeleteResource(ctx context.Context, arg DeleteResourceParams) error {
-	_, err := q.db.ExecContext(ctx, deleteResource, arg.ID, arg.UserID)
-	return err
+func (q *Queries) DeleteResource(ctx context.Context, arg DeleteResourceParams) (Resource, error) {
+	row := q.db.QueryRowContext(ctx, deleteResource, arg.ID, arg.UserID)
+	var i Resource
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Title,
+		&i.Description,
+		&i.Url,
+		&i.Favourite,
+		&i.ReadLater,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getResource = `-- name: GetResource :one

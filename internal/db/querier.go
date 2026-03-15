@@ -14,7 +14,7 @@ type Querier interface {
 	CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error)
 	CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteResource(ctx context.Context, arg DeleteResourceParams) error
+	DeleteResource(ctx context.Context, arg DeleteResourceParams) (Resource, error)
 	DeleteToken(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetResource(ctx context.Context, arg GetResourceParams) (Resource, error)

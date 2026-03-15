@@ -31,7 +31,7 @@ type ResourceStore interface {
 	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (db.Resource, error)
 	Create(ctx context.Context, params ResourceCreateParams) (db.Resource, error)
 	Update(ctx context.Context, params ResourceUpdateParams) (db.Resource, error)
-	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
+	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (db.Resource, error)
 }
 
 type resourceStore struct {
@@ -67,7 +67,7 @@ func (r *resourceStore) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID)
 	})
 }
 
-func (r *resourceStore) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+func (r *resourceStore) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (db.Resource, error) {
 	return r.queries.DeleteResource(ctx, db.DeleteResourceParams{
 		ID:     id,
 		UserID: userID,

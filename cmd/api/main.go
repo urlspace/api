@@ -16,7 +16,32 @@ import (
 	"github.com/hreftools/api/internal/store"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/resend/resend-go/v3"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
+
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
+
+func initTracer() (*sdktrace.TracerProvider, error) {
+	exporter, err := otlptrace.New(context.Background(), otlptracehttp.NewClient())
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithBatcher(exporter),
+	)
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{}, propagation.Baggage{}))
+	return tp, nil
+}
 
 func run(ctx context.Context) error {
 	port := os.Getenv("PORT")
@@ -55,7 +80,14 @@ func run(ctx context.Context) error {
 	resendClient := resend.NewClient(resendApiKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
 
+	tp, err := initTracer()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tp.Shutdown(context.Background())
+
 	srv := server.New(port, store, emailSender)
+	srv.Handler = otelhttp.NewHandler(srv.Handler, "api")
 
 	chServer := make(chan error, 1)
 

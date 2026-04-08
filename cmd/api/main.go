@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/emails"
 	"github.com/hreftools/api/internal/server"
 	"github.com/hreftools/api/internal/store"
@@ -27,8 +29,8 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-func initTracer() (*sdktrace.TracerProvider, error) {
-	exporter, err := otlptrace.New(context.Background(), otlptracehttp.NewClient())
+func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
+	exporter, err := otlptrace.New(ctx, otlptracehttp.NewClient())
 	if err != nil {
 		return nil, err
 	}
@@ -43,27 +45,11 @@ func initTracer() (*sdktrace.TracerProvider, error) {
 	return tp, nil
 }
 
-func run(ctx context.Context) error {
-	port := os.Getenv("PORT")
-	databaseUrl := os.Getenv("DATABASE_URL")
-	resendApiKey := os.Getenv("RESEND_API_KEY")
-
-	if port == "" {
-		log.Fatal("PORT environment variable is required")
-	}
-	if databaseUrl == "" {
-		log.Fatal("DATABASE_URL environment variable is required")
-	}
-
-	pool, err := sql.Open("pgx", databaseUrl)
+func initDb(databaseURL string) (*sql.DB, error) {
+	pool, err := sql.Open("pgx", databaseURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
-	defer func() {
-		if err := pool.Close(); err != nil {
-			log.Printf("Failed to close database connection: %v", err)
-		}
-	}()
 
 	// configure db connection pool
 	pool.SetMaxOpenConns(25)
@@ -73,25 +59,45 @@ func run(ctx context.Context) error {
 
 	// verify the db connectoin
 	if err := pool.Ping(); err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
+		pool.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
+	return pool, nil
+}
+
+func run(ctx context.Context) error {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	pool, err := initDb(cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := pool.Close(); err != nil {
+			log.Printf("Failed to close database connection: %v", err)
+		}
+	}()
+
 	store := store.New(pool)
-	resendClient := resend.NewClient(resendApiKey)
+	resendClient := resend.NewClient(cfg.ResendAPIKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
 
-	tp, err := initTracer()
+	tp, err := initTracer(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to initialize tracer: %w", err)
 	}
 	defer tp.Shutdown(context.Background())
 
-	srv := server.New(port, store, emailSender)
+	srv := server.New(cfg.Port, store, emailSender)
 	srv.Handler = otelhttp.NewHandler(srv.Handler, "api")
 
 	chServer := make(chan error, 1)
 
-	log.Printf("Starting server on %s", port)
+	log.Printf("Starting server on %s", cfg.Port)
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			chServer <- err

@@ -63,11 +63,11 @@ The server starts on port 8080 by default (configurable via `PORT` env var) with
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `PORT` | Yes | Port the server listens on |
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `RESEND_API_KEY` | No | Resend API key for sending emails |
+| Variable         | Required | Description                       |
+| ---------------- | -------- | --------------------------------- |
+| `PORT`           | Yes      | Port the server listens on        |
+| `DATABASE_URL`   | Yes      | PostgreSQL connection string      |
+| `RESEND_API_KEY` | Yes      | Resend API key for sending emails |
 
 ## Project Structure
 
@@ -201,31 +201,31 @@ These constants (and all other shared constants) are defined in `internal/config
 
 ## Key Dependencies
 
-| Package | Purpose |
-|---|---|
-| `github.com/jackc/pgx/v5` | PostgreSQL driver |
-| `github.com/google/uuid` | UUID types |
+| Package                          | Purpose                        |
+| -------------------------------- | ------------------------------ |
+| `github.com/jackc/pgx/v5`        | PostgreSQL driver              |
+| `github.com/google/uuid`         | UUID types                     |
 | `github.com/resend/resend-go/v3` | Transactional email via Resend |
-| `golang.org/x/crypto` | Password hashing |
+| `golang.org/x/crypto`            | Password hashing               |
 
 ## API Endpoints
 
 All endpoints are prefixed with `/v1`.
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/v1/status` | Health check |
-| `POST` | `/v1/auth/signup` | Register a new user |
-| `POST` | `/v1/auth/verify` | Verify email with token |
-| `POST` | `/v1/auth/resend-verification` | Resend verification email |
-| `POST` | `/v1/auth/signin` | Sign in and create session |
-| `GET` | `/v1/me` | Get current authenticated user |
-| `GET` | `/v1/users` | List all users (admin) |
-| `GET` | `/v1/users/{id}` | Get a user by ID (admin) |
-| `POST` | `/v1/users` | Create a user (admin) |
-| `DELETE` | `/v1/users/{id}` | Delete a user (admin) |
-| `GET` | `/v1/resources` | List resources |
-| `GET` | `/v1/resources/{id}` | Get a resource by ID |
-| `POST` | `/v1/resources` | Create a resource |
-| `PUT` | `/v1/resources/{id}` | Update a resource |
-| `DELETE` | `/v1/resources/{id}` | Delete a resource |
+| Method   | Path                           | Description                    |
+| -------- | ------------------------------ | ------------------------------ |
+| `GET`    | `/v1/status`                   | Health check                   |
+| `POST`   | `/v1/auth/signup`              | Register a new user            |
+| `POST`   | `/v1/auth/verify`              | Verify email with token        |
+| `POST`   | `/v1/auth/resend-verification` | Resend verification email      |
+| `POST`   | `/v1/auth/signin`              | Sign in and create session     |
+| `GET`    | `/v1/me`                       | Get current authenticated user |
+| `GET`    | `/v1/users`                    | List all users (admin)         |
+| `GET`    | `/v1/users/{id}`               | Get a user by ID (admin)       |
+| `POST`   | `/v1/users`                    | Create a user (admin)          |
+| `DELETE` | `/v1/users/{id}`               | Delete a user (admin)          |
+| `GET`    | `/v1/resources`                | List resources                 |
+| `GET`    | `/v1/resources/{id}`           | Get a resource by ID           |
+| `POST`   | `/v1/resources`                | Create a resource              |
+| `PUT`    | `/v1/resources/{id}`           | Update a resource              |
+| `DELETE` | `/v1/resources/{id}`           | Delete a resource              |

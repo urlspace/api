@@ -5,12 +5,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hreftools/api/internal/db"
 	"github.com/hreftools/api/internal/emails"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/postgres"
+	"github.com/hreftools/api/internal/resource"
+	"github.com/hreftools/api/internal/user"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func setupTestStore(t *testing.T) *store.Store {
+func setupTestDB(t *testing.T) *sql.DB {
 	t.Helper()
 
 	dsn := os.Getenv("TEST_DATABASE_URL")
@@ -28,7 +31,45 @@ func setupTestStore(t *testing.T) *store.Store {
 		pool.Close()
 	})
 
-	return store.New(pool)
+	return pool
+}
+
+func setupUserService(t *testing.T) *user.Service {
+	t.Helper()
+
+	pool := setupTestDB(t)
+	queries := db.New(pool)
+	userRepo := postgres.NewUserRepository(queries)
+	tokenRepo := postgres.NewTokenRepository(queries)
+	emailSender := &mockEmailSender{}
+
+	return user.NewService(userRepo, tokenRepo, emailSender)
+}
+
+func setupResourceService(t *testing.T) *resource.Service {
+	t.Helper()
+
+	pool := setupTestDB(t)
+	queries := db.New(pool)
+	resourceRepo := postgres.NewResourceRepository(queries)
+
+	return resource.NewService(resourceRepo)
+}
+
+func setupServices(t *testing.T) (*user.Service, *resource.Service, *mockEmailSender) {
+	t.Helper()
+
+	pool := setupTestDB(t)
+	queries := db.New(pool)
+	userRepo := postgres.NewUserRepository(queries)
+	tokenRepo := postgres.NewTokenRepository(queries)
+	resourceRepo := postgres.NewResourceRepository(queries)
+	emailSender := &mockEmailSender{}
+
+	userSvc := user.NewService(userRepo, tokenRepo, emailSender)
+	resourceSvc := resource.NewService(resourceRepo)
+
+	return userSvc, resourceSvc, emailSender
 }
 
 type mockEmailSender struct {

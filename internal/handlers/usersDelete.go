@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 )
 
 type UsersDeleteResponse struct {
@@ -15,7 +15,7 @@ type UsersDeleteResponse struct {
 	Data   models.ResponseUserAdmin `json:"data"`
 }
 
-func UsersDelete(s *store.Store) http.HandlerFunc {
+func UsersDelete(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
@@ -24,7 +24,7 @@ func UsersDelete(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		u, err := s.Users.Delete(r.Context(), idUuid)
+		u, err := svc.Delete(r.Context(), idUuid)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

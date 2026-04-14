@@ -9,19 +9,19 @@ import (
 
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/handlers"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/utils"
 )
 
 func TestMeGet(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
 		hash, err := utils.PasswordHash("SecurePass123!")
 		if err != nil {
 			t.Fatalf("failed to hash password: %v", err)
 		}
-		params := store.UserCreateParams{
+		params := user.CreateParams{
 			Email:         "me@example.com",
 			EmailVerified: true,
 			Password:      hash,
@@ -30,14 +30,14 @@ func TestMeGet(t *testing.T) {
 			IsPro:         true,
 		}
 
-		user, err := s.Users.Create(t.Context(), params)
+		u, err := svc.Repo.Create(t.Context(), params)
 		if err != nil {
 			t.Fatalf("failed to seed user: %v", err)
 		}
 
-		handler := handlers.MeGet(s)
+		handler := handlers.MeGet(svc)
 		req := httptest.NewRequest(http.MethodGet, "/me", nil)
-		ctx := context.WithValue(req.Context(), config.UserIDContextKey, user.ID)
+		ctx := context.WithValue(req.Context(), config.UserIDContextKey, u.ID)
 		req = req.WithContext(ctx)
 		rec := httptest.NewRecorder()
 
@@ -55,7 +55,7 @@ func TestMeGet(t *testing.T) {
 		if expected := "ok"; res.Status != expected {
 			t.Errorf("expected status: %s, got %s", expected, res.Status)
 		}
-		if expected := user.ID; res.Data.ID != expected {
+		if expected := u.ID; res.Data.ID != expected {
 			t.Errorf("expected ID: %s, got %s", expected, res.Data.ID)
 		}
 		if expected := params.Email; res.Data.Email != expected {

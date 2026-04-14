@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/models"
+	"github.com/hreftools/api/internal/resource"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
 	"github.com/hreftools/api/internal/validator"
 )
@@ -48,7 +48,7 @@ type ResourceCreateResponse struct {
 	Data   models.ResponseResource `json:"data"`
 }
 
-func ResourcesCreate(s *store.Store) http.HandlerFunc {
+func ResourcesCreate(svc *resource.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := utils.UserIDFromContext(r.Context())
 
@@ -65,7 +65,7 @@ func ResourcesCreate(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		params := store.ResourceCreateParams{
+		params := resource.CreateParams{
 			UserID:      userID,
 			Title:       body.Title,
 			Url:         body.URL,
@@ -73,7 +73,7 @@ func ResourcesCreate(s *store.Store) http.HandlerFunc {
 			Favourite:   *body.Favourite,
 			ReadLater:   *body.ReadLater,
 		}
-		rr, err := s.Resources.Create(r.Context(), params)
+		rr, err := svc.Create(r.Context(), params)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

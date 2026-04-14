@@ -14,7 +14,7 @@ import (
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/handlers"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 )
 
 func TestAuthVerifyBody_Normalize(t *testing.T) {
@@ -88,9 +88,9 @@ func TestAuthVerifyBody_Validate(t *testing.T) {
 
 func TestAuthVerify(t *testing.T) {
 	t.Run("fails on incorrect body", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthVerify(s)
+		handler := handlers.AuthVerify(svc)
 
 		body := `this is not a json body`
 		req := httptest.NewRequest("POST", "/auth/verify", strings.NewReader(body))
@@ -117,9 +117,9 @@ func TestAuthVerify(t *testing.T) {
 	})
 
 	t.Run("fails on unexpected field in body", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthVerify(s)
+		handler := handlers.AuthVerify(svc)
 
 		body := `{"token":"12345678-1234-1234-1234-123456789abc","unexpected":"field"}`
 		req := httptest.NewRequest("POST", "/auth/verify", strings.NewReader(body))
@@ -146,9 +146,9 @@ func TestAuthVerify(t *testing.T) {
 	})
 
 	t.Run("fails on invalid request body", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthVerify(s)
+		handler := handlers.AuthVerify(svc)
 
 		body := `{"token":""}`
 		req := httptest.NewRequest("POST", "/auth/verify", strings.NewReader(body))
@@ -175,9 +175,9 @@ func TestAuthVerify(t *testing.T) {
 	})
 
 	t.Run("fails on non-existing token", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthVerify(s)
+		handler := handlers.AuthVerify(svc)
 
 		token := uuid.New().String()
 		body := fmt.Sprintf(`{"token":"%s"}`, token)
@@ -205,22 +205,23 @@ func TestAuthVerify(t *testing.T) {
 	})
 
 	t.Run("fails on expired token", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
 		token := uuid.New()
+		exp := time.Now().Add(-time.Hour)
 
-		s.Users.Create(context.Background(), store.UserCreateParams{
+		svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   false,
 			EmailVerificationToken:          uuid.NullUUID{Valid: true, UUID: token},
-			EmailVerificationTokenExpiresAt: new(time.Now().Add(-time.Hour)),
+			EmailVerificationTokenExpiresAt: &exp,
 			Password:                        "strongpassword",
 			Username:                        "testuser",
 			IsAdmin:                         false,
 			IsPro:                           false,
 		})
 
-		handler := handlers.AuthVerify(s)
+		handler := handlers.AuthVerify(svc)
 
 		body := fmt.Sprintf(`{"token":"%s"}`, token.String())
 		req := httptest.NewRequest("POST", "/auth/verify", strings.NewReader(body))
@@ -247,22 +248,23 @@ func TestAuthVerify(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
 		token := uuid.New()
+		exp := time.Now().Add(config.EmailVerificationTokenExpiryDuration)
 
-		s.Users.Create(context.Background(), store.UserCreateParams{
+		svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   false,
 			EmailVerificationToken:          uuid.NullUUID{Valid: true, UUID: token},
-			EmailVerificationTokenExpiresAt: new(time.Now().Add(config.EmailVerificationTokenExpiryDuration)),
+			EmailVerificationTokenExpiresAt: &exp,
 			Password:                        "strongpassword",
 			Username:                        "testuser",
 			IsAdmin:                         false,
 			IsPro:                           false,
 		})
 
-		handler := handlers.AuthVerify(s)
+		handler := handlers.AuthVerify(svc)
 
 		body := `{"token":"` + token.String() + `"}`
 		req := httptest.NewRequest("POST", "/auth/verify", strings.NewReader(body))

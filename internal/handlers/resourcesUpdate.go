@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/models"
+	"github.com/hreftools/api/internal/resource"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
 	"github.com/hreftools/api/internal/validator"
 )
@@ -49,7 +49,7 @@ type ResourceUpdateResponse struct {
 	Data   models.ResponseResource `json:"data"`
 }
 
-func ResourcesUpdate(s *store.Store) http.HandlerFunc {
+func ResourcesUpdate(svc *resource.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := utils.UserIDFromContext(r.Context())
 
@@ -73,7 +73,7 @@ func ResourcesUpdate(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		params := store.ResourceUpdateParams{
+		params := resource.UpdateParams{
 			ID:          idUuid,
 			UserID:      userID,
 			Title:       body.Title,
@@ -82,7 +82,7 @@ func ResourcesUpdate(s *store.Store) http.HandlerFunc {
 			Favourite:   *body.Favourite,
 			ReadLater:   *body.ReadLater,
 		}
-		rr, err := s.Resources.Update(r.Context(), params)
+		rr, err := svc.Update(r.Context(), params)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

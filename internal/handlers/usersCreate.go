@@ -6,11 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
-	"github.com/hreftools/api/internal/utils"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -56,7 +54,7 @@ type UserCreateResponse struct {
 	Data   models.ResponseUserAdmin `json:"data"`
 }
 
-func UserCreate(s *store.Store) http.HandlerFunc {
+func UserCreate(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body UserCreateBody
 		decoder := json.NewDecoder(r.Body)
@@ -73,22 +71,7 @@ func UserCreate(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		passwordHash, err := utils.PasswordHash(body.Password)
-		if err != nil {
-			response.HandleClientError(w, err, "failed to hash password")
-			return
-		}
-		params := store.UserCreateParams{
-			Email:                           body.Email,
-			EmailVerified:                   true,
-			EmailVerificationToken:          uuid.NullUUID{},
-			EmailVerificationTokenExpiresAt: nil,
-			Password:                        passwordHash,
-			Username:                        body.Username,
-			IsAdmin:                         *body.IsAdmin,
-			IsPro:                           *body.IsPro,
-		}
-		u, err := s.Users.Create(r.Context(), params)
+		u, err := svc.AdminCreate(r.Context(), body.Username, body.Email, body.Password, *body.IsAdmin, *body.IsPro)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

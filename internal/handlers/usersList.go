@@ -6,7 +6,7 @@ import (
 
 	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 )
 
 type UsersListResponse struct {
@@ -14,9 +14,9 @@ type UsersListResponse struct {
 	Data   []models.ResponseUserAdmin `json:"data"`
 }
 
-func UsersList(s *store.Store) http.HandlerFunc {
+func UsersList(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		list, err := s.Users.List(r.Context())
+		list, err := svc.List(r.Context())
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

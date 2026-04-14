@@ -1,19 +1,13 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"strings"
-	"time"
 
-	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/config"
-	"github.com/hreftools/api/internal/emails"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -38,7 +32,7 @@ type AuthResetPasswordRequestResponse struct {
 	Data   string `json:"data"`
 }
 
-func AuthResetPasswordRequest(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc {
+func AuthResetPasswordRequest(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body AuthResetPasswordRequestBody
 		decoder := json.NewDecoder(r.Body)
@@ -55,73 +49,19 @@ func AuthResetPasswordRequest(s *store.Store, emailSender emails.EmailSender) ht
 			return
 		}
 
-		u, err := s.Users.GetByEmail(r.Context(), body.Email)
+		err := svc.ResetPasswordRequest(r.Context(), body.Email)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				response.WriteJSONSuccess(w, http.StatusOK, &AuthResetPasswordRequestResponse{
-					Status: "ok",
-					Data:   "ok",
-				})
-				return
-			}
-			response.HandleServerError(w, err, "failed to query user")
-			return
-		}
-
-		// rate limit: if existing token age < 5 minutes, return 429
-		if u.PasswordResetTokenExpiresAt != nil {
-			tokenAge := config.PasswordResetTokenExpiryDuration - time.Until(*u.PasswordResetTokenExpiresAt)
-			if tokenAge < time.Minute*5 {
-				log.Println("password reset email already sent, please wait before requesting a new one")
+			if errors.Is(err, user.ErrRateLimited) {
 				response.WriteJSONError(w, http.StatusTooManyRequests, "password reset email already sent, please wait before requesting a new one")
 				return
 			}
-		}
-
-		token := uuid.NullUUID{Valid: true, UUID: uuid.New()}
-
-		templateParams := emails.AuthResetPasswordRequestParams{
-			Token: token.UUID.String(),
-		}
-		bodyHtml, err := emails.RenderTemplateHtml(emails.AuthResetPasswordRequestTemplateHtml, templateParams)
-		if err != nil {
-			response.HandleServerError(w, err, "failed to render html email template")
-			return
-		}
-		bodyText, err := emails.RenderTemplateTxt(emails.AuthResetPasswordRequestTemplateTxt, templateParams)
-		if err != nil {
-			response.HandleServerError(w, err, "failed to render text email template")
-			return
-		}
-
-		params := store.UserUpdatePasswordResetTokenParams{
-			Id:                          u.ID,
-			PasswordResetToken:          token,
-			PasswordResetTokenExpiresAt: new(time.Now().Add(config.PasswordResetTokenExpiryDuration)),
-		}
-		_, err = s.Users.UpdatePasswordResetToken(r.Context(), params)
-		if err != nil {
 			response.HandleDbError(w, err)
 			return
 		}
 
-		emailParams := emails.EmailSendParams{
-			To:      []string{body.Email},
-			Text:    bodyText,
-			Html:    bodyHtml,
-			Subject: "Password reset has been requested",
-		}
-
-		err = emailSender.Send(emailParams)
-		if err != nil {
-			log.Printf("Failed to send email: %v", err)
-		}
-
-		res := AuthResetPasswordRequestResponse{
+		response.WriteJSONSuccess(w, http.StatusOK, AuthResetPasswordRequestResponse{
 			Status: "ok",
 			Data:   "ok",
-		}
-
-		response.WriteJSONSuccess(w, http.StatusOK, res)
+		})
 	}
 }

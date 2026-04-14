@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -13,9 +12,12 @@ import (
 	"time"
 
 	"github.com/hreftools/api/internal/config"
+	"github.com/hreftools/api/internal/db"
 	"github.com/hreftools/api/internal/emails"
+	"github.com/hreftools/api/internal/postgres"
+	"github.com/hreftools/api/internal/resource"
 	"github.com/hreftools/api/internal/server"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/resend/resend-go/v3"
 
@@ -45,34 +47,13 @@ func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
 	return tp, nil
 }
 
-func initDb(databaseURL string) (*sql.DB, error) {
-	pool, err := sql.Open("pgx", databaseURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	// configure db connection pool
-	pool.SetMaxOpenConns(25)
-	pool.SetMaxIdleConns(5)
-	pool.SetConnMaxLifetime(5 * time.Minute)
-	pool.SetConnMaxIdleTime(5 * time.Minute)
-
-	// verify the db connectoin
-	if err := pool.Ping(); err != nil {
-		pool.Close()
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	return pool, nil
-}
-
 func run(ctx context.Context) error {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		return err
 	}
 
-	pool, err := initDb(cfg.DatabaseURL)
+	pool, err := postgres.Connect(cfg.DatabaseURL)
 	if err != nil {
 		return err
 	}
@@ -82,9 +63,16 @@ func run(ctx context.Context) error {
 		}
 	}()
 
-	store := store.New(pool)
+	queries := db.New(pool)
+	userRepo := postgres.NewUserRepository(queries)
+	tokenRepo := postgres.NewTokenRepository(queries)
+	resourceRepo := postgres.NewResourceRepository(queries)
+
 	resendClient := resend.NewClient(cfg.ResendAPIKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
+
+	userSvc := user.NewService(userRepo, tokenRepo, emailSender)
+	resourceSvc := resource.NewService(resourceRepo)
 
 	tp, err := initTracer(ctx)
 	if err != nil {
@@ -92,7 +80,7 @@ func run(ctx context.Context) error {
 	}
 	defer tp.Shutdown(context.Background())
 
-	srv := server.New(cfg.Port, store, emailSender)
+	srv := server.New(cfg.Port, userSvc, resourceSvc)
 	srv.Handler = otelhttp.NewHandler(srv.Handler, "api")
 
 	chServer := make(chan error, 1)

@@ -14,7 +14,7 @@ import (
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/handlers"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 )
 
 func TestAuthResetPasswordRequestBody_Normalize(t *testing.T) {
@@ -88,10 +88,9 @@ func TestAuthResetPasswordRequestBody_Validate(t *testing.T) {
 
 func TestAuthResetPasswordRequest(t *testing.T) {
 	t.Run("fails on incorrect body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthResetPasswordRequest(s, emailSenderMock)
+		handler := handlers.AuthResetPasswordRequest(svc)
 
 		body := `this is not a json body`
 		req := httptest.NewRequest("POST", "/auth/reset-password-request", strings.NewReader(body))
@@ -122,10 +121,9 @@ func TestAuthResetPasswordRequest(t *testing.T) {
 	})
 
 	t.Run("fails on unexpected field in body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthResetPasswordRequest(s, emailSenderMock)
+		handler := handlers.AuthResetPasswordRequest(svc)
 
 		body := `{"email":"test@example.com","unexpected":"field"}`
 		req := httptest.NewRequest("POST", "/auth/reset-password-request", strings.NewReader(body))
@@ -156,10 +154,9 @@ func TestAuthResetPasswordRequest(t *testing.T) {
 	})
 
 	t.Run("invalid request body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthResetPasswordRequest(s, emailSenderMock)
+		handler := handlers.AuthResetPasswordRequest(svc)
 
 		body := `{"email":""}`
 
@@ -190,10 +187,9 @@ func TestAuthResetPasswordRequest(t *testing.T) {
 	})
 
 	t.Run("returns 200 for non existing users and sends no email", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthResetPasswordRequest(s, emailSenderMock)
+		handler := handlers.AuthResetPasswordRequest(svc)
 
 		body := `{"email":"test@example.com"}`
 		req := httptest.NewRequest("POST", "/auth/reset-password-request", strings.NewReader(body))
@@ -224,11 +220,10 @@ func TestAuthResetPasswordRequest(t *testing.T) {
 	})
 
 	t.Run("rate limiter hit for fresh token", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, _ := setupServices(t)
 
 		// create user, then set a fresh password reset token
-		u, _ := s.Users.Create(context.Background(), store.UserCreateParams{
+		u, _ := svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   true,
 			EmailVerificationToken:          uuid.NullUUID{},
@@ -239,13 +234,14 @@ func TestAuthResetPasswordRequest(t *testing.T) {
 			IsPro:                           false,
 		})
 
-		s.Users.UpdatePasswordResetToken(context.Background(), store.UserUpdatePasswordResetTokenParams{
-			Id:                          u.ID,
+		exp := time.Now().Add(config.PasswordResetTokenExpiryDuration)
+		svc.Repo.UpdatePasswordResetToken(context.Background(), user.UpdatePasswordResetTokenParams{
+			ID:                          u.ID,
 			PasswordResetToken:          uuid.NullUUID{Valid: true, UUID: uuid.New()},
-			PasswordResetTokenExpiresAt: new(time.Now().Add(config.PasswordResetTokenExpiryDuration)),
+			PasswordResetTokenExpiresAt: &exp,
 		})
 
-		handler := handlers.AuthResetPasswordRequest(s, emailSenderMock)
+		handler := handlers.AuthResetPasswordRequest(svc)
 
 		body := `{"email":"test@example.com"}`
 		req := httptest.NewRequest("POST", "/auth/reset-password-request", strings.NewReader(body))
@@ -272,13 +268,12 @@ func TestAuthResetPasswordRequest(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
 		// create a user with a password reset token that expires in 50 minutes
 		// (in contrast to 1 hr), so there is more than 5 minutes since the token
 		// was generated, so the rate limiter won't block us
-		u, _ := s.Users.Create(context.Background(), store.UserCreateParams{
+		u, _ := svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   true,
 			EmailVerificationToken:          uuid.NullUUID{},
@@ -289,13 +284,14 @@ func TestAuthResetPasswordRequest(t *testing.T) {
 			IsPro:                           false,
 		})
 
-		s.Users.UpdatePasswordResetToken(context.Background(), store.UserUpdatePasswordResetTokenParams{
-			Id:                          u.ID,
+		exp := time.Now().Add(time.Minute * 50)
+		svc.Repo.UpdatePasswordResetToken(context.Background(), user.UpdatePasswordResetTokenParams{
+			ID:                          u.ID,
 			PasswordResetToken:          uuid.NullUUID{Valid: true, UUID: uuid.New()},
-			PasswordResetTokenExpiresAt: new(time.Now().Add(time.Minute * 50)),
+			PasswordResetTokenExpiresAt: &exp,
 		})
 
-		handler := handlers.AuthResetPasswordRequest(s, emailSenderMock)
+		handler := handlers.AuthResetPasswordRequest(svc)
 
 		body := `{"email":"test@example.com"}`
 		req := httptest.NewRequest("POST", "/auth/reset-password-request", strings.NewReader(body))

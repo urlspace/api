@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/models"
+	"github.com/hreftools/api/internal/resource"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
 )
 
@@ -15,11 +15,11 @@ type ResourcesListResponse struct {
 	Data   []models.ResponseResource `json:"data"`
 }
 
-func ResourcesList(s *store.Store) http.HandlerFunc {
+func ResourcesList(svc *resource.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := utils.UserIDFromContext(r.Context())
 
-		list, err := s.Resources.List(r.Context(), userID)
+		list, err := svc.List(r.Context(), userID)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

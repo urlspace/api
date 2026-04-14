@@ -2,17 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
-	"time"
 
-	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/config"
-	"github.com/hreftools/api/internal/emails"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
-	"github.com/hreftools/api/internal/utils"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -48,7 +42,7 @@ type AuthSignupResponse struct {
 	Data   string `json:"data"`
 }
 
-func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc {
+func AuthSignup(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body AuthSignupBody
 		decoder := json.NewDecoder(r.Body)
@@ -65,63 +59,15 @@ func AuthSignup(s *store.Store, emailSender emails.EmailSender) http.HandlerFunc
 			return
 		}
 
-		passwordHash, err := utils.PasswordHash(body.Password)
-		if err != nil {
-			response.HandleServerError(w, err, "failed to hash password")
-			return
-		}
-
-		token := uuid.NullUUID{Valid: true, UUID: uuid.New()}
-
-		emailVerifyData := emails.AuthSignupParams{
-			Username: body.Username,
-			Email:    body.Email,
-			Token:    token.UUID.String(),
-		}
-		bodyHtml, err := emails.RenderTemplateHtml(emails.AuthSignupTemplateHtml, emailVerifyData)
-		if err != nil {
-			response.HandleServerError(w, err, "failed to render html email template")
-			return
-		}
-		bodyText, err := emails.RenderTemplateTxt(emails.AuthSignupTemplateTxt, emailVerifyData)
-		if err != nil {
-			response.HandleServerError(w, err, "failed to render text email template")
-			return
-		}
-
-		params := store.UserCreateParams{
-			Email:                           body.Email,
-			EmailVerified:                   false,
-			EmailVerificationToken:          token,
-			EmailVerificationTokenExpiresAt: new(time.Now().Add(config.EmailVerificationTokenExpiryDuration)),
-			Password:                        passwordHash,
-			Username:                        body.Username,
-			IsAdmin:                         false,
-			IsPro:                           false,
-		}
-		_, err = s.Users.Create(r.Context(), params)
+		err := svc.Signup(r.Context(), body.Username, body.Email, body.Password)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return
 		}
 
-		emailParams := emails.EmailSendParams{
-			To:      []string{body.Email},
-			Text:    bodyText,
-			Html:    bodyHtml,
-			Subject: "Hello from href.tools",
-		}
-
-		err = emailSender.Send(emailParams)
-		if err != nil {
-			log.Printf("Failed to send email: %v", err)
-		}
-
-		res := AuthSignupResponse{
+		response.WriteJSONSuccess(w, http.StatusCreated, AuthSignupResponse{
 			Status: "ok",
 			Data:   "ok",
-		}
-
-		response.WriteJSONSuccess(w, http.StatusCreated, res)
+		})
 	}
 }

@@ -1,17 +1,14 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
-	"github.com/hreftools/api/internal/utils"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -41,7 +38,7 @@ type AuthSigninResponse struct {
 	Data   string `json:"data"`
 }
 
-func AuthSignin(s *store.Store) http.HandlerFunc {
+func AuthSignin(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body AuthSigninBody
 		decoder := json.NewDecoder(r.Body)
@@ -58,26 +55,6 @@ func AuthSignin(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		u, err := s.Users.GetByEmail(r.Context(), body.Email)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				response.WriteJSONError(w, http.StatusUnauthorized, "invalid email or password")
-				return
-			}
-			response.HandleServerError(w, err, "failed to get user")
-			return
-		}
-
-		if !u.EmailVerified {
-			response.WriteJSONError(w, http.StatusUnauthorized, "invalid email or password")
-			return
-		}
-
-		if !utils.PasswordValidate(body.Password, u.Password) {
-			response.WriteJSONError(w, http.StatusUnauthorized, "invalid email or password")
-			return
-		}
-
 		const maxUaLength = 255
 		ua := r.Header.Get("User-Agent")
 		if len(ua) > maxUaLength {
@@ -88,21 +65,20 @@ func AuthSignin(s *store.Store) http.HandlerFunc {
 			description = &ua
 		}
 
-		token, err := s.Tokens.Create(r.Context(), store.TokenCreateParams{
-			UserID:      u.ID,
-			Type:        config.TokenTypeSession,
-			Description: description,
-			ExpiresAt:   time.Now().Add(config.SessionExpiryDuration),
-		})
+		result, err := svc.Signin(r.Context(), body.Email, body.Password, description)
 		if err != nil {
-			response.HandleServerError(w, err, "failed to create session")
+			if errors.Is(err, user.ErrInvalidCredentials) || errors.Is(err, user.ErrEmailNotVerified) {
+				response.WriteJSONError(w, http.StatusUnauthorized, "invalid email or password")
+				return
+			}
+			response.HandleServerError(w, err, "failed to sign in")
 			return
 		}
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     config.SessionCookieName,
-			Value:    token.ID.String(),
-			Expires:  token.ExpiresAt,
+			Value:    result.Token.ID.String(),
+			Expires:  result.Token.ExpiresAt,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,

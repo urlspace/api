@@ -6,7 +6,7 @@ import (
 
 	"github.com/hreftools/api/internal/models"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/utils"
 )
 
@@ -15,7 +15,7 @@ type MeGetResponse struct {
 	Data   models.ResponseUser `json:"data"`
 }
 
-func MeGet(s *store.Store) http.HandlerFunc {
+func MeGet(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := utils.UserIDFromContext(r.Context())
 		if !ok {
@@ -23,7 +23,7 @@ func MeGet(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		u, err := s.Users.GetById(r.Context(), userID)
+		u, err := svc.GetById(r.Context(), userID)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

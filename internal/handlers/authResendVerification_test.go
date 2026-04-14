@@ -14,7 +14,7 @@ import (
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/handlers"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 )
 
 func TestAuthResendVerificationBody_Normalize(t *testing.T) {
@@ -88,10 +88,9 @@ func TestAuthResendVerificationBody_Validate(t *testing.T) {
 
 func TestAuthResendVerification(t *testing.T) {
 	t.Run("fails on incorrect body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthResendVerification(s, emailSenderMock)
+		handler := handlers.AuthResendVerification(svc)
 
 		body := `this is not a json body`
 		req := httptest.NewRequest("POST", "/auth/resend-verification", strings.NewReader(body))
@@ -122,10 +121,9 @@ func TestAuthResendVerification(t *testing.T) {
 	})
 
 	t.Run("fails on unexpected field in body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthResendVerification(s, emailSenderMock)
+		handler := handlers.AuthResendVerification(svc)
 
 		body := `{"email":"test@example.com","unexpected":"field"}`
 		req := httptest.NewRequest("POST", "/auth/resend-verification", strings.NewReader(body))
@@ -156,10 +154,9 @@ func TestAuthResendVerification(t *testing.T) {
 	})
 
 	t.Run("invalid request body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthResendVerification(s, emailSenderMock)
+		handler := handlers.AuthResendVerification(svc)
 
 		body := `{"email":""}`
 
@@ -190,10 +187,9 @@ func TestAuthResendVerification(t *testing.T) {
 	})
 
 	t.Run("returns 200 for non existing users and sends no email", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthResendVerification(s, emailSenderMock)
+		handler := handlers.AuthResendVerification(svc)
 
 		body := `{"email":"test@example.com"}`
 		req := httptest.NewRequest("POST", "/auth/resend-verification", strings.NewReader(body))
@@ -224,10 +220,9 @@ func TestAuthResendVerification(t *testing.T) {
 	})
 
 	t.Run("returns 200 for already verified users and sends no email", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		s.Users.Create(context.Background(), store.UserCreateParams{
+		svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   true,
 			EmailVerificationToken:          uuid.NullUUID{},
@@ -238,7 +233,7 @@ func TestAuthResendVerification(t *testing.T) {
 			IsPro:                           false,
 		})
 
-		handler := handlers.AuthResendVerification(s, emailSenderMock)
+		handler := handlers.AuthResendVerification(svc)
 
 		body := `{"email":"test@example.com"}`
 		req := httptest.NewRequest("POST", "/auth/resend-verification", strings.NewReader(body))
@@ -269,21 +264,21 @@ func TestAuthResendVerification(t *testing.T) {
 	})
 
 	t.Run("rate limier hit for fresh token", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, _ := setupServices(t)
 
-		s.Users.Create(context.Background(), store.UserCreateParams{
+		exp := time.Now().Add(config.EmailVerificationTokenExpiryDuration)
+		svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   false,
 			EmailVerificationToken:          uuid.NullUUID{Valid: true, UUID: uuid.New()},
-			EmailVerificationTokenExpiresAt: new(time.Now().Add(config.EmailVerificationTokenExpiryDuration)),
+			EmailVerificationTokenExpiresAt: &exp,
 			Password:                        "strongpassword",
 			Username:                        "testuser",
 			IsAdmin:                         false,
 			IsPro:                           false,
 		})
 
-		handler := handlers.AuthResendVerification(s, emailSenderMock)
+		handler := handlers.AuthResendVerification(svc)
 
 		body := `{"email":"test@example.com"}`
 		req := httptest.NewRequest("POST", "/auth/resend-verification", strings.NewReader(body))
@@ -311,25 +306,25 @@ func TestAuthResendVerification(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
 		// create a user with token that expires in 23 hrs (in contrast to 24 hr),
 		// so there is more than 5 minutes since the token was generated,
 		// so we will be able to test the resend verification flow
 		// as the token is not longer super fresh
-		s.Users.Create(context.Background(), store.UserCreateParams{
+		exp := time.Now().Add(time.Hour * 23)
+		svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   false,
 			EmailVerificationToken:          uuid.NullUUID{Valid: true, UUID: uuid.New()},
-			EmailVerificationTokenExpiresAt: new(time.Now().Add(time.Hour * 23)),
+			EmailVerificationTokenExpiresAt: &exp,
 			Password:                        "strongpassword",
 			Username:                        "testuser",
 			IsAdmin:                         false,
 			IsPro:                           false,
 		})
 
-		handler := handlers.AuthResendVerification(s, emailSenderMock)
+		handler := handlers.AuthResendVerification(svc)
 
 		body := `{"email":"test@example.com"}`
 		req := httptest.NewRequest("POST", "/auth/resend-verification", strings.NewReader(body))

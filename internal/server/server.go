@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hreftools/api/internal/emails"
 	"github.com/hreftools/api/internal/handlers"
 	"github.com/hreftools/api/internal/middlewares"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/resource"
+	"github.com/hreftools/api/internal/user"
 )
 
-func New(port string, s *store.Store, emailSender emails.EmailSender) *http.Server {
+func New(port string, userSvc *user.Service, resourceSvc *resource.Service) *http.Server {
 	// routes
 	mux := http.NewServeMux()
 
@@ -20,33 +20,33 @@ func New(port string, s *store.Store, emailSender emails.EmailSender) *http.Serv
 	// status
 	mux.HandleFunc("GET /status", handlers.Status)
 
-	auth := middlewares.Auth(s)
-	adminOnly := middlewares.MiddlewareStack(auth, middlewares.Admin(s))
+	auth := middlewares.Auth(userSvc)
+	adminOnly := middlewares.MiddlewareStack(auth, middlewares.Admin(userSvc))
 
 	// me (authenticated)
-	mux.Handle("GET /me", auth(handlers.MeGet(s)))
+	mux.Handle("GET /me", auth(handlers.MeGet(userSvc)))
 
 	// resources (protected)
-	mux.Handle("GET /resources", auth(handlers.ResourcesList(s)))
-	mux.Handle("GET /resources/{id}", auth(handlers.ResourcesGet(s)))
-	mux.Handle("POST /resources", auth(handlers.ResourcesCreate(s)))
-	mux.Handle("PUT /resources/{id}", auth(handlers.ResourcesUpdate(s)))
-	mux.Handle("DELETE /resources/{id}", auth(handlers.ResourcesDelete(s)))
+	mux.Handle("GET /resources", auth(handlers.ResourcesList(resourceSvc)))
+	mux.Handle("GET /resources/{id}", auth(handlers.ResourcesGet(resourceSvc)))
+	mux.Handle("POST /resources", auth(handlers.ResourcesCreate(resourceSvc)))
+	mux.Handle("PUT /resources/{id}", auth(handlers.ResourcesUpdate(resourceSvc)))
+	mux.Handle("DELETE /resources/{id}", auth(handlers.ResourcesDelete(resourceSvc)))
 
 	// users (admin only)
-	mux.Handle("GET /users", adminOnly(handlers.UsersList(s)))
-	mux.Handle("GET /users/{id}", adminOnly(handlers.UsersGet(s)))
-	mux.Handle("POST /users", adminOnly(handlers.UserCreate(s)))
-	mux.Handle("DELETE /users/{id}", adminOnly(handlers.UsersDelete(s)))
+	mux.Handle("GET /users", adminOnly(handlers.UsersList(userSvc)))
+	mux.Handle("GET /users/{id}", adminOnly(handlers.UsersGet(userSvc)))
+	mux.Handle("POST /users", adminOnly(handlers.UserCreate(userSvc)))
+	mux.Handle("DELETE /users/{id}", adminOnly(handlers.UsersDelete(userSvc)))
 
 	// auth
-	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(s, emailSender))
-	mux.HandleFunc("POST /auth/signin", handlers.AuthSignin(s))
-	mux.HandleFunc("POST /auth/verify", handlers.AuthVerify(s))
-	mux.HandleFunc("POST /auth/resend-verification", handlers.AuthResendVerification(s, emailSender))
-	mux.HandleFunc("POST /auth/reset-password-request", handlers.AuthResetPasswordRequest(s, emailSender))
-	mux.HandleFunc("POST /auth/reset-password-confirm", handlers.AuthResetPasswordConfirm(s))
-	mux.Handle("POST /auth/signout", auth(handlers.AuthSignout(s)))
+	mux.HandleFunc("POST /auth/signup", handlers.AuthSignup(userSvc))
+	mux.HandleFunc("POST /auth/signin", handlers.AuthSignin(userSvc))
+	mux.HandleFunc("POST /auth/verify", handlers.AuthVerify(userSvc))
+	mux.HandleFunc("POST /auth/resend-verification", handlers.AuthResendVerification(userSvc))
+	mux.HandleFunc("POST /auth/reset-password-request", handlers.AuthResetPasswordRequest(userSvc))
+	mux.HandleFunc("POST /auth/reset-password-confirm", handlers.AuthResetPasswordConfirm(userSvc))
+	mux.Handle("POST /auth/signout", auth(handlers.AuthSignout(userSvc)))
 
 	// version api
 	v1 := http.NewServeMux()

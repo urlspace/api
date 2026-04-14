@@ -9,11 +9,11 @@ import (
 
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/utils"
 )
 
-func Auth(s *store.Store) Middleware {
+func Auth(svc *user.Service) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			tokenID, ok := utils.ResolveTokenID(r)
@@ -22,7 +22,7 @@ func Auth(s *store.Store) Middleware {
 				return
 			}
 
-			token, err := s.Tokens.GetByID(r.Context(), tokenID)
+			token, err := svc.GetTokenByID(r.Context(), tokenID)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) {
 					response.WriteJSONError(w, http.StatusUnauthorized, "unauthorized")
@@ -52,7 +52,7 @@ func Auth(s *store.Store) Middleware {
 					// a failed renewal is non-fatal — the token remains valid for
 					// the remainder of its current expiry window and renewal will
 					// be retried on the next request.
-					_, _ = s.Tokens.UpdateExpiresAt(context.Background(), store.TokenUpdateExpiresAtParams{
+					_, _ = svc.UpdateTokenExpiresAt(context.Background(), user.TokenUpdateExpiresAtParams{
 						ID:        token.ID,
 						ExpiresAt: time.Now().Add(config.SessionExpiryDuration),
 					})

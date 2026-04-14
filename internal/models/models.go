@@ -4,7 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/db"
+	"github.com/hreftools/api/internal/resource"
+	"github.com/hreftools/api/internal/user"
 )
 
 type ResponseResource struct {
@@ -18,16 +19,16 @@ type ResponseResource struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
-func NewResponseResource(u db.Resource) ResponseResource {
+func NewResponseResource(r resource.Resource) ResponseResource {
 	return ResponseResource{
-		ID:          u.ID,
-		Title:       u.Title,
-		Description: u.Description,
-		URL:         u.Url,
-		Favourite:   u.Favourite,
-		ReadLater:   u.ReadLater,
-		CreatedAt:   u.CreatedAt,
-		UpdatedAt:   u.UpdatedAt,
+		ID:          r.ID,
+		Title:       r.Title,
+		Description: r.Description,
+		URL:         r.Url,
+		Favourite:   r.Favourite,
+		ReadLater:   r.ReadLater,
+		CreatedAt:   r.CreatedAt,
+		UpdatedAt:   r.UpdatedAt,
 	}
 }
 
@@ -41,7 +42,7 @@ type ResponseUser struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func NewResponseUser(u db.User) ResponseUser {
+func NewResponseUser(u user.User) ResponseUser {
 	return ResponseUser{
 		ID:        u.ID,
 		Email:     u.Email,
@@ -68,7 +69,7 @@ type ResponseUserAdmin struct {
 	UpdatedAt                       time.Time     `json:"updatedAt"`
 }
 
-func NewResponseUserAdmin(u db.User) ResponseUserAdmin {
+func NewResponseUserAdmin(u user.User) ResponseUserAdmin {
 	return ResponseUserAdmin{
 		ID:                              u.ID,
 		Email:                           u.Email,

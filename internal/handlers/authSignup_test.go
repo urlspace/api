@@ -100,10 +100,9 @@ func TestAuthSignupBody_Validate(t *testing.T) {
 
 func TestAuthSignup(t *testing.T) {
 	t.Run("fails on incorrect body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthSignup(s, emailSenderMock)
+		handler := handlers.AuthSignup(svc)
 
 		body := `this is not a json body`
 		req := httptest.NewRequest("POST", "/auth/signup", strings.NewReader(body))
@@ -134,10 +133,9 @@ func TestAuthSignup(t *testing.T) {
 	})
 
 	t.Run("fails on unexpected field in body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthSignup(s, emailSenderMock)
+		handler := handlers.AuthSignup(svc)
 
 		body := `{"username":"testuser","email":"test@example.com","password":"SecurePass123!","unexpected":"field"}`
 		req := httptest.NewRequest("POST", "/auth/signup", strings.NewReader(body))
@@ -168,10 +166,9 @@ func TestAuthSignup(t *testing.T) {
 	})
 
 	t.Run("invalid request body", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthSignup(s, emailSenderMock)
+		handler := handlers.AuthSignup(svc)
 
 		body := `{"username":"","email":"","password":""}`
 
@@ -202,10 +199,9 @@ func TestAuthSignup(t *testing.T) {
 	})
 
 	t.Run("returns conflict status on duplicated emails ", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthSignup(s, emailSenderMock)
+		handler := handlers.AuthSignup(svc)
 
 		body1 := `{"username":"one","email":"test@example.com","password":"SecurePass123!"}`
 		req1 := httptest.NewRequest("POST", "/auth/signup", strings.NewReader(body1))
@@ -240,10 +236,9 @@ func TestAuthSignup(t *testing.T) {
 	})
 
 	t.Run("returns conflict status on duplicated usernames ", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthSignup(s, emailSenderMock)
+		handler := handlers.AuthSignup(svc)
 
 		body1 := `{"username":"test","email":"one@example.com","password":"SecurePass123!"}`
 		req1 := httptest.NewRequest("POST", "/auth/signup", strings.NewReader(body1))
@@ -291,10 +286,9 @@ func TestAuthSignup(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		s := setupTestStore(t)
-		emailSenderMock := &mockEmailSender{}
+		svc, _, emailSenderMock := setupServices(t)
 
-		handler := handlers.AuthSignup(s, emailSenderMock)
+		handler := handlers.AuthSignup(svc)
 
 		body := `{"username":"testuser","email":"test@example.com","password":"SecurePass123!"}`
 		req := httptest.NewRequest("POST", "/auth/signup", strings.NewReader(body))

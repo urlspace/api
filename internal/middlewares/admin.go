@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/utils"
 )
 
-func Admin(s *store.Store) Middleware {
+func Admin(svc *user.Service) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userID, ok := utils.UserIDFromContext(r.Context())
@@ -19,7 +19,7 @@ func Admin(s *store.Store) Middleware {
 				return
 			}
 
-			user, err := s.Users.GetById(r.Context(), userID)
+			u, err := svc.GetById(r.Context(), userID)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) {
 					response.WriteJSONError(w, http.StatusUnauthorized, "unauthorized")
@@ -29,7 +29,7 @@ func Admin(s *store.Store) Middleware {
 				return
 			}
 
-			if !user.IsAdmin {
+			if !u.IsAdmin {
 				response.WriteJSONError(w, http.StatusForbidden, "forbidden")
 				return
 			}

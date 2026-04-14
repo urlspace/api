@@ -14,7 +14,7 @@ import (
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/handlers"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 )
 
 func TestAuthResetPasswordConfirmBody_Normalize(t *testing.T) {
@@ -97,9 +97,9 @@ func TestAuthResetPasswordConfirmBody_Validate(t *testing.T) {
 
 func TestAuthResetPasswordConfirm(t *testing.T) {
 	t.Run("fails on incorrect body", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthResetPasswordConfirm(s)
+		handler := handlers.AuthResetPasswordConfirm(svc)
 
 		body := `this is not a json body`
 		req := httptest.NewRequest("POST", "/auth/reset-password-confirm", strings.NewReader(body))
@@ -126,9 +126,9 @@ func TestAuthResetPasswordConfirm(t *testing.T) {
 	})
 
 	t.Run("fails on unexpected field in body", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthResetPasswordConfirm(s)
+		handler := handlers.AuthResetPasswordConfirm(svc)
 
 		body := `{"token":"12345678-1234-1234-1234-123456789abc","password":"newpassword1234","unexpected":"field"}`
 		req := httptest.NewRequest("POST", "/auth/reset-password-confirm", strings.NewReader(body))
@@ -155,9 +155,9 @@ func TestAuthResetPasswordConfirm(t *testing.T) {
 	})
 
 	t.Run("fails on invalid request body - empty token", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthResetPasswordConfirm(s)
+		handler := handlers.AuthResetPasswordConfirm(svc)
 
 		body := `{"token":"","password":"newpassword1234"}`
 		req := httptest.NewRequest("POST", "/auth/reset-password-confirm", strings.NewReader(body))
@@ -184,9 +184,9 @@ func TestAuthResetPasswordConfirm(t *testing.T) {
 	})
 
 	t.Run("fails on invalid request body - empty password", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthResetPasswordConfirm(s)
+		handler := handlers.AuthResetPasswordConfirm(svc)
 
 		body := `{"token":"12345678-1234-1234-1234-123456789abc","password":""}`
 		req := httptest.NewRequest("POST", "/auth/reset-password-confirm", strings.NewReader(body))
@@ -209,9 +209,9 @@ func TestAuthResetPasswordConfirm(t *testing.T) {
 	})
 
 	t.Run("fails on non-existing token", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
-		handler := handlers.AuthResetPasswordConfirm(s)
+		handler := handlers.AuthResetPasswordConfirm(svc)
 
 		token := uuid.New().String()
 		body := fmt.Sprintf(`{"token":"%s","password":"newpassword1234"}`, token)
@@ -239,11 +239,11 @@ func TestAuthResetPasswordConfirm(t *testing.T) {
 	})
 
 	t.Run("fails on expired token", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
 		token := uuid.New()
 
-		u, _ := s.Users.Create(context.Background(), store.UserCreateParams{
+		u, _ := svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   true,
 			EmailVerificationToken:          uuid.NullUUID{},
@@ -254,13 +254,14 @@ func TestAuthResetPasswordConfirm(t *testing.T) {
 			IsPro:                           false,
 		})
 
-		s.Users.UpdatePasswordResetToken(context.Background(), store.UserUpdatePasswordResetTokenParams{
-			Id:                          u.ID,
+		exp := time.Now().Add(-time.Hour)
+		svc.Repo.UpdatePasswordResetToken(context.Background(), user.UpdatePasswordResetTokenParams{
+			ID:                          u.ID,
 			PasswordResetToken:          uuid.NullUUID{Valid: true, UUID: token},
-			PasswordResetTokenExpiresAt: new(time.Now().Add(-time.Hour)),
+			PasswordResetTokenExpiresAt: &exp,
 		})
 
-		handler := handlers.AuthResetPasswordConfirm(s)
+		handler := handlers.AuthResetPasswordConfirm(svc)
 
 		body := fmt.Sprintf(`{"token":"%s","password":"newpassword1234"}`, token.String())
 		req := httptest.NewRequest("POST", "/auth/reset-password-confirm", strings.NewReader(body))
@@ -287,11 +288,11 @@ func TestAuthResetPasswordConfirm(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		s := setupTestStore(t)
+		svc, _, _ := setupServices(t)
 
 		token := uuid.New()
 
-		u, _ := s.Users.Create(context.Background(), store.UserCreateParams{
+		u, _ := svc.Repo.Create(context.Background(), user.CreateParams{
 			Email:                           "test@example.com",
 			EmailVerified:                   true,
 			EmailVerificationToken:          uuid.NullUUID{},
@@ -302,13 +303,14 @@ func TestAuthResetPasswordConfirm(t *testing.T) {
 			IsPro:                           false,
 		})
 
-		s.Users.UpdatePasswordResetToken(context.Background(), store.UserUpdatePasswordResetTokenParams{
-			Id:                          u.ID,
+		exp := time.Now().Add(config.PasswordResetTokenExpiryDuration)
+		svc.Repo.UpdatePasswordResetToken(context.Background(), user.UpdatePasswordResetTokenParams{
+			ID:                          u.ID,
 			PasswordResetToken:          uuid.NullUUID{Valid: true, UUID: token},
-			PasswordResetTokenExpiresAt: new(time.Now().Add(config.PasswordResetTokenExpiryDuration)),
+			PasswordResetTokenExpiresAt: &exp,
 		})
 
-		handler := handlers.AuthResetPasswordConfirm(s)
+		handler := handlers.AuthResetPasswordConfirm(svc)
 
 		body := `{"token":"` + token.String() + `","password":"newstrongpassword"}`
 		req := httptest.NewRequest("POST", "/auth/reset-password-confirm", strings.NewReader(body))

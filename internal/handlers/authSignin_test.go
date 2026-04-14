@@ -12,11 +12,11 @@ import (
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/handlers"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/utils"
 )
 
-func seedSigninUser(t *testing.T, s *store.Store, email, username, password string, verified bool) {
+func seedSigninUser(t *testing.T, svc *user.Service, email, username, password string, verified bool) {
 	t.Helper()
 
 	hash, err := utils.PasswordHash(password)
@@ -28,10 +28,11 @@ func seedSigninUser(t *testing.T, s *store.Store, email, username, password stri
 	var expiresAt *time.Time
 	if !verified {
 		token = uuid.NullUUID{Valid: true, UUID: uuid.New()}
-		expiresAt = new(time.Now().Add(24 * time.Hour))
+		exp := time.Now().Add(24 * time.Hour)
+		expiresAt = &exp
 	}
 
-	_, err = s.Users.Create(t.Context(), store.UserCreateParams{
+	_, err = svc.Repo.Create(t.Context(), user.CreateParams{
 		Email:                           email,
 		EmailVerified:                   verified,
 		EmailVerificationToken:          token,
@@ -143,8 +144,8 @@ func TestAuthSigninBody_Validate(t *testing.T) {
 
 func TestAuthSignin(t *testing.T) {
 	t.Run("fails on incorrect body", func(t *testing.T) {
-		s := setupTestStore(t)
-		handler := handlers.AuthSignin(s)
+		svc, _, _ := setupServices(t)
+		handler := handlers.AuthSignin(svc)
 
 		req := httptest.NewRequest("POST", "/auth/signin", strings.NewReader("not json"))
 		rec := httptest.NewRecorder()
@@ -167,8 +168,8 @@ func TestAuthSignin(t *testing.T) {
 	})
 
 	t.Run("fails on unexpected field in body", func(t *testing.T) {
-		s := setupTestStore(t)
-		handler := handlers.AuthSignin(s)
+		svc, _, _ := setupServices(t)
+		handler := handlers.AuthSignin(svc)
 
 		body := `{"email":"test@example.com","password":"SecurePass123!","unexpected":"field"}`
 		req := httptest.NewRequest("POST", "/auth/signin", strings.NewReader(body))
@@ -192,8 +193,8 @@ func TestAuthSignin(t *testing.T) {
 	})
 
 	t.Run("fails on invalid request body", func(t *testing.T) {
-		s := setupTestStore(t)
-		handler := handlers.AuthSignin(s)
+		svc, _, _ := setupServices(t)
+		handler := handlers.AuthSignin(svc)
 
 		body := `{"email":"","password":""}`
 		req := httptest.NewRequest("POST", "/auth/signin", strings.NewReader(body))
@@ -217,8 +218,8 @@ func TestAuthSignin(t *testing.T) {
 	})
 
 	t.Run("fails on non-existent email", func(t *testing.T) {
-		s := setupTestStore(t)
-		handler := handlers.AuthSignin(s)
+		svc, _, _ := setupServices(t)
+		handler := handlers.AuthSignin(svc)
 
 		body := `{"email":"nobody@example.com","password":"SecurePass123!"}`
 		req := httptest.NewRequest("POST", "/auth/signin", strings.NewReader(body))
@@ -242,9 +243,9 @@ func TestAuthSignin(t *testing.T) {
 	})
 
 	t.Run("fails on wrong password", func(t *testing.T) {
-		s := setupTestStore(t)
-		seedSigninUser(t, s, "user@example.com", "user", "SecurePass123!", true)
-		handler := handlers.AuthSignin(s)
+		svc, _, _ := setupServices(t)
+		seedSigninUser(t, svc, "user@example.com", "user", "SecurePass123!", true)
+		handler := handlers.AuthSignin(svc)
 
 		body := `{"email":"user@example.com","password":"WrongPassword!"}`
 		req := httptest.NewRequest("POST", "/auth/signin", strings.NewReader(body))
@@ -268,9 +269,9 @@ func TestAuthSignin(t *testing.T) {
 	})
 
 	t.Run("fails on unverified email", func(t *testing.T) {
-		s := setupTestStore(t)
-		seedSigninUser(t, s, "unverified@example.com", "unverified", "SecurePass123!", false)
-		handler := handlers.AuthSignin(s)
+		svc, _, _ := setupServices(t)
+		seedSigninUser(t, svc, "unverified@example.com", "unverified", "SecurePass123!", false)
+		handler := handlers.AuthSignin(svc)
 
 		body := `{"email":"unverified@example.com","password":"SecurePass123!"}`
 		req := httptest.NewRequest("POST", "/auth/signin", strings.NewReader(body))
@@ -294,9 +295,9 @@ func TestAuthSignin(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		s := setupTestStore(t)
-		seedSigninUser(t, s, "verified@example.com", "verified", "SecurePass123!", true)
-		handler := handlers.AuthSignin(s)
+		svc, _, _ := setupServices(t)
+		seedSigninUser(t, svc, "verified@example.com", "verified", "SecurePass123!", true)
+		handler := handlers.AuthSignin(svc)
 
 		body := `{"email":"verified@example.com","password":"SecurePass123!"}`
 		req := httptest.NewRequest("POST", "/auth/signin", strings.NewReader(body))

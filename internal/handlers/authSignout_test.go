@@ -9,14 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/handlers"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/utils"
 )
 
-func seedSignoutUser(t *testing.T, s *store.Store) uuid.UUID {
+func seedSignoutUser(t *testing.T, svc *user.Service) user.User {
 	t.Helper()
 
 	hash, err := utils.PasswordHash("SecurePass123!")
@@ -24,7 +23,7 @@ func seedSignoutUser(t *testing.T, s *store.Store) uuid.UUID {
 		t.Fatalf("failed to hash password: %v", err)
 	}
 
-	user, err := s.Users.Create(t.Context(), store.UserCreateParams{
+	u, err := svc.Repo.Create(t.Context(), user.CreateParams{
 		Email:         "signout@example.com",
 		EmailVerified: true,
 		Password:      hash,
@@ -36,16 +35,16 @@ func seedSignoutUser(t *testing.T, s *store.Store) uuid.UUID {
 		t.Fatalf("failed to seed user: %v", err)
 	}
 
-	return user.ID
+	return u
 }
 
 func TestAuthSignout(t *testing.T) {
 	t.Run("success via cookie", func(t *testing.T) {
-		s := setupTestStore(t)
-		userID := seedSignoutUser(t, s)
+		svc, _, _ := setupServices(t)
+		u := seedSignoutUser(t, svc)
 
-		token, err := s.Tokens.Create(t.Context(), store.TokenCreateParams{
-			UserID:    userID,
+		token, err := svc.TokenRepo.Create(t.Context(), user.TokenCreateParams{
+			UserID:    u.ID,
 			Type:      config.TokenTypeSession,
 			ExpiresAt: time.Now().Add(config.SessionExpiryDuration),
 		})
@@ -53,7 +52,7 @@ func TestAuthSignout(t *testing.T) {
 			t.Fatalf("failed to create token: %v", err)
 		}
 
-		handler := handlers.AuthSignout(s)
+		handler := handlers.AuthSignout(svc)
 		req := httptest.NewRequest("POST", "/auth/signout", nil)
 		req.AddCookie(&http.Cookie{Name: config.SessionCookieName, Value: token.ID.String()})
 		rec := httptest.NewRecorder()
@@ -88,18 +87,18 @@ func TestAuthSignout(t *testing.T) {
 			t.Errorf("expected MaxAge: %d, got %d", expected, sessionCookie.MaxAge)
 		}
 
-		_, err = s.Tokens.GetByID(t.Context(), token.ID)
+		_, err = svc.TokenRepo.GetByID(t.Context(), token.ID)
 		if !errors.Is(err, sql.ErrNoRows) {
 			t.Errorf("expected token to be deleted, got err: %v", err)
 		}
 	})
 
 	t.Run("success via Bearer header", func(t *testing.T) {
-		s := setupTestStore(t)
-		userID := seedSignoutUser(t, s)
+		svc, _, _ := setupServices(t)
+		u := seedSignoutUser(t, svc)
 
-		token, err := s.Tokens.Create(t.Context(), store.TokenCreateParams{
-			UserID:    userID,
+		token, err := svc.TokenRepo.Create(t.Context(), user.TokenCreateParams{
+			UserID:    u.ID,
 			Type:      config.TokenTypeSession,
 			ExpiresAt: time.Now().Add(config.SessionExpiryDuration),
 		})
@@ -107,7 +106,7 @@ func TestAuthSignout(t *testing.T) {
 			t.Fatalf("failed to create token: %v", err)
 		}
 
-		handler := handlers.AuthSignout(s)
+		handler := handlers.AuthSignout(svc)
 		req := httptest.NewRequest("POST", "/auth/signout", nil)
 		req.Header.Set("Authorization", "Bearer "+token.ID.String())
 		rec := httptest.NewRecorder()
@@ -142,7 +141,7 @@ func TestAuthSignout(t *testing.T) {
 			t.Errorf("expected MaxAge: %d, got %d", expected, sessionCookie.MaxAge)
 		}
 
-		_, err = s.Tokens.GetByID(t.Context(), token.ID)
+		_, err = svc.TokenRepo.GetByID(t.Context(), token.ID)
 		if !errors.Is(err, sql.ErrNoRows) {
 			t.Errorf("expected token to be deleted, got err: %v", err)
 		}

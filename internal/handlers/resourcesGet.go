@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/models"
+	"github.com/hreftools/api/internal/resource"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
 	"github.com/hreftools/api/internal/utils"
 )
 
@@ -16,7 +16,7 @@ type ResourcesGetResponse struct {
 	Data   models.ResponseResource `json:"data"`
 }
 
-func ResourcesGet(s *store.Store) http.HandlerFunc {
+func ResourcesGet(svc *resource.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := utils.UserIDFromContext(r.Context())
 
@@ -27,7 +27,7 @@ func ResourcesGet(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		rr, err := s.Resources.Get(r.Context(), idUuid, userID)
+		rr, err := svc.Get(r.Context(), idUuid, userID)
 		if err != nil {
 			response.HandleDbError(w, err)
 			return

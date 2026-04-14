@@ -5,11 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/response"
-	"github.com/hreftools/api/internal/store"
+	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -34,7 +32,7 @@ type AuthVerifyResponse struct {
 	Data   string `json:"data"`
 }
 
-func AuthVerify(s *store.Store) http.HandlerFunc {
+func AuthVerify(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body AuthVerifyBody
 		decoder := json.NewDecoder(r.Body)
@@ -51,32 +49,19 @@ func AuthVerify(s *store.Store) http.HandlerFunc {
 			return
 		}
 
-		// im swallowing the error here as the token is already
-		// validated as a uuid, so it should never fail to parse
-		token, _ := uuid.Parse(body.Token)
-
-		u, err := s.Users.GetByEmailVerificationToken(r.Context(), token)
+		err := svc.Verify(r.Context(), body.Token)
 		if err != nil {
+			if errors.Is(err, user.ErrTokenExpired) {
+				response.HandleClientError(w, err, "token has expired")
+				return
+			}
 			response.HandleDbError(w, err)
 			return
 		}
 
-		if u.EmailVerificationTokenExpiresAt != nil && u.EmailVerificationTokenExpiresAt.Before(time.Now()) {
-			response.HandleClientError(w, errors.New("token has expired"), "token has expired")
-			return
-		}
-
-		u, err = s.Users.Verify(r.Context(), u.ID)
-		if err != nil {
-			response.HandleDbError(w, err)
-			return
-		}
-
-		res := AuthVerifyResponse{
+		response.WriteJSONSuccess(w, http.StatusOK, AuthVerifyResponse{
 			Status: "ok",
 			Data:   "ok",
-		}
-
-		response.WriteJSONSuccess(w, http.StatusOK, res)
+		})
 	}
 }

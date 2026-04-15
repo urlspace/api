@@ -8,13 +8,12 @@ import (
 
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/user"
-	"github.com/hreftools/api/internal/utils"
 )
 
 func authMiddleware(svc *user.Service) middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tokenID, ok := utils.ResolveTokenID(r)
+			tokenID, ok := resolveTokenID(r)
 			if !ok {
 				writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 				return

@@ -5,13 +5,12 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/user"
-	"github.com/hreftools/api/internal/utils"
 )
 
 func adminMiddleware(svc *user.Service) middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userID, ok := utils.UserIDFromContext(r.Context())
+			userID, ok := userIDFromContext(r.Context())
 			if !ok {
 				writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 				return

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/utils"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -48,7 +47,7 @@ type resourceCreateResponse struct {
 
 func handleResourcesCreate(svc *resource.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := utils.UserIDFromContext(r.Context())
+		userID, _ := userIDFromContext(r.Context())
 
 		var body resourceCreateBody
 		decoder := json.NewDecoder(r.Body)

@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/emails"
-	"github.com/hreftools/api/internal/utils"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type CreateParams struct {
@@ -70,6 +70,19 @@ type TokenRepository interface {
 	DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
+func passwordHash(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+func passwordValidate(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
 var (
 	ErrNotFound           = errors.New("not found")
 	ErrConflict           = errors.New("conflict")
@@ -95,7 +108,7 @@ func NewService(repo Repository, tokenRepo TokenRepository, emailSender emails.E
 
 // Signup creates a new unverified user and sends a verification email.
 func (s *Service) Signup(ctx context.Context, username, email, password string) error {
-	passwordHash, err := utils.PasswordHash(password)
+	passwordHash, err := passwordHash(password)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
@@ -162,7 +175,7 @@ func (s *Service) Signin(ctx context.Context, email, password string, descriptio
 		return SigninResult{}, ErrEmailNotVerified
 	}
 
-	if !utils.PasswordValidate(password, u.Password) {
+	if !passwordValidate(password, u.Password) {
 		return SigninResult{}, ErrInvalidCredentials
 	}
 
@@ -321,7 +334,7 @@ func (s *Service) ResetPasswordConfirm(ctx context.Context, tokenStr, newPasswor
 		return ErrTokenExpired
 	}
 
-	passwordHash, err := utils.PasswordHash(newPassword)
+	passwordHash, err := passwordHash(newPassword)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
@@ -363,7 +376,7 @@ func (s *Service) List(ctx context.Context) ([]User, error) {
 
 // AdminCreate creates a new user (admin operation — pre-verified, no email sent).
 func (s *Service) AdminCreate(ctx context.Context, username, email, password string, isAdmin, isPro bool) (User, error) {
-	passwordHash, err := utils.PasswordHash(password)
+	passwordHash, err := passwordHash(password)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to hash password: %w", err)
 	}

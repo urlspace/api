@@ -6,9 +6,11 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/resource"
 	"github.com/hreftools/api/internal/user"
 )
@@ -89,6 +91,32 @@ func newResponseUserAdmin(u user.User) responseUserAdmin {
 		CreatedAt:                       u.CreatedAt,
 		UpdatedAt:                       u.UpdatedAt,
 	}
+}
+
+// Request helpers
+
+func resolveTokenID(r *http.Request) (uuid.UUID, bool) {
+	if authHeader := r.Header.Get("Authorization"); authHeader != "" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+			if id, err := uuid.Parse(strings.TrimSpace(parts[1])); err == nil {
+				return id, true
+			}
+		}
+	}
+
+	if cookie, err := r.Cookie(config.SessionCookieName); err == nil {
+		if id, err := uuid.Parse(cookie.Value); err == nil {
+			return id, true
+		}
+	}
+
+	return uuid.UUID{}, false
+}
+
+func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	id, ok := ctx.Value(config.UserIDContextKey).(uuid.UUID)
+	return id, ok
 }
 
 // JSON response helpers

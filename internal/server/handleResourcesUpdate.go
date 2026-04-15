@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/utils"
 	"github.com/hreftools/api/internal/validator"
 )
 
@@ -49,7 +48,7 @@ type resourceUpdateResponse struct {
 
 func handleResourcesUpdate(svc *resource.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := utils.UserIDFromContext(r.Context())
+		userID, _ := userIDFromContext(r.Context())
 
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)

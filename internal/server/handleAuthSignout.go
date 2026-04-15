@@ -5,7 +5,6 @@ import (
 
 	"github.com/hreftools/api/internal/config"
 	"github.com/hreftools/api/internal/user"
-	"github.com/hreftools/api/internal/utils"
 )
 
 type authSignoutResponse struct {
@@ -15,7 +14,7 @@ type authSignoutResponse struct {
 
 func handleAuthSignout(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tokenID, _ := utils.ResolveTokenID(r)
+		tokenID, _ := resolveTokenID(r)
 
 		if err := svc.Signout(r.Context(), tokenID); err != nil {
 			handleServerError(w, err, "failed to delete session")

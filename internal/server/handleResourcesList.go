@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/utils"
 )
 
 type resourcesListResponse struct {
@@ -15,7 +14,7 @@ type resourcesListResponse struct {
 
 func handleResourcesList(svc *resource.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := utils.UserIDFromContext(r.Context())
+		userID, _ := userIDFromContext(r.Context())
 
 		list, err := svc.List(r.Context(), userID)
 		if err != nil {

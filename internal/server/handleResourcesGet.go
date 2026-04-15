@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/utils"
 )
 
@@ -22,13 +21,13 @@ func handleResourcesGet(svc *resource.Service) http.HandlerFunc {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
 		if err != nil {
-			response.HandleClientError(w, err, "invalid id parameter")
+			handleClientError(w, err, "invalid id parameter")
 			return
 		}
 
 		rr, err := svc.Get(r.Context(), idUuid, userID)
 		if err != nil {
-			response.HandleDbError(w, err)
+			handleDbError(w, err)
 			return
 		}
 

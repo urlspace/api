@@ -1,6 +1,11 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+	"log"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -84,4 +89,67 @@ func newResponseUserAdmin(u user.User) responseUserAdmin {
 		CreatedAt:                       u.CreatedAt,
 		UpdatedAt:                       u.UpdatedAt,
 	}
+}
+
+// JSON response helpers
+
+type errorResponse struct {
+	Status string `json:"status"`
+	Data   string `json:"data"`
+}
+
+func writeJSONSuccess(w http.ResponseWriter, statusCode int, res any) {
+	w.WriteHeader(statusCode)
+
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Error encoding response: %v", err)
+	}
+}
+
+func writeJSONError(w http.ResponseWriter, statusCode int, message string) {
+	w.WriteHeader(statusCode)
+
+	res := &errorResponse{
+		Status: "error",
+		Data:   message,
+	}
+
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Error encoding error response: %v", err)
+	}
+}
+
+func handleDbError(w http.ResponseWriter, err error) {
+	if errors.Is(err, user.ErrNotFound) || errors.Is(err, resource.ErrNotFound) {
+		writeJSONError(w, http.StatusNotFound, "entry not found")
+		return
+	}
+
+	if errors.Is(err, user.ErrConflict) || errors.Is(err, resource.ErrConflict) {
+		writeJSONError(w, http.StatusConflict, "request conflict")
+		return
+	}
+
+	if errors.Is(err, context.DeadlineExceeded) {
+		writeJSONError(w, http.StatusRequestTimeout, "request timeout")
+		return
+	}
+
+	if errors.Is(err, context.Canceled) {
+		writeJSONError(w, 499, "request cancelled")
+		return
+	}
+
+	log.Printf("Database error: %v", err)
+	writeJSONError(w, http.StatusInternalServerError, "internal server error")
+}
+
+func handleClientError(w http.ResponseWriter, err error, message string) {
+	log.Printf("Client error: %v", err)
+	writeJSONError(w, http.StatusBadRequest, message)
+}
+
+func handleServerError(w http.ResponseWriter, err error, message string) {
+	log.Printf("Server error: %v", err)
+	writeJSONError(w, http.StatusInternalServerError, "internal server error")
 }

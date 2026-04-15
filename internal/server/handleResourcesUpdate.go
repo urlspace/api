@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/utils"
 	"github.com/hreftools/api/internal/validator"
 )
@@ -55,7 +54,7 @@ func handleResourcesUpdate(svc *resource.Service) http.HandlerFunc {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
 		if err != nil {
-			response.HandleClientError(w, err, "invalid id parameter")
+			handleClientError(w, err, "invalid id parameter")
 			return
 		}
 
@@ -63,12 +62,12 @@ func handleResourcesUpdate(svc *resource.Service) http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
-			response.HandleClientError(w, err, "invalid request body")
+			handleClientError(w, err, "invalid request body")
 			return
 		}
 
 		if err := body.validate(); err != nil {
-			response.HandleClientError(w, err, err.Error())
+			handleClientError(w, err, err.Error())
 			return
 		}
 
@@ -83,7 +82,7 @@ func handleResourcesUpdate(svc *resource.Service) http.HandlerFunc {
 		}
 		rr, err := svc.Update(r.Context(), params)
 		if err != nil {
-			response.HandleDbError(w, err)
+			handleDbError(w, err)
 			return
 		}
 

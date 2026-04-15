@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/config"
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/utils"
 )
@@ -19,7 +18,7 @@ func handleAuthSignout(svc *user.Service) http.HandlerFunc {
 		tokenID, _ := utils.ResolveTokenID(r)
 
 		if err := svc.Signout(r.Context(), tokenID); err != nil {
-			response.HandleServerError(w, err, "failed to delete session")
+			handleServerError(w, err, "failed to delete session")
 			return
 		}
 
@@ -32,7 +31,7 @@ func handleAuthSignout(svc *user.Service) http.HandlerFunc {
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		response.WriteJSONSuccess(w, http.StatusOK, authSignoutResponse{
+		writeJSONSuccess(w, http.StatusOK, authSignoutResponse{
 			Status: "ok",
 			Data:   "signed out",
 		})

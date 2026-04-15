@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/db"
 	"github.com/hreftools/api/internal/user"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type UserRepository struct {
@@ -14,6 +17,17 @@ type UserRepository struct {
 
 func NewUserRepository(queries db.Querier) user.Repository {
 	return &UserRepository{queries: queries}
+}
+
+func translateUserError(err error) error {
+	if errors.Is(err, sql.ErrNoRows) {
+		return user.ErrNotFound
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return user.ErrConflict
+	}
+	return err
 }
 
 func toUser(u db.User) user.User {
@@ -37,7 +51,7 @@ func toUser(u db.User) user.User {
 func (r *UserRepository) List(ctx context.Context) ([]user.User, error) {
 	rows, err := r.queries.ListUsers(ctx)
 	if err != nil {
-		return nil, err
+		return nil, translateUserError(err)
 	}
 
 	users := make([]user.User, len(rows))
@@ -50,7 +64,7 @@ func (r *UserRepository) List(ctx context.Context) ([]user.User, error) {
 func (r *UserRepository) GetById(ctx context.Context, id uuid.UUID) (user.User, error) {
 	row, err := r.queries.GetUserById(ctx, id)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -58,7 +72,7 @@ func (r *UserRepository) GetById(ctx context.Context, id uuid.UUID) (user.User, 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (user.User, error) {
 	row, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -66,7 +80,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (user.Use
 func (r *UserRepository) GetByEmailVerificationToken(ctx context.Context, emailVerificationToken uuid.UUID) (user.User, error) {
 	row, err := r.queries.GetUserByEmailVerificationToken(ctx, uuid.NullUUID{Valid: true, UUID: emailVerificationToken})
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -74,7 +88,7 @@ func (r *UserRepository) GetByEmailVerificationToken(ctx context.Context, emailV
 func (r *UserRepository) GetByPasswordResetToken(ctx context.Context, token uuid.UUID) (user.User, error) {
 	row, err := r.queries.GetUserByPasswordResetToken(ctx, uuid.NullUUID{Valid: true, UUID: token})
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -93,7 +107,7 @@ func (r *UserRepository) Create(ctx context.Context, params user.CreateParams) (
 
 	row, err := r.queries.CreateUser(ctx, args)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -101,7 +115,7 @@ func (r *UserRepository) Create(ctx context.Context, params user.CreateParams) (
 func (r *UserRepository) Verify(ctx context.Context, id uuid.UUID) (user.User, error) {
 	row, err := r.queries.VerifyUser(ctx, id)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -114,7 +128,7 @@ func (r *UserRepository) UpdateVerificationToken(ctx context.Context, params use
 	}
 	row, err := r.queries.UpdateVerificationToken(ctx, args)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -127,7 +141,7 @@ func (r *UserRepository) UpdatePasswordResetToken(ctx context.Context, params us
 	}
 	row, err := r.queries.UpdatePasswordResetToken(ctx, args)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -139,7 +153,7 @@ func (r *UserRepository) ResetPassword(ctx context.Context, id uuid.UUID, passwo
 	}
 	row, err := r.queries.ResetUserPassword(ctx, args)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }
@@ -147,7 +161,7 @@ func (r *UserRepository) ResetPassword(ctx context.Context, id uuid.UUID, passwo
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) (user.User, error) {
 	row, err := r.queries.DeleteUser(ctx, id)
 	if err != nil {
-		return user.User{}, err
+		return user.User{}, translateUserError(err)
 	}
 	return toUser(row), nil
 }

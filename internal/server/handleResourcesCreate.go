@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/utils"
 	"github.com/hreftools/api/internal/validator"
 )
@@ -55,12 +54,12 @@ func handleResourcesCreate(svc *resource.Service) http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
-			response.HandleClientError(w, err, "invalid request body")
+			handleClientError(w, err, "invalid request body")
 			return
 		}
 
 		if err := body.validate(); err != nil {
-			response.HandleClientError(w, err, err.Error())
+			handleClientError(w, err, err.Error())
 			return
 		}
 
@@ -74,7 +73,7 @@ func handleResourcesCreate(svc *resource.Service) http.HandlerFunc {
 		}
 		rr, err := svc.Create(r.Context(), params)
 		if err != nil {
-			response.HandleDbError(w, err)
+			handleDbError(w, err)
 			return
 		}
 

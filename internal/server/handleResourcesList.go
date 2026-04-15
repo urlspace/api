@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/utils"
 )
 
@@ -20,7 +19,7 @@ func handleResourcesList(svc *resource.Service) http.HandlerFunc {
 
 		list, err := svc.List(r.Context(), userID)
 		if err != nil {
-			response.HandleDbError(w, err)
+			handleDbError(w, err)
 			return
 		}
 

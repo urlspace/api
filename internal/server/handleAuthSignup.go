@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/validator"
 )
@@ -48,24 +47,24 @@ func handleAuthSignup(svc *user.Service) http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
-			response.HandleClientError(w, err, "invalid request body")
+			handleClientError(w, err, "invalid request body")
 			return
 		}
 
 		body.normalize()
 
 		if err := body.validate(); err != nil {
-			response.HandleClientError(w, err, err.Error())
+			handleClientError(w, err, err.Error())
 			return
 		}
 
 		err := svc.Signup(r.Context(), body.Username, body.Email, body.Password)
 		if err != nil {
-			response.HandleDbError(w, err)
+			handleDbError(w, err)
 			return
 		}
 
-		response.WriteJSONSuccess(w, http.StatusCreated, authSignupResponse{
+		writeJSONSuccess(w, http.StatusCreated, authSignupResponse{
 			Status: "ok",
 			Data:   "ok",
 		})

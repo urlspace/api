@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/user"
 )
 
@@ -19,13 +18,13 @@ func handleUsersDelete(svc *user.Service) http.HandlerFunc {
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
 		if err != nil {
-			response.HandleClientError(w, err, "invalid id parameter")
+			handleClientError(w, err, "invalid id parameter")
 			return
 		}
 
 		u, err := svc.Delete(r.Context(), idUuid)
 		if err != nil {
-			response.HandleDbError(w, err)
+			handleDbError(w, err)
 			return
 		}
 

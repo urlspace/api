@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/validator"
 )
@@ -38,28 +37,28 @@ func handleAuthResetPasswordRequest(svc *user.Service) http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
-			response.HandleClientError(w, err, "invalid request body")
+			handleClientError(w, err, "invalid request body")
 			return
 		}
 
 		body.normalize()
 
 		if err := body.validate(); err != nil {
-			response.HandleClientError(w, err, err.Error())
+			handleClientError(w, err, err.Error())
 			return
 		}
 
 		err := svc.ResetPasswordRequest(r.Context(), body.Email)
 		if err != nil {
 			if errors.Is(err, user.ErrRateLimited) {
-				response.WriteJSONError(w, http.StatusTooManyRequests, "password reset email already sent, please wait before requesting a new one")
+				writeJSONError(w, http.StatusTooManyRequests, "password reset email already sent, please wait before requesting a new one")
 				return
 			}
-			response.HandleDbError(w, err)
+			handleDbError(w, err)
 			return
 		}
 
-		response.WriteJSONSuccess(w, http.StatusOK, authResetPasswordRequestResponse{
+		writeJSONSuccess(w, http.StatusOK, authResetPasswordRequestResponse{
 			Status: "ok",
 			Data:   "ok",
 		})

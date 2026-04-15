@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/validator"
 )
@@ -38,28 +37,28 @@ func handleAuthVerify(svc *user.Service) http.HandlerFunc {
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
-			response.HandleClientError(w, err, "invalid request body")
+			handleClientError(w, err, "invalid request body")
 			return
 		}
 
 		body.normalize()
 
 		if err := body.validate(); err != nil {
-			response.HandleClientError(w, err, err.Error())
+			handleClientError(w, err, err.Error())
 			return
 		}
 
 		err := svc.Verify(r.Context(), body.Token)
 		if err != nil {
 			if errors.Is(err, user.ErrTokenExpired) {
-				response.HandleClientError(w, err, "token has expired")
+				handleClientError(w, err, "token has expired")
 				return
 			}
-			response.HandleDbError(w, err)
+			handleDbError(w, err)
 			return
 		}
 
-		response.WriteJSONSuccess(w, http.StatusOK, authVerifyResponse{
+		writeJSONSuccess(w, http.StatusOK, authVerifyResponse{
 			Status: "ok",
 			Data:   "ok",
 		})

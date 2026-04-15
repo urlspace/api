@@ -2,8 +2,14 @@ package resource
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+)
+
+var (
+	ErrNotFound = errors.New("not found")
+	ErrConflict = errors.New("conflict")
 )
 
 type CreateParams struct {

@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/db"
 	"github.com/hreftools/api/internal/resource"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type ResourceRepository struct {
@@ -14,6 +17,17 @@ type ResourceRepository struct {
 
 func NewResourceRepository(queries db.Querier) resource.Repository {
 	return &ResourceRepository{queries: queries}
+}
+
+func translateResourceError(err error) error {
+	if errors.Is(err, sql.ErrNoRows) {
+		return resource.ErrNotFound
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return resource.ErrConflict
+	}
+	return err
 }
 
 func toResource(r db.Resource) resource.Resource {
@@ -33,7 +47,7 @@ func toResource(r db.Resource) resource.Resource {
 func (r *ResourceRepository) List(ctx context.Context, userID uuid.UUID) ([]resource.Resource, error) {
 	rows, err := r.queries.ListResources(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, translateResourceError(err)
 	}
 
 	resources := make([]resource.Resource, len(rows))
@@ -49,7 +63,7 @@ func (r *ResourceRepository) Get(ctx context.Context, id uuid.UUID, userID uuid.
 		UserID: userID,
 	})
 	if err != nil {
-		return resource.Resource{}, err
+		return resource.Resource{}, translateResourceError(err)
 	}
 	return toResource(row), nil
 }
@@ -65,7 +79,7 @@ func (r *ResourceRepository) Create(ctx context.Context, params resource.CreateP
 	}
 	row, err := r.queries.CreateResource(ctx, args)
 	if err != nil {
-		return resource.Resource{}, err
+		return resource.Resource{}, translateResourceError(err)
 	}
 	return toResource(row), nil
 }
@@ -82,7 +96,7 @@ func (r *ResourceRepository) Update(ctx context.Context, params resource.UpdateP
 	}
 	row, err := r.queries.UpdateResource(ctx, args)
 	if err != nil {
-		return resource.Resource{}, err
+		return resource.Resource{}, translateResourceError(err)
 	}
 	return toResource(row), nil
 }
@@ -93,7 +107,7 @@ func (r *ResourceRepository) Delete(ctx context.Context, id uuid.UUID, userID uu
 		UserID: userID,
 	})
 	if err != nil {
-		return resource.Resource{}, err
+		return resource.Resource{}, translateResourceError(err)
 	}
 	return toResource(row), nil
 }

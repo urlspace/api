@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -72,6 +71,8 @@ type TokenRepository interface {
 }
 
 var (
+	ErrNotFound           = errors.New("not found")
+	ErrConflict           = errors.New("conflict")
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrEmailNotVerified   = errors.New("invalid email or password")
 	ErrTokenExpired       = errors.New("token has expired")
@@ -151,7 +152,7 @@ type SigninResult struct {
 func (s *Service) Signin(ctx context.Context, email, password string, description *string) (SigninResult, error) {
 	u, err := s.Repo.GetByEmail(ctx, email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNotFound) {
 			return SigninResult{}, ErrInvalidCredentials
 		}
 		return SigninResult{}, err
@@ -200,7 +201,7 @@ func (s *Service) Verify(ctx context.Context, tokenStr string) error {
 func (s *Service) ResendVerification(ctx context.Context, email string) error {
 	u, err := s.Repo.GetByEmail(ctx, email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNotFound) {
 			return nil // silent success for non-existent emails
 		}
 		return err
@@ -257,7 +258,7 @@ func (s *Service) ResendVerification(ctx context.Context, email string) error {
 func (s *Service) ResetPasswordRequest(ctx context.Context, email string) error {
 	u, err := s.Repo.GetByEmail(ctx, email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNotFound) {
 			return nil // silent success
 		}
 		return err

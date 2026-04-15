@@ -2,13 +2,11 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"net/http"
 	"time"
 
 	"github.com/hreftools/api/internal/config"
-	"github.com/hreftools/api/internal/response"
 	"github.com/hreftools/api/internal/user"
 	"github.com/hreftools/api/internal/utils"
 )
@@ -18,17 +16,17 @@ func authMiddleware(svc *user.Service) middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			tokenID, ok := utils.ResolveTokenID(r)
 			if !ok {
-				response.WriteJSONError(w, http.StatusUnauthorized, "unauthorized")
+				writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
 
 			token, err := svc.GetTokenByID(r.Context(), tokenID)
 			if err != nil {
-				if errors.Is(err, sql.ErrNoRows) {
-					response.WriteJSONError(w, http.StatusUnauthorized, "unauthorized")
+				if errors.Is(err, user.ErrNotFound) {
+					writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 					return
 				}
-				response.HandleServerError(w, err, "failed to look up token")
+				handleServerError(w, err, "failed to look up token")
 				return
 			}
 
@@ -41,7 +39,7 @@ func authMiddleware(svc *user.Service) middleware {
 					Secure:   true,
 					SameSite: http.SameSiteLaxMode,
 				})
-				response.WriteJSONError(w, http.StatusUnauthorized, "unauthorized")
+				writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
 

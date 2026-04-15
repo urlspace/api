@@ -2,6 +2,8 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/hreftools/api/internal/db"
@@ -14,6 +16,13 @@ type TokenRepository struct {
 
 func NewTokenRepository(queries db.Querier) user.TokenRepository {
 	return &TokenRepository{queries: queries}
+}
+
+func translateTokenError(err error) error {
+	if errors.Is(err, sql.ErrNoRows) {
+		return user.ErrNotFound
+	}
+	return err
 }
 
 func toToken(t db.Token) user.Token {
@@ -37,7 +46,7 @@ func (t *TokenRepository) Create(ctx context.Context, params user.TokenCreatePar
 	}
 	row, err := t.queries.CreateToken(ctx, args)
 	if err != nil {
-		return user.Token{}, err
+		return user.Token{}, translateTokenError(err)
 	}
 	return toToken(row), nil
 }
@@ -45,7 +54,7 @@ func (t *TokenRepository) Create(ctx context.Context, params user.TokenCreatePar
 func (t *TokenRepository) GetByID(ctx context.Context, id uuid.UUID) (user.Token, error) {
 	row, err := t.queries.GetTokenById(ctx, id)
 	if err != nil {
-		return user.Token{}, err
+		return user.Token{}, translateTokenError(err)
 	}
 	return toToken(row), nil
 }
@@ -57,7 +66,7 @@ func (t *TokenRepository) UpdateExpiresAt(ctx context.Context, params user.Token
 	}
 	row, err := t.queries.UpdateTokenExpiresAt(ctx, args)
 	if err != nil {
-		return user.Token{}, err
+		return user.Token{}, translateTokenError(err)
 	}
 	return toToken(row), nil
 }

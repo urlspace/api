@@ -148,12 +148,12 @@ func writeJSONError(w http.ResponseWriter, statusCode int, message string) {
 }
 
 func handleDbError(w http.ResponseWriter, err error) {
-	if errors.Is(err, user.ErrNotFound) || errors.Is(err, resource.ErrNotFound) {
+	if errors.Is(err, resource.ErrNotFound) {
 		writeJSONError(w, http.StatusNotFound, "entry not found")
 		return
 	}
 
-	if errors.Is(err, user.ErrConflict) || errors.Is(err, resource.ErrConflict) {
+	if errors.Is(err, resource.ErrConflict) {
 		writeJSONError(w, http.StatusConflict, "request conflict")
 		return
 	}
@@ -178,6 +178,6 @@ func handleClientError(w http.ResponseWriter, err error, message string) {
 }
 
 func handleServerError(w http.ResponseWriter, err error, message string) {
-	log.Printf("Server error: %v", err)
+	log.Printf("Server error: %v, %v", err, message)
 	writeJSONError(w, http.StatusInternalServerError, "internal server error")
 }

@@ -84,6 +84,28 @@ func passwordValidate(password, hash string) bool {
 }
 
 var (
+	// validation username
+	ErrValidationUsernameRequired   = errors.New("username is required")
+	ErrValidationUsernameTooShort   = errors.New("username must be min 3 characters")
+	ErrValidationUsernameTooLong    = errors.New("username must be max 32 characters")
+	ErrValidationUsernameCharacters = errors.New("username can only contain lowercase characters, numbers, hyphens, and underscores")
+	ErrValidationUsernamePrefix     = errors.New("username cannot start with hyphen or underscore")
+	ErrValidationUsernameSuffix     = errors.New("username cannot end with hyphen or underscore")
+	ErrValidationUsernameReserved   = errors.New("username is reserved")
+
+	// validation email
+	ErrValidationEmailRequired = errors.New("email is required")
+	ErrValidationEmailFormat   = errors.New("email format is invalid")
+	ErrValidationEmailTooLong  = errors.New("email must be at most 254 characters")
+
+	// validation password
+	ErrValidationPasswordRequired = errors.New("password is required")
+	ErrValidationPasswordTooShort = errors.New("password must be at least 12 characters")
+
+	// validation token
+	ErrValidationTokenRequired = errors.New("token is required")
+	ErrValidationTokenFormat   = errors.New("token is invalid")
+
 	ErrNotFound           = errors.New("not found")
 	ErrConflict           = errors.New("conflict")
 	ErrInvalidCredentials = errors.New("invalid email or password")
@@ -108,6 +130,19 @@ func NewService(repo Repository, tokenRepo TokenRepository, emailSender emails.E
 
 // Signup creates a new unverified user and sends a verification email.
 func (s *Service) Signup(ctx context.Context, username, email, password string) error {
+	username, err := validateUsername(username)
+	if err != nil {
+		return err
+	}
+	err = validatePassword(password)
+	if err != nil {
+		return err
+	}
+	email, err = validateEmail(email)
+	if err != nil {
+		return err
+	}
+
 	passwordHash, err := passwordHash(password)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)

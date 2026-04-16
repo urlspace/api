@@ -30,7 +30,9 @@ func MapErrorToHTTP(err error) (int, string) {
 		errors.Is(err, ErrValidationPasswordRequired) ||
 		errors.Is(err, ErrValidationPasswordTooShort) ||
 		errors.Is(err, ErrValidationTokenRequired) ||
-		errors.Is(err, ErrValidationTokenFormat) {
+		errors.Is(err, ErrValidationTokenFormat) ||
+		errors.Is(err, ErrValidationIsAdminRequired) ||
+		errors.Is(err, ErrValidationIsProRequired) {
 		return http.StatusBadRequest, err.Error()
 	}
 
@@ -48,9 +50,6 @@ func MapErrorToHTTP(err error) (int, string) {
 	}
 	if errors.Is(err, ErrTokenExpired) {
 		return http.StatusUnauthorized, err.Error()
-	}
-	if errors.Is(err, ErrRateLimited) {
-		return http.StatusTooManyRequests, "rate limit exceeded"
 	}
 	if errors.Is(err, ErrResendTooFrequent) {
 		return http.StatusTooManyRequests, err.Error()

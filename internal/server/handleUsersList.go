@@ -16,7 +16,8 @@ func handleUsersList(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		list, err := svc.List(r.Context())
 		if err != nil {
-			handleDbError(w, err)
+			statusCode, errorMessage := user.MapErrorToHTTP(err)
+			writeJSONError(w, statusCode, errorMessage)
 			return
 		}
 

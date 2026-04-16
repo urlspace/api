@@ -236,3 +236,107 @@ func Test_validateUsername(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateIsAdmin(t *testing.T) {
+	boolTrue := true
+	boolFalse := false
+
+	tests := []struct {
+		name       string
+		input      *bool
+		want       bool
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:    "Valid isAdmin true",
+			input:   &boolTrue,
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:    "Valid isAdmin false",
+			input:   &boolFalse,
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name:       "Missing isAdmin",
+			input:      nil,
+			wantErr:    true,
+			wantErrMsg: "isAdmin flag is required",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := validateIsAdmin(tt.input)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("validateIsAdmin() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("validateIsAdmin() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("validateIsAdmin() succeeded unexpectedly")
+			}
+			if got != tt.want {
+				t.Errorf("validateIsAdmin() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_validateIsPro(t *testing.T) {
+	boolTrue := true
+	boolFalse := false
+
+	tests := []struct {
+		name       string
+		input      *bool
+		want       bool
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:    "Valid isPro true",
+			input:   &boolTrue,
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:    "Valid isPro false",
+			input:   &boolFalse,
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name:       "Missing isPro",
+			input:      nil,
+			wantErr:    true,
+			wantErrMsg: "isPro flag is required",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := validateIsPro(tt.input)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("validateIsPro() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("validateIsPro() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("validateIsPro() succeeded unexpectedly")
+			}
+			if got != tt.want {
+				t.Errorf("validateIsPro() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

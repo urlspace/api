@@ -100,3 +100,19 @@ func validateUsername(u string) (string, error) {
 
 	return u, nil
 }
+
+func validateIsAdmin(isAdmin *bool) (bool, error) {
+	if isAdmin == nil {
+		return false, ErrValidationIsAdminRequired
+	}
+
+	return *isAdmin, nil
+}
+
+func validateIsPro(isPro *bool) (bool, error) {
+	if isPro == nil {
+		return false, ErrValidationIsProRequired
+	}
+
+	return *isPro, nil
+}

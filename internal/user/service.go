@@ -106,6 +106,12 @@ var (
 	ErrValidationTokenRequired = errors.New("token is required")
 	ErrValidationTokenFormat   = errors.New("token is invalid")
 
+	// validation is admin
+	ErrValidationIsAdminRequired = errors.New("isAdmin flag is required")
+
+	// validation is pro
+	ErrValidationIsProRequired = errors.New("isPro flag is required")
+
 	ErrNotFound                 = errors.New("not found")
 	ErrConflict                 = errors.New("conflict")
 	ErrInvalidCredentials       = errors.New("invalid email or password")
@@ -443,7 +449,27 @@ func (s *Service) List(ctx context.Context) ([]User, error) {
 }
 
 // AdminCreate creates a new user (admin operation — pre-verified, no email sent).
-func (s *Service) AdminCreate(ctx context.Context, username, email, password string, isAdmin, isPro bool) (User, error) {
+func (s *Service) AdminCreate(ctx context.Context, username, email, password string, isAdmin, isPro *bool) (User, error) {
+	username, err := validateUsername(username)
+	if err != nil {
+		return User{}, err
+	}
+	err = validatePassword(password)
+	if err != nil {
+		return User{}, err
+	}
+	email, err = validateEmail(email)
+	if err != nil {
+		return User{}, err
+	}
+	isAdminValue, err := validateIsAdmin(isAdmin)
+	if err != nil {
+		return User{}, err
+	}
+	isProValue, err := validateIsPro(isPro)
+	if err != nil {
+		return User{}, err
+	}
 	passwordHash, err := passwordHash(password)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to hash password: %w", err)
@@ -456,8 +482,8 @@ func (s *Service) AdminCreate(ctx context.Context, username, email, password str
 		EmailVerificationTokenExpiresAt: nil,
 		Password:                        passwordHash,
 		Username:                        username,
-		IsAdmin:                         isAdmin,
-		IsPro:                           isPro,
+		IsAdmin:                         isAdminValue,
+		IsPro:                           isProValue,
 	})
 }
 

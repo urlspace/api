@@ -2,12 +2,9 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/hreftools/api/internal/user"
-	"github.com/hreftools/api/internal/validator"
 )
 
 type userCreateBody struct {
@@ -16,35 +13,6 @@ type userCreateBody struct {
 	Password string `json:"password"`
 	IsAdmin  *bool  `json:"isAdmin"`
 	IsPro    *bool  `json:"isPro"`
-}
-
-func (b *userCreateBody) normalize() {
-	b.Username = strings.ToLower(strings.TrimSpace(b.Username))
-	b.Email = strings.ToLower(strings.TrimSpace(b.Email))
-}
-
-func (b *userCreateBody) validate() error {
-	if err := validator.Username(b.Username); err != nil {
-		return err
-	}
-
-	if err := validator.Email(b.Email); err != nil {
-		return err
-	}
-
-	if err := validator.Password(b.Password); err != nil {
-		return err
-	}
-
-	if b.IsAdmin == nil {
-		return errors.New("isAdmin field is required")
-	}
-
-	if b.IsPro == nil {
-		return errors.New("isPro field is required")
-	}
-
-	return nil
 }
 
 type usersCreateResponse struct {
@@ -62,16 +30,10 @@ func handleUsersCreate(svc *user.Service) http.HandlerFunc {
 			return
 		}
 
-		body.normalize()
-
-		if err := body.validate(); err != nil {
-			handleClientError(w, err, err.Error())
-			return
-		}
-
-		u, err := svc.AdminCreate(r.Context(), body.Username, body.Email, body.Password, *body.IsAdmin, *body.IsPro)
+		u, err := svc.AdminCreate(r.Context(), body.Username, body.Email, body.Password, body.IsAdmin, body.IsPro)
 		if err != nil {
-			handleDbError(w, err)
+			statusCode, errorMessage := user.MapErrorToHTTP(err)
+			writeJSONError(w, statusCode, errorMessage)
 			return
 		}
 

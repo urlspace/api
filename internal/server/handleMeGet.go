@@ -22,7 +22,8 @@ func handleMeGet(svc *user.Service) http.HandlerFunc {
 
 		u, err := svc.GetById(r.Context(), userID)
 		if err != nil {
-			handleDbError(w, err)
+			statusCode, errorMessage := user.MapErrorToHTTP(err)
+			writeJSONError(w, statusCode, errorMessage)
 			return
 		}
 

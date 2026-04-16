@@ -10,13 +10,21 @@ func Test_validateTitle(t *testing.T) {
 	tests := []struct {
 		name       string
 		input      string
+		wantResult string
 		wantErr    bool
 		wantErrMsg string
 	}{
 		{
-			name:    "Valid title",
-			input:   "My Resource",
-			wantErr: false,
+			name:       "Valid title",
+			input:      "My Resource",
+			wantResult: "My Resource",
+			wantErr:    false,
+		},
+		{
+			name:       "Title is trimmed",
+			input:      "  My Resource  ",
+			wantResult: "My Resource",
+			wantErr:    false,
 		},
 		{
 			name:       "Title is too short",
@@ -33,7 +41,7 @@ func Test_validateTitle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, gotErr := validateTitle(tt.input)
+			gotResult, gotErr := validateTitle(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("ResourceTitle() failed: %v", gotErr)
@@ -46,6 +54,9 @@ func Test_validateTitle(t *testing.T) {
 			if tt.wantErr {
 				t.Fatal("ResourceTitle() succeeded unexpectedly")
 			}
+			if tt.wantResult != "" && gotResult != tt.wantResult {
+				t.Errorf("ResourceTitle() result = %v, want %v", gotResult, tt.wantResult)
+			}
 		})
 	}
 }
@@ -54,18 +65,26 @@ func Test_validateDescription(t *testing.T) {
 	tests := []struct {
 		name       string
 		input      string
+		wantResult string
 		wantErr    bool
 		wantErrMsg string
 	}{
 		{
-			name:    "Valid description",
-			input:   "A helpful resource description.",
-			wantErr: false,
+			name:       "Valid description",
+			input:      "A helpful resource description.",
+			wantResult: "A helpful resource description.",
+			wantErr:    false,
 		},
 		{
 			name:    "Empty description",
 			input:   "",
 			wantErr: false,
+		},
+		{
+			name:       "Description is trimmed",
+			input:      "  A helpful resource description.  ",
+			wantResult: "A helpful resource description.",
+			wantErr:    false,
 		},
 		{
 			name:       "Description is too long",
@@ -76,7 +95,7 @@ func Test_validateDescription(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, gotErr := validateDescription(tt.input)
+			gotResult, gotErr := validateDescription(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("ResourceDescription() failed: %v", gotErr)
@@ -88,6 +107,9 @@ func Test_validateDescription(t *testing.T) {
 			}
 			if tt.wantErr {
 				t.Fatal("ResourceDescription() succeeded unexpectedly")
+			}
+			if tt.wantResult != "" && gotResult != tt.wantResult {
+				t.Errorf("ResourceDescription() result = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
 	}

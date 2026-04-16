@@ -2,6 +2,7 @@ package resource
 
 import (
 	"net/url"
+	"strings"
 )
 
 const (
@@ -10,6 +11,8 @@ const (
 )
 
 func validateTitle(t string) (string, error) {
+	t = strings.TrimSpace(t)
+
 	if len(t) < resourceTitleLengthMin || len(t) > resourceTitleLengthMax {
 		return t, ErrValidationTitleLength
 	}
@@ -22,6 +25,8 @@ const (
 )
 
 func validateDescription(d string) (string, error) {
+	d = strings.TrimSpace(d)
+
 	if len(d) > resourceDescriptionLengthMax {
 		return d, ErrValidationDescriptionLength
 	}

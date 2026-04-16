@@ -11,13 +11,21 @@ func Test_validateEmail(t *testing.T) {
 	tests := []struct {
 		name       string
 		input      string
+		wantResult string
 		wantErr    bool
 		wantErrMsg string
 	}{
 		{
-			name:    "Email is valid",
-			input:   "example@example.com",
-			wantErr: false,
+			name:       "Email is valid",
+			input:      "example@example.com",
+			wantResult: "example@example.com",
+			wantErr:    false,
+		},
+		{
+			name:       "Email is normalized to lowercase and trimmed",
+			input:      "  Example@Example.COM  ",
+			wantResult: "example@example.com",
+			wantErr:    false,
 		},
 		{
 			name:       "Email is missing",
@@ -40,7 +48,7 @@ func Test_validateEmail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, gotErr := validateEmail(tt.input)
+			gotResult, gotErr := validateEmail(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("Email() failed: %v", gotErr)
@@ -52,6 +60,9 @@ func Test_validateEmail(t *testing.T) {
 			}
 			if tt.wantErr {
 				t.Fatal("Email() succeeded unexpectedly")
+			}
+			if tt.wantResult != "" && gotResult != tt.wantResult {
+				t.Errorf("Email() result = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
 	}
@@ -155,13 +166,21 @@ func Test_validateUsername(t *testing.T) {
 	tests := []struct {
 		name       string
 		input      string
+		wantResult string
 		wantErr    bool
 		wantErrMsg string
 	}{
 		{
-			name:    "Username is valid",
-			input:   "username",
-			wantErr: false,
+			name:       "Username is valid",
+			input:      "username",
+			wantResult: "username",
+			wantErr:    false,
+		},
+		{
+			name:       "Username is normalized to lowercase and trimmed",
+			input:      "  UserName  ",
+			wantResult: "username",
+			wantErr:    false,
 		},
 		{
 			name:       "Missing username",
@@ -220,7 +239,7 @@ func Test_validateUsername(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, gotErr := validateUsername(tt.input)
+			gotResult, gotErr := validateUsername(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("Username() failed: %v", gotErr)
@@ -232,6 +251,9 @@ func Test_validateUsername(t *testing.T) {
 			}
 			if tt.wantErr {
 				t.Fatal("Username() succeeded unexpectedly")
+			}
+			if tt.wantResult != "" && gotResult != tt.wantResult {
+				t.Errorf("Username() result = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
 	}

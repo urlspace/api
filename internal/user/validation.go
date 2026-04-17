@@ -118,6 +118,33 @@ var reservedUsernames = map[string]bool{
 	"staff":     true,
 	"team":      true,
 	"official":  true,
+	// routing / URL conflicts
+	"api":     true,
+	"static":  true,
+	"assets":  true,
+	"cdn":     true,
+	"favicon": true,
+	// auth flows
+	"login":    true,
+	"logout":   true,
+	"signup":   true,
+	"register": true,
+	"verify":   true,
+	"reset":    true,
+	"forgot":   true,
+	// profile / account paths
+	"account":   true,
+	"accounts":  true,
+	"profile":   true,
+	"settings":  true,
+	"dashboard": true,
+	// sentinel values
+	"null":      true,
+	"undefined": true,
+	"anonymous": true,
+	// bots / crawlers
+	"bot":    true,
+	"robots": true,
 }
 
 // Only lowercase ASCII letters, digits, hyphens, and underscores are allowed.

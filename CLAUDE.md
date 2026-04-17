@@ -53,12 +53,12 @@ The codebase follows a **domain-driven layout** with two domain packages (`user`
 ### Key layers
 
 - **`cmd/api/main.go`** — Entry point. Wires config, database, repositories, services, tracing, and server. Handles graceful shutdown.
-- **`internal/user/`** — User domain: `User` and `Token` models, `Repository` and `TokenRepository` interfaces, `Service` (business logic for auth flows, CRUD), validation functions, and sentinel errors.
+- **`internal/user/`** — User domain: `User` and `Session` models, `Repository` and `SessionRepository` interfaces, `Service` (business logic for auth flows, CRUD), validation functions, and sentinel errors.
 - **`internal/resource/`** — Resource domain: `Resource` model, `Repository` interface, `Service`, validation, and sentinel errors.
-- **`internal/postgres/`** — PostgreSQL implementations of repository interfaces. `Connect()` sets up the connection pool. One file per repository (`repository_users.go`, `repository_tokens.go`, `repository_resources.go`).
+- **`internal/postgres/`** — PostgreSQL implementations of repository interfaces. `Connect()` sets up the connection pool. One file per repository (`repository_users.go`, `repository_sessions.go`, `repository_resources.go`).
 - **`internal/server/`** — HTTP layer: route registration (`server.go`), all handlers (`handler_*.go`), all middlewares (`middleware_*.go`), JSON response helpers and response DTOs (`helpers.go`).
 - **`internal/db/`** — sqlc-generated code. Do not edit manually; regenerate with `make gen`.
-- **`internal/config/`** — `LoadConfig()` reads env vars. Shared constants: session durations, context keys, token types.
+- **`internal/config/`** — `LoadConfig()` reads env vars. Shared constants: session durations, context keys.
 - **`internal/emails/`** — `EmailSender` interface + Resend implementation. Template rendering for transactional emails.
 
 ### Data flow
@@ -78,7 +78,7 @@ Middleware composition:
 
 ### Validation pattern
 
-Each domain package contains its own validation functions (e.g., `user/validation.go`, `resource/validate.go`). Validators are called by the service layer before any repository calls. They return sanitized values alongside errors.
+Each domain package contains its own validation functions (e.g., `user/validation.go`, `resource/validation.go`). Validators are called by the service layer before any repository calls. They return sanitized values alongside errors.
 
 ### Error mapping
 
@@ -90,7 +90,7 @@ All JSON responses: `{"status": "ok"|"error", "data": ...}`
 
 ### Authentication
 
-The auth middleware validates tokens from `Authorization: Bearer <uuid>` header or `session_id` cookie. On success, stores user ID in request context via `config.UserIDContextKey`. Sessions use sliding expiry (renewed when < 15 days remaining).
+The auth middleware validates sessions from `Authorization: Bearer <uuid>` header or `session_id` cookie. On success, stores user ID in request context via `config.UserIDContextKey`. Sessions use sliding expiry (renewed when < 15 days remaining).
 
 ## Key Dependencies
 
@@ -99,11 +99,11 @@ The auth middleware validates tokens from `Authorization: Bearer <uuid>` header 
 | `github.com/jackc/pgx/v5`        | PostgreSQL driver              |
 | `github.com/google/uuid`         | UUID types                     |
 | `github.com/resend/resend-go/v3` | Transactional email via Resend |
-| `golang.org/x/crypto`            | Password hashing (bcrypt)      |
+| `golang.org/x/crypto`            | Password hashing (argon2id)    |
 | `go.opentelemetry.io/otel`       | OpenTelemetry tracing          |
 
 ## SQL & Migrations
 
 - Migrations live in `sql/migrations/` (sequential numbered, `.up.sql`/`.down.sql`)
-- Queries live in `sql/queries/` (one file per domain: `resources.sql`, `tokens.sql`, `users.sql`)
+- Queries live in `sql/queries/` (one file per domain: `resources.sql`, `sessions.sql`, `users.sql`)
 - sqlc config: `sqlc.yml` — generates to `internal/db/` with `emit_interface: true` and `emit_empty_slices: true`

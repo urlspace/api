@@ -29,6 +29,7 @@ func MapErrorToHTTP(err error) (int, string) {
 		errors.Is(err, ErrValidationEmailTooLong) ||
 		errors.Is(err, ErrValidationPasswordRequired) ||
 		errors.Is(err, ErrValidationPasswordTooShort) ||
+		errors.Is(err, ErrValidationPasswordTooLong) ||
 		errors.Is(err, ErrValidationTokenRequired) ||
 		errors.Is(err, ErrValidationTokenFormat) ||
 		errors.Is(err, ErrValidationIsAdminRequired) ||

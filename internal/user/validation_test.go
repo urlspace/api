@@ -110,6 +110,12 @@ func Test_validatePassword(t *testing.T) {
 			wantErr:    true,
 			wantErrMsg: "password is required",
 		},
+		{
+			name:       "Password exceeding 128 characters is rejected",
+			input:      strings.Repeat("a", 129),
+			wantErr:    true,
+			wantErrMsg: "password must be at most 128 characters",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

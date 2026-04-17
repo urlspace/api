@@ -226,6 +226,7 @@ var (
 	// validation password
 	ErrValidationPasswordRequired = errors.New("password is required")
 	ErrValidationPasswordTooShort = errors.New("password must be at least 12 characters")
+	ErrValidationPasswordTooLong  = errors.New("password must be at most 128 characters")
 
 	// validation token
 	ErrValidationTokenRequired = errors.New("token is required")

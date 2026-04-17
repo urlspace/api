@@ -37,6 +37,13 @@ func validateEmail(e string) (string, error) {
 
 const (
 	passwordLengthMin = 12
+	// 128 characters is generous enough to accommodate the maximum generated
+	// password length of popular password managers (1Password: 100, LastPass: 100,
+	// Bitwarden: 128, Dashlane: 40, KeePass: unlimited). An upper bound is
+	// necessary because Argon2id is deliberately memory-intensive (64 MB per hash),
+	// so accepting unbounded input would allow attackers to tie up server resources
+	// with a small number of concurrent requests containing very large passwords.
+	passwordLengthMax = 128
 )
 
 func validatePassword(p string) (string, error) {
@@ -50,6 +57,10 @@ func validatePassword(p string) (string, error) {
 	// characters of entropy (e.g. 3 emoji = 12 bytes but only 3 characters).
 	if utf8.RuneCountInString(p) < passwordLengthMin {
 		return p, ErrValidationPasswordTooShort
+	}
+
+	if utf8.RuneCountInString(p) > passwordLengthMax {
+		return p, ErrValidationPasswordTooLong
 	}
 
 	return p, nil

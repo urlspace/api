@@ -120,6 +120,8 @@ func validateUsername(u string) (string, error) {
 		return u, ErrValidationUsernameRequired
 	}
 
+	// len() is used here instead of utf8.RuneCountInString() because the regex
+	// (userPattern) already restricts usernames to single-byte ASCII characters.
 	if len(u) < userUsernameLengthMin {
 		return u, ErrValidationUsernameTooShort
 	}

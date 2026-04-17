@@ -15,14 +15,20 @@ func validateEmail(e string) (string, error) {
 		return e, ErrValidationEmailRequired
 	}
 
-	// validate format RFC 5322
-	if _, err := mail.ParseAddress(e); err != nil {
+	// RFC 5321 limits the total length of an email address to 254 characters.
+	if len(e) > 254 {
+		return e, ErrValidationEmailTooLong
+	}
+
+	parsed, err := mail.ParseAddress(e)
+	if err != nil {
 		return e, ErrValidationEmailFormat
 	}
 
-	// limit length as per smtp spec RFC 5321
-	if len(e) > 254 {
-		return e, ErrValidationEmailTooLong
+	// mail.ParseAddress accepts RFC 5322 display names like "Joe" <joe@evil.com>.
+	// Reject these by ensuring the raw input matches the parsed address exactly.
+	if parsed.Address != e {
+		return e, ErrValidationEmailFormat
 	}
 
 	return e, nil

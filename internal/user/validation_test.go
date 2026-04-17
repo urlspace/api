@@ -40,6 +40,12 @@ func Test_validateEmail(t *testing.T) {
 			wantErrMsg: "email format is invalid",
 		},
 		{
+			name:       "Email with RFC 5322 display name is rejected",
+			input:      `"Joe" <joe@evil.com>`,
+			wantErr:    true,
+			wantErrMsg: "email format is invalid",
+		},
+		{
 			name:       "Email's length exceeds 254 characters",
 			input:      strings.Repeat("a", 245) + "@email.com",
 			wantErr:    true,

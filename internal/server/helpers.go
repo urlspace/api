@@ -94,7 +94,7 @@ func newResponseUserAdmin(u user.User) responseUserAdmin {
 
 // Request helpers
 
-func resolveTokenID(r *http.Request) (uuid.UUID, bool) {
+func resolveSessionID(r *http.Request) (uuid.UUID, bool) {
 	if authHeader := r.Header.Get("Authorization"); authHeader != "" {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {

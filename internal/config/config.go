@@ -17,9 +17,6 @@ type contextKey string
 
 const UserIDContextKey contextKey = "userID"
 
-const TokenTypeSession = "session"
-const TokenTypeAPI = "token"
-
 const SessionCookieName = "session_id"
 
 type Config struct {

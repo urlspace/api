@@ -54,22 +54,21 @@ type Repository interface {
 	Delete(ctx context.Context, id uuid.UUID) (User, error)
 }
 
-type TokenCreateParams struct {
+type SessionCreateParams struct {
 	UserID      uuid.UUID
-	Type        string
 	Description *string
 	ExpiresAt   time.Time
 }
 
-type TokenUpdateExpiresAtParams struct {
+type SessionUpdateExpiresAtParams struct {
 	ID        uuid.UUID
 	ExpiresAt time.Time
 }
 
-type TokenRepository interface {
-	Create(ctx context.Context, params TokenCreateParams) (Token, error)
-	GetByID(ctx context.Context, id uuid.UUID) (Token, error)
-	UpdateExpiresAt(ctx context.Context, params TokenUpdateExpiresAtParams) (Token, error)
+type SessionRepository interface {
+	Create(ctx context.Context, params SessionCreateParams) (Session, error)
+	GetByID(ctx context.Context, id uuid.UUID) (Session, error)
+	UpdateExpiresAt(ctx context.Context, params SessionUpdateExpiresAtParams) (Session, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error
 }
@@ -249,14 +248,14 @@ var (
 
 type Service struct {
 	Repo        Repository
-	TokenRepo   TokenRepository
+	SessionRepo SessionRepository
 	EmailSender emails.EmailSender
 }
 
-func NewService(repo Repository, tokenRepo TokenRepository, emailSender emails.EmailSender) *Service {
+func NewService(repo Repository, sessionRepo SessionRepository, emailSender emails.EmailSender) *Service {
 	return &Service{
 		Repo:        repo,
-		TokenRepo:   tokenRepo,
+		SessionRepo: sessionRepo,
 		EmailSender: emailSender,
 	}
 }
@@ -326,10 +325,10 @@ func (s *Service) Signup(ctx context.Context, username, email, password string) 
 }
 
 type SigninResult struct {
-	Token Token
+	Session Session
 }
 
-// Signin validates credentials and creates a session token.
+// Signin validates credentials and creates a session.
 func (s *Service) Signin(ctx context.Context, email, password string, description *string) (SigninResult, error) {
 	email, err := validateEmail(email)
 	if err != nil {
@@ -356,9 +355,8 @@ func (s *Service) Signin(ctx context.Context, email, password string, descriptio
 		return SigninResult{}, ErrInvalidCredentials
 	}
 
-	token, err := s.TokenRepo.Create(ctx, TokenCreateParams{
+	session, err := s.SessionRepo.Create(ctx, SessionCreateParams{
 		UserID:      u.ID,
-		Type:        config.TokenTypeSession,
 		Description: description,
 		ExpiresAt:   time.Now().Add(config.SessionExpiryDuration),
 	})
@@ -366,7 +364,7 @@ func (s *Service) Signin(ctx context.Context, email, password string, descriptio
 		return SigninResult{}, err
 	}
 
-	return SigninResult{Token: token}, nil
+	return SigninResult{Session: session}, nil
 }
 
 // Verify validates a verification token and marks the user as verified.
@@ -544,24 +542,24 @@ func (s *Service) ResetPasswordConfirm(ctx context.Context, tokenStr, newPasswor
 		return err
 	}
 
-	go s.TokenRepo.DeleteAllByUserID(context.Background(), u.ID)
+	go s.SessionRepo.DeleteAllByUserID(context.Background(), u.ID)
 
 	return nil
 }
 
-// Signout deletes a session token.
-func (s *Service) Signout(ctx context.Context, tokenID uuid.UUID) error {
-	return s.TokenRepo.Delete(ctx, tokenID)
+// Signout deletes a session.
+func (s *Service) Signout(ctx context.Context, sessionID uuid.UUID) error {
+	return s.SessionRepo.Delete(ctx, sessionID)
 }
 
-// GetTokenByID retrieves a token by its ID (used by auth middleware).
-func (s *Service) GetTokenByID(ctx context.Context, id uuid.UUID) (Token, error) {
-	return s.TokenRepo.GetByID(ctx, id)
+// GetSessionByID retrieves a session by its ID (used by auth middleware).
+func (s *Service) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error) {
+	return s.SessionRepo.GetByID(ctx, id)
 }
 
-// UpdateTokenExpiresAt updates the expiry of a token (used by auth middleware for sliding sessions).
-func (s *Service) UpdateTokenExpiresAt(ctx context.Context, params TokenUpdateExpiresAtParams) (Token, error) {
-	return s.TokenRepo.UpdateExpiresAt(ctx, params)
+// UpdateSessionExpiresAt updates the expiry of a session (used by auth middleware for sliding expiry).
+func (s *Service) UpdateSessionExpiresAt(ctx context.Context, params SessionUpdateExpiresAtParams) (Session, error) {
+	return s.SessionRepo.UpdateExpiresAt(ctx, params)
 }
 
 // GetById retrieves a user by ID.

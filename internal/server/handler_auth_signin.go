@@ -47,8 +47,8 @@ func handleAuthSignin(svc *user.Service) http.HandlerFunc {
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     config.SessionCookieName,
-			Value:    result.Token.ID.String(),
-			Expires:  result.Token.ExpiresAt,
+			Value:    result.Session.ID.String(),
+			Expires:  result.Session.ExpiresAt,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,

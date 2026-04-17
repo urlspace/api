@@ -65,13 +65,13 @@ func run(ctx context.Context) error {
 
 	queries := db.New(pool)
 	userRepo := postgres.NewUserRepository(queries)
-	tokenRepo := postgres.NewTokenRepository(queries)
+	sessionRepo := postgres.NewSessionRepository(queries)
 	resourceRepo := postgres.NewResourceRepository(queries)
 
 	resendClient := resend.NewClient(cfg.ResendAPIKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
 
-	userSvc := user.NewService(userRepo, tokenRepo, emailSender)
+	userSvc := user.NewService(userRepo, sessionRepo, emailSender)
 	resourceSvc := resource.NewService(resourceRepo)
 
 	tp, err := initTracer(ctx)

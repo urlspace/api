@@ -68,7 +68,40 @@ func validateToken(token string) (string, error) {
 }
 
 var reservedUsernames = map[string]bool{
-	"admin": true,
+	// brand
+	"href":       true,
+	"hreftools":  true,
+	"href_tools": true,
+	"href-tools": true,
+	"yank":       true,
+	"yankpage":   true,
+	"yank-page":  true,
+	"yank_page":  true,
+	// infrastructure
+	"root":      true,
+	"system":    true,
+	"localhost": true,
+	"www":       true,
+	"mail":      true,
+	"ftp":       true,
+	// impersonation targets
+	"support":    true,
+	"help":       true,
+	"contact":    true,
+	"info":       true,
+	"security":   true,
+	"abuse":      true,
+	"postmaster": true,
+	"webmaster":  true,
+	"noreply":    true,
+	"no-reply":   true,
+	"admin":      true,
+	// authority
+	"moderator": true,
+	"mod":       true,
+	"staff":     true,
+	"team":      true,
+	"official":  true,
 }
 
 var userPattern = regexp.MustCompile(`^[a-z0-9_-]+$`)

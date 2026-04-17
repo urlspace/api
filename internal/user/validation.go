@@ -40,7 +40,7 @@ const (
 )
 
 func validatePassword(p string) (string, error) {
-	if len(p) == 0 {
+	if len(p) == 0 || strings.TrimSpace(p) == "" {
 		return p, ErrValidationPasswordRequired
 	}
 
@@ -104,6 +104,8 @@ var reservedUsernames = map[string]bool{
 	"official":  true,
 }
 
+// Only lowercase ASCII letters, digits, hyphens, and underscores are allowed.
+// Consecutive separators (e.g. "a--b", "a__b") are permitted as they are URL-friendly.
 var userPattern = regexp.MustCompile(`^[a-z0-9_-]+$`)
 
 const (

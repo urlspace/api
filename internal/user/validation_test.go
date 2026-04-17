@@ -104,6 +104,12 @@ func Test_validatePassword(t *testing.T) {
 			wantErr:    true,
 			wantErrMsg: "password must be at least 12 characters",
 		},
+		{
+			name:       "Whitespace-only password is rejected",
+			input:      "            ",
+			wantErr:    true,
+			wantErrMsg: "password is required",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -247,6 +253,12 @@ func Test_validateUsername(t *testing.T) {
 			input:      "admin",
 			wantErr:    true,
 			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Unicode lookalike characters are rejected",
+			input:      "аdmin",
+			wantErr:    true,
+			wantErrMsg: "username can only contain lowercase characters, numbers, hyphens, and underscores",
 		},
 	}
 	for _, tt := range tests {

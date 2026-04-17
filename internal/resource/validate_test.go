@@ -39,6 +39,18 @@ func Test_validateTitle(t *testing.T) {
 			wantErrMsg: "title must be between 3 and 255 characters",
 		},
 		{
+			name:       "Title with null byte is rejected",
+			input:      "My \x00 Resource",
+			wantErr:    true,
+			wantErrMsg: "title must not contain control characters",
+		},
+		{
+			name:       "Title with tab is rejected",
+			input:      "My \t Resource",
+			wantErr:    true,
+			wantErrMsg: "title must not contain control characters",
+		},
+		{
 			name:       "Multi-byte characters are counted as characters not bytes",
 			input:      strings.Repeat("ą", 128),
 			wantResult: strings.Repeat("ą", 128),
@@ -99,6 +111,18 @@ func Test_validateDescription(t *testing.T) {
 			wantErrMsg: "description must be less than 512 characters",
 		},
 		{
+			name:       "Description with null byte is rejected",
+			input:      "A description with \x00 null byte",
+			wantErr:    true,
+			wantErrMsg: "description must not contain control characters",
+		},
+		{
+			name:       "Description with newline is rejected",
+			input:      "A description with \n newline",
+			wantErr:    true,
+			wantErrMsg: "description must not contain control characters",
+		},
+		{
 			name:       "Multi-byte characters are counted as characters not bytes",
 			input:      strings.Repeat("ą", 257),
 			wantResult: strings.Repeat("ą", 257),
@@ -148,9 +172,9 @@ func Test_validateURL(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:       "URL is returned as parsed string",
+			name:       "URL scheme and host are normalized to lowercase",
 			input:      "HTTP://Example.COM/path",
-			wantResult: "http://Example.COM/path",
+			wantResult: "http://example.com/path",
 			wantErr:    false,
 		},
 		{

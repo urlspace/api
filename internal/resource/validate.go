@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/url"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -23,6 +24,14 @@ func validateTitle(t string) (string, error) {
 		return t, ErrValidationTitleLength
 	}
 
+	// Reject control characters (null bytes, tabs, newlines, etc.) which can
+	// cause issues in logs, CSV exports, database collation, or rendering.
+	for _, r := range t {
+		if unicode.IsControl(r) {
+			return t, ErrValidationTitleInvalidCharacters
+		}
+	}
+
 	return t, nil
 }
 
@@ -37,6 +46,13 @@ func validateDescription(d string) (string, error) {
 	// not bytes. See validateTitle for details.
 	if utf8.RuneCountInString(d) > resourceDescriptionLengthMax {
 		return d, ErrValidationDescriptionLength
+	}
+
+	// Reject control characters. See validateTitle for details.
+	for _, r := range d {
+		if unicode.IsControl(r) {
+			return d, ErrValidationDescriptionInvalidCharacters
+		}
 	}
 
 	return d, nil
@@ -67,6 +83,10 @@ func validateURL(u string) (string, error) {
 	if uParsed.User != nil {
 		return u, ErrValidationURLFormat
 	}
+
+	// RFC 3986 §6.2.2.1: host is case-insensitive. Normalize to lowercase
+	// so that HTTPS://EXAMPLE.COM and https://example.com are stored identically.
+	uParsed.Host = strings.ToLower(uParsed.Host)
 
 	if isPrivateHost(uParsed.Host) {
 		return u, ErrValidationURLPrivate

@@ -9,10 +9,12 @@ import (
 
 var (
 	// validation title
-	ErrValidationTitleLength = errors.New("title must be between 3 and 255 characters")
+	ErrValidationTitleLength            = errors.New("title must be between 3 and 255 characters")
+	ErrValidationTitleInvalidCharacters = errors.New("title must not contain control characters")
 
 	// validation description
-	ErrValidationDescriptionLength = errors.New("description must be less than 512 characters")
+	ErrValidationDescriptionLength            = errors.New("description must be less than 512 characters")
+	ErrValidationDescriptionInvalidCharacters = errors.New("description must not contain control characters")
 
 	// validation url
 	ErrValidationURLFormat    = errors.New("url is invalid")

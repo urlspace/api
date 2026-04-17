@@ -46,6 +46,12 @@ func Test_validateEmail(t *testing.T) {
 			wantErrMsg: "email format is invalid",
 		},
 		{
+			name:       "Email with empty local part after plus-stripping is rejected",
+			input:      "+tag@gmail.com",
+			wantErr:    true,
+			wantErrMsg: "email format is invalid",
+		},
+		{
 			name:       "Email local part exceeding 64 characters is rejected",
 			input:      strings.Repeat("a", 65) + "@example.com",
 			wantErr:    true,

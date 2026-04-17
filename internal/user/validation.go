@@ -32,6 +32,13 @@ func validateEmail(e string) (string, error) {
 		return e, ErrValidationEmailFormat
 	}
 
+	// Strip plus-addressing (subaddressing) from the local part to prevent
+	// users from creating multiple accounts with the same mailbox.
+	// e.g. "user+tag@gmail.com" becomes "user@gmail.com".
+	parts := strings.SplitN(e, "@", 2)
+	local := strings.SplitN(parts[0], "+", 2)
+	e = local[0] + "@" + parts[1]
+
 	return e, nil
 }
 

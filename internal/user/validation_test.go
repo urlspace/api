@@ -28,6 +28,12 @@ func Test_validateEmail(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			name:       "Plus-addressing tag is stripped",
+			input:      "user+tag@gmail.com",
+			wantResult: "user@gmail.com",
+			wantErr:    false,
+		},
+		{
 			name:       "Email is missing",
 			input:      "",
 			wantErr:    true,

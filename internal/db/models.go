@@ -22,10 +22,9 @@ type Resource struct {
 	UpdatedAt   time.Time
 }
 
-type Token struct {
+type Session struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
-	Type        string
 	Description *string
 	ExpiresAt   time.Time
 	CreatedAt   time.Time

@@ -12,14 +12,14 @@ import (
 
 type Querier interface {
 	CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error)
-	CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteResource(ctx context.Context, arg DeleteResourceParams) (Resource, error)
-	DeleteToken(ctx context.Context, id uuid.UUID) error
-	DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) error
+	DeleteSession(ctx context.Context, id uuid.UUID) error
+	DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetResource(ctx context.Context, arg GetResourceParams) (Resource, error)
-	GetTokenById(ctx context.Context, id uuid.UUID) (Token, error)
+	GetSessionById(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByEmailVerificationToken(ctx context.Context, emailVerificationToken uuid.NullUUID) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
@@ -29,7 +29,7 @@ type Querier interface {
 	ResetUserPassword(ctx context.Context, arg ResetUserPasswordParams) (User, error)
 	UpdatePasswordResetToken(ctx context.Context, arg UpdatePasswordResetTokenParams) (User, error)
 	UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error)
-	UpdateTokenExpiresAt(ctx context.Context, arg UpdateTokenExpiresAtParams) (Token, error)
+	UpdateSessionExpiresAt(ctx context.Context, arg UpdateSessionExpiresAtParams) (Session, error)
 	UpdateVerificationToken(ctx context.Context, arg UpdateVerificationTokenParams) (User, error)
 	VerifyUser(ctx context.Context, id uuid.UUID) (User, error)
 }

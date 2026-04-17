@@ -47,7 +47,12 @@ const (
 )
 
 func validatePassword(p string) (string, error) {
-	if len(p) == 0 || strings.TrimSpace(p) == "" {
+	// Trim leading/trailing whitespace before any checks. NIST SP 800-63B
+	// section 5.1.1 recommends this — surrounding spaces are almost always
+	// a copy-paste accident that would cause login failures later.
+	p = strings.TrimSpace(p)
+
+	if len(p) == 0 {
 		return p, ErrValidationPasswordRequired
 	}
 

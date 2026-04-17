@@ -87,6 +87,11 @@ func Test_validatePassword(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:    "Leading and trailing whitespace is trimmed",
+			input:   "  supersecretpassword123  ",
+			wantErr: false,
+		},
+		{
 			name:       "Missing password",
 			input:      "",
 			wantErr:    true,

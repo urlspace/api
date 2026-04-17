@@ -38,6 +38,12 @@ func Test_validateTitle(t *testing.T) {
 			wantErr:    true,
 			wantErrMsg: "title must be between 3 and 255 characters",
 		},
+		{
+			name:       "Multi-byte characters are counted as characters not bytes",
+			input:      strings.Repeat("ą", 128),
+			wantResult: strings.Repeat("ą", 128),
+			wantErr:    false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -91,6 +97,12 @@ func Test_validateDescription(t *testing.T) {
 			input:      strings.Repeat("a", 513),
 			wantErr:    true,
 			wantErrMsg: "description must be less than 512 characters",
+		},
+		{
+			name:       "Multi-byte characters are counted as characters not bytes",
+			input:      strings.Repeat("ą", 257),
+			wantResult: strings.Repeat("ą", 257),
+			wantErr:    false,
 		},
 	}
 	for _, tt := range tests {

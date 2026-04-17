@@ -3,6 +3,7 @@ package resource
 import (
 	"net/url"
 	"strings"
+	"unicode/utf8"
 )
 
 const (
@@ -13,7 +14,11 @@ const (
 func validateTitle(t string) (string, error) {
 	t = strings.TrimSpace(t)
 
-	if len(t) < resourceTitleLengthMin || len(t) > resourceTitleLengthMax {
+	// Use RuneCountInString instead of len to count human-readable characters,
+	// not bytes. Non-ASCII characters (e.g. Polish ąęł, CJK) are multi-byte
+	// in UTF-8 and would inflate the byte count, causing valid titles to be
+	// rejected or invalid ones to pass.
+	if utf8.RuneCountInString(t) < resourceTitleLengthMin || utf8.RuneCountInString(t) > resourceTitleLengthMax {
 		return t, ErrValidationTitleLength
 	}
 
@@ -27,7 +32,9 @@ const (
 func validateDescription(d string) (string, error) {
 	d = strings.TrimSpace(d)
 
-	if len(d) > resourceDescriptionLengthMax {
+	// Use RuneCountInString instead of len to count human-readable characters,
+	// not bytes. See validateTitle for details.
+	if utf8.RuneCountInString(d) > resourceDescriptionLengthMax {
 		return d, ErrValidationDescriptionLength
 	}
 

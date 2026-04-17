@@ -39,6 +39,11 @@ func validateEmail(e string) (string, error) {
 	local := strings.SplitN(parts[0], "+", 2)
 	e = local[0] + "@" + parts[1]
 
+	// RFC 5321 §4.5.3.1 limits the local part (before @) to 64 characters.
+	if len(local[0]) > 64 {
+		return e, ErrValidationEmailFormat
+	}
+
 	return e, nil
 }
 

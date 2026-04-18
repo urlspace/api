@@ -13,23 +13,30 @@ import (
 type Querier interface {
 	CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
+	CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteResource(ctx context.Context, arg DeleteResourceParams) (Resource, error)
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) error
+	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
+	DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetResource(ctx context.Context, arg GetResourceParams) (Resource, error)
 	GetSessionById(ctx context.Context, id uuid.UUID) (Session, error)
+	GetTokenByHash(ctx context.Context, hash string) (Token, error)
+	GetTokenById(ctx context.Context, arg GetTokenByIdParams) (Token, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByEmailVerificationToken(ctx context.Context, emailVerificationToken uuid.NullUUID) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByPasswordResetToken(ctx context.Context, passwordResetToken uuid.NullUUID) (User, error)
 	ListResources(ctx context.Context, userID uuid.UUID) ([]Resource, error)
+	ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]Token, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	ResetUserPassword(ctx context.Context, arg ResetUserPasswordParams) (User, error)
 	UpdatePasswordResetToken(ctx context.Context, arg UpdatePasswordResetTokenParams) (User, error)
 	UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error)
 	UpdateSessionExpiresAt(ctx context.Context, arg UpdateSessionExpiresAtParams) (Session, error)
+	UpdateTokenLastUsedAt(ctx context.Context, id uuid.UUID) error
 	UpdateVerificationToken(ctx context.Context, arg UpdateVerificationTokenParams) (User, error)
 	VerifyUser(ctx context.Context, id uuid.UUID) (User, error)
 }

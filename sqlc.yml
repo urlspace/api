@@ -43,3 +43,12 @@ sql:
           - column: "sessions.updated_at"
             go_type:
               type: "time.Time"
+          - column: "tokens.last_used_at"
+            go_type:
+              type: "time.Time"
+          - column: "tokens.created_at"
+            go_type:
+              type: "time.Time"
+          - column: "tokens.updated_at"
+            go_type:
+              type: "time.Time"

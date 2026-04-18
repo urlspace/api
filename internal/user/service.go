@@ -168,12 +168,12 @@ func passwordHash(password string) (string, error) {
 	), nil
 }
 
-// passwordValidate checks whether a plaintext password matches a stored
+// passwordMatchesHash checks whether a plaintext password matches a stored
 // Argon2id hash. It parses the parameters, salt, and expected key from
 // the stored hash string, then re-derives the key from the candidate
 // password using the same parameters. If the derived key matches the
 // stored key, the password is correct.
-func passwordValidate(password, hash string) bool {
+func passwordMatchesHash(password, hash string) bool {
 	// Parse the stored hash string to extract the algorithm parameters,
 	// salt, and expected key. Sscanf reads structured data from a string
 	// using a format template — each %d/%s maps to one of the variables.
@@ -378,7 +378,7 @@ func (s *Service) Signin(ctx context.Context, email, password string, descriptio
 	u, err := s.UserRepo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			passwordValidate(password, dummyHash) // prevent timing-based user enumeration
+			passwordMatchesHash(password, dummyHash) // prevent timing-based user enumeration
 			return SigninResult{}, ErrInvalidCredentials
 		}
 		return SigninResult{}, err
@@ -388,7 +388,7 @@ func (s *Service) Signin(ctx context.Context, email, password string, descriptio
 		return SigninResult{}, ErrEmailNotVerified
 	}
 
-	if !passwordValidate(password, u.Password) {
+	if !passwordMatchesHash(password, u.Password) {
 		return SigninResult{}, ErrInvalidCredentials
 	}
 
@@ -665,7 +665,7 @@ func (s *Service) DeleteSelf(ctx context.Context, userID uuid.UUID, password str
 		return err
 	}
 
-	if !passwordValidate(password, u.Password) {
+	if !passwordMatchesHash(password, u.Password) {
 		return ErrInvalidCredentials
 	}
 
@@ -722,7 +722,7 @@ func (s *Service) TokenCreate(ctx context.Context, userID uuid.UUID, password, d
 		return TokenCreateResult{}, err
 	}
 
-	if !passwordValidate(password, u.Password) {
+	if !passwordMatchesHash(password, u.Password) {
 		return TokenCreateResult{}, ErrInvalidCredentials
 	}
 

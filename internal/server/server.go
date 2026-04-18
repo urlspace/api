@@ -18,18 +18,19 @@ func New(port string, userSvc *user.Service, resourceSvc *resource.Service) *htt
 	// status
 	mux.HandleFunc("GET /status", handleStatus)
 
-	auth := authMiddleware(userSvc)
-	adminOnly := middlewareStack(auth, adminMiddleware(userSvc))
+	sessionOnly := authMiddleware(userSvc, AuthConfig{UseSession: true, UseToken: false})
+	sessionOrToken := authMiddleware(userSvc, AuthConfig{UseSession: true, UseToken: true})
+	adminOnly := middlewareStack(sessionOrToken, adminMiddleware(userSvc))
 
 	// me (authenticated)
-	mux.Handle("GET /me", auth(handleMeGet(userSvc)))
+	mux.Handle("GET /me", sessionOrToken(handleMeGet(userSvc)))
 
 	// resources (protected)
-	mux.Handle("GET /resources", auth(handleResourcesList(resourceSvc)))
-	mux.Handle("GET /resources/{id}", auth(handleResourcesGet(resourceSvc)))
-	mux.Handle("POST /resources", auth(handleResourcesCreate(resourceSvc)))
-	mux.Handle("PUT /resources/{id}", auth(handleResourcesUpdate(resourceSvc)))
-	mux.Handle("DELETE /resources/{id}", auth(handleResourcesDelete(resourceSvc)))
+	mux.Handle("GET /resources", sessionOrToken(handleResourcesList(resourceSvc)))
+	mux.Handle("GET /resources/{id}", sessionOrToken(handleResourcesGet(resourceSvc)))
+	mux.Handle("POST /resources", sessionOrToken(handleResourcesCreate(resourceSvc)))
+	mux.Handle("PUT /resources/{id}", sessionOrToken(handleResourcesUpdate(resourceSvc)))
+	mux.Handle("DELETE /resources/{id}", sessionOrToken(handleResourcesDelete(resourceSvc)))
 
 	// users (admin only)
 	mux.Handle("GET /users", adminOnly(handleUsersList(userSvc)))
@@ -37,12 +38,12 @@ func New(port string, userSvc *user.Service, resourceSvc *resource.Service) *htt
 	mux.Handle("POST /users", adminOnly(handleUsersCreate(userSvc)))
 	mux.Handle("DELETE /users/{id}", adminOnly(handleUsersDelete(userSvc)))
 
-	// tokens (authenticated, session-only)
-	mux.Handle("POST /tokens", auth(handleTokensCreate(userSvc)))
-	mux.Handle("GET /tokens", auth(handleTokensList(userSvc)))
-	mux.Handle("GET /tokens/{id}", auth(handleTokensGet(userSvc)))
-	mux.Handle("DELETE /tokens/{id}", auth(handleTokensDelete(userSvc)))
-	mux.Handle("DELETE /tokens", auth(handleTokensDeleteAll(userSvc)))
+	// tokens (session-only — token management requires an active session)
+	mux.Handle("POST /tokens", sessionOnly(handleTokensCreate(userSvc)))
+	mux.Handle("GET /tokens", sessionOnly(handleTokensList(userSvc)))
+	mux.Handle("GET /tokens/{id}", sessionOnly(handleTokensGet(userSvc)))
+	mux.Handle("DELETE /tokens/{id}", sessionOnly(handleTokensDelete(userSvc)))
+	mux.Handle("DELETE /tokens", sessionOnly(handleTokensDeleteAll(userSvc)))
 
 	// auth
 	mux.HandleFunc("POST /auth/signup", handleAuthSignup(userSvc))
@@ -51,7 +52,7 @@ func New(port string, userSvc *user.Service, resourceSvc *resource.Service) *htt
 	mux.HandleFunc("POST /auth/resend-verification", handleAuthResendVerification(userSvc))
 	mux.HandleFunc("POST /auth/reset-password-request", handleAuthResetPasswordRequest(userSvc))
 	mux.HandleFunc("POST /auth/reset-password-confirm", handleAuthResetPasswordConfirm(userSvc))
-	mux.Handle("POST /auth/signout", auth(handleAuthSignout(userSvc)))
+	mux.Handle("POST /auth/signout", sessionOnly(handleAuthSignout(userSvc)))
 
 	// version api
 	v1 := http.NewServeMux()

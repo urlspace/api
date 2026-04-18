@@ -113,22 +113,28 @@ func newResponseToken(t user.Token) responseToken {
 // Request helpers
 
 func resolveSessionID(r *http.Request) (uuid.UUID, bool) {
-	if authHeader := r.Header.Get("Authorization"); authHeader != "" {
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
-			if id, err := uuid.Parse(strings.TrimSpace(parts[1])); err == nil {
-				return id, true
-			}
-		}
-	}
-
 	if cookie, err := r.Cookie(config.SessionCookieName); err == nil {
 		if id, err := uuid.Parse(cookie.Value); err == nil {
 			return id, true
 		}
 	}
-
 	return uuid.UUID{}, false
+}
+
+func resolveBearerToken(r *http.Request) (string, bool) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", false
+	}
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		return "", false
+	}
+	token := strings.TrimSpace(parts[1])
+	if token == "" {
+		return "", false
+	}
+	return token, true
 }
 
 func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {

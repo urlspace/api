@@ -46,7 +46,7 @@ func MapErrorToHTTP(err error) (int, string) {
 		return http.StatusConflict, "conflict"
 	}
 	if errors.Is(err, ErrInvalidCredentials) {
-		return http.StatusUnauthorized, "invalid email or password"
+		return http.StatusUnauthorized, err.Error()
 	}
 	if errors.Is(err, ErrEmailNotVerified) {
 		return http.StatusForbidden, "invalid email or password"

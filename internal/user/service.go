@@ -261,7 +261,7 @@ var (
 
 	ErrNotFound                 = errors.New("not found")
 	ErrConflict                 = errors.New("conflict")
-	ErrInvalidCredentials       = errors.New("invalid email or password")
+	ErrInvalidCredentials       = errors.New("invalid credentials")
 	ErrEmailNotVerified         = errors.New("invalid email or password")
 	ErrTokenExpired             = errors.New("token has expired")
 	ErrResendTooFrequent        = errors.New("verification email already sent, please wait before requesting a new one")

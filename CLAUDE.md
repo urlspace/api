@@ -53,9 +53,9 @@ The codebase follows a **domain-driven layout** with two domain packages (`user`
 ### Key layers
 
 - **`cmd/api/main.go`** — Entry point. Wires config, database, repositories, services, tracing, and server. Handles graceful shutdown.
-- **`internal/user/`** — User domain: `User` and `Session` models, `Repository` and `SessionRepository` interfaces, `Service` (business logic for auth flows, CRUD), validation functions, and sentinel errors.
+- **`internal/user/`** — User domain: `User`, `Session`, and `Token` models, `Repository`, `SessionRepository`, and `TokenRepository` interfaces, `Service` (business logic for auth flows, CRUD, API token management), validation functions, and sentinel errors.
 - **`internal/resource/`** — Resource domain: `Resource` model, `Repository` interface, `Service`, validation, and sentinel errors.
-- **`internal/postgres/`** — PostgreSQL implementations of repository interfaces. `Connect()` sets up the connection pool. One file per repository (`repository_users.go`, `repository_sessions.go`, `repository_resources.go`).
+- **`internal/postgres/`** — PostgreSQL implementations of repository interfaces. `Connect()` sets up the connection pool. One file per repository (`repository_users.go`, `repository_sessions.go`, `repository_tokens.go`, `repository_resources.go`).
 - **`internal/server/`** — HTTP layer: route registration (`server.go`), all handlers (`handler_*.go`), all middlewares (`middleware_*.go`), JSON response helpers and response DTOs (`helpers.go`).
 - **`internal/db/`** — sqlc-generated code. Do not edit manually; regenerate with `make gen`.
 - **`internal/config/`** — `LoadConfig()` reads env vars. Shared constants: session durations, context keys.
@@ -73,8 +73,9 @@ All routes are prefixed with `/v1/` via `http.StripPrefix`. Routes are registere
 
 Middleware composition:
 - **Global**: `loggingMiddleware` → `commonHeadersMiddleware` → `maxBodySizeMiddleware`
-- **Authenticated routes**: wrapped with `auth(handler)`
-- **Admin routes**: wrapped with `adminOnly(handler)` (which is `middlewareStack(auth, admin)`)
+- **Session-only routes**: wrapped with `sessionOnly(handler)` — cookie auth only (token management, signout)
+- **Session or token routes**: wrapped with `sessionOrToken(handler)` — cookie or Bearer token (resources, me)
+- **Admin routes**: wrapped with `adminOnly(handler)` (which is `middlewareStack(sessionOrToken, admin)`)
 
 ### Validation pattern
 
@@ -90,7 +91,11 @@ All JSON responses: `{"status": "ok"|"error", "data": ...}`
 
 ### Authentication
 
-The auth middleware validates sessions from `Authorization: Bearer <uuid>` header or `session_id` cookie. On success, stores user ID in request context via `config.UserIDContextKey`. Sessions use sliding expiry (renewed when < 15 days remaining).
+Two auth methods, configured per-route via `AuthConfig{UseSession, UseToken}`:
+- **Sessions** — UUID stored in `session_id` cookie. Have a 30-day sliding expiry (renewed when < 15 days remaining). Used for browser-based access.
+- **API Tokens** — Format `yp_<random>`, sent via `Authorization: Bearer <token>` header. No expiry. Stored as SHA-256 hash. Used for programmatic access.
+
+Cookie is checked first. On success, user ID is stored in request context via `config.UserIDContextKey`. Token management endpoints require session auth only.
 
 ## Key Dependencies
 
@@ -105,5 +110,5 @@ The auth middleware validates sessions from `Authorization: Bearer <uuid>` heade
 ## SQL & Migrations
 
 - Migrations live in `sql/migrations/` (sequential numbered, `.up.sql`/`.down.sql`)
-- Queries live in `sql/queries/` (one file per domain: `resources.sql`, `sessions.sql`, `users.sql`)
+- Queries live in `sql/queries/` (one file per domain: `resources.sql`, `sessions.sql`, `tokens.sql`, `users.sql`)
 - sqlc config: `sqlc.yml` — generates to `internal/db/` with `emit_interface: true` and `emit_empty_slices: true`

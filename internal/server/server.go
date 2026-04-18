@@ -53,6 +53,7 @@ func New(port string, userSvc *user.Service, resourceSvc *resource.Service) *htt
 	mux.HandleFunc("POST /auth/reset-password-request", handleAuthResetPasswordRequest(userSvc))
 	mux.HandleFunc("POST /auth/reset-password-confirm", handleAuthResetPasswordConfirm(userSvc))
 	mux.Handle("POST /auth/signout", sessionOnly(handleAuthSignout(userSvc)))
+	mux.Handle("DELETE /auth", sessionOnly(handleAuthDelete(userSvc)))
 
 	// version api
 	v1 := http.NewServeMux()

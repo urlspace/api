@@ -648,9 +648,29 @@ func (s *Service) AdminCreate(ctx context.Context, username, email, password str
 	})
 }
 
-// Delete removes a user by ID.
+// Delete removes a user by ID (admin operation).
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) (User, error) {
 	return s.UserRepo.Delete(ctx, id)
+}
+
+// DeleteSelf removes the authenticated user after verifying their password.
+func (s *Service) DeleteSelf(ctx context.Context, userID uuid.UUID, password string) error {
+	password, err := validatePassword(password)
+	if err != nil {
+		return err
+	}
+
+	u, err := s.UserRepo.GetById(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if !passwordValidate(password, u.Password) {
+		return ErrInvalidCredentials
+	}
+
+	_, err = s.UserRepo.Delete(ctx, userID)
+	return err
 }
 
 // tokenPrefix is prepended to every generated API token so that leaked tokens

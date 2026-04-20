@@ -12,7 +12,7 @@ func commonHeadersMiddleware(next http.Handler) http.Handler {
 
 		// CORS
 		origin := r.Header.Get("Origin")
-		if origin == "https://href.tools" || origin == "http://localhost:3000" {
+		if origin == "https://href.tools" || origin == "http://localhost:3001" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")

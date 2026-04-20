@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/hreftools/api/internal/resource"
+	"github.com/urlspace/api/internal/resource"
 )
 
 type resourceCreateBody struct {

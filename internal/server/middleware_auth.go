@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/config"
-	"github.com/hreftools/api/internal/user"
+	"github.com/urlspace/api/internal/config"
+	"github.com/urlspace/api/internal/user"
 )
 
 type AuthConfig struct {

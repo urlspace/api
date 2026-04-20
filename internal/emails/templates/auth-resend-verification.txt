@@ -1,4 +1,4 @@
 New verification link!
 
-Please verify your email using the following token: https://href.tools/verify?token={{.Token}}
+Please verify your email using the following token: https://url.space/auth/verify?token={{.Token}}
 This token will expire in 24 hours.

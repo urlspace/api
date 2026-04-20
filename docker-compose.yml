@@ -1,13 +1,13 @@
-name: hreftools
+name: urlspace
 
 services:
   postgres:
-    container_name: hreftools-db
+    container_name: urlspace-db
     image: postgres:18.2
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: hreftools
+      POSTGRES_DB: urlspace
     ports:
       - "5432:5432"
     volumes:

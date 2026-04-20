@@ -6,8 +6,8 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/db"
-	"github.com/hreftools/api/internal/user"
+	"github.com/urlspace/api/internal/db"
+	"github.com/urlspace/api/internal/user"
 )
 
 type TokenRepository struct {

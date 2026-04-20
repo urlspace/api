@@ -108,14 +108,10 @@ func validateToken(token string) (string, error) {
 
 var reservedUsernames = map[string]bool{
 	// brand
-	"href":       true,
-	"hreftools":  true,
-	"href_tools": true,
-	"href-tools": true,
-	"yank":       true,
-	"yankpage":   true,
-	"yank-page":  true,
-	"yank_page":  true,
+	"url":       true,
+	"urlspace":  true,
+	"url_space": true,
+	"url-space": true,
 	// infrastructure
 	"root":      true,
 	"system":    true,

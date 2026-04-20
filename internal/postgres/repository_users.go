@@ -6,9 +6,9 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/db"
-	"github.com/hreftools/api/internal/user"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/urlspace/api/internal/db"
+	"github.com/urlspace/api/internal/user"
 )
 
 type UserRepository struct {

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Go HTTP API server (`github.com/hreftools/api`) using Go 1.26.0, the standard library's `net/http` package, PostgreSQL via `pgx`, and OpenTelemetry for tracing.
+Go HTTP API server (`github.com/urlspace/api`) using Go 1.26.0, the standard library's `net/http` package, PostgreSQL via `pgx`, and OpenTelemetry for tracing.
 
 ## Development Philosophy
 
@@ -29,22 +29,23 @@ make docker-up / docker-down        # Docker Compose
 ```
 
 Run a single test:
+
 ```bash
 go test ./internal/user/ -run TestValidateUsername
 ```
 
 ## Environment Variables
 
-| Variable         | Required | Description                       |
-| ---------------- | -------- | --------------------------------- |
-| `PORT`           | Yes      | Port the server listens on        |
-| `DATABASE_URL`   | Yes      | PostgreSQL connection string      |
-| `RESEND_API_KEY` | Yes      | Resend API key for sending emails |
-| `OTEL_SERVICE_NAME` | No | OpenTelemetry service name |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OTLP exporter endpoint URL |
-| `OTEL_EXPORTER_OTLP_PROTOCOL` | No | OTLP protocol (e.g., `http/protobuf`) |
-| `OTEL_RESOURCE_ATTRIBUTES` | No | Additional OTEL resource attributes |
-| `OTEL_EXPORTER_OTLP_HEADERS` | No | Headers for OTLP exporter (e.g., auth tokens) |
+| Variable                      | Required | Description                                   |
+| ----------------------------- | -------- | --------------------------------------------- |
+| `PORT`                        | Yes      | Port the server listens on                    |
+| `DATABASE_URL`                | Yes      | PostgreSQL connection string                  |
+| `RESEND_API_KEY`              | Yes      | Resend API key for sending emails             |
+| `OTEL_SERVICE_NAME`           | No       | OpenTelemetry service name                    |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | No       | OTLP exporter endpoint URL                    |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | No       | OTLP protocol (e.g., `http/protobuf`)         |
+| `OTEL_RESOURCE_ATTRIBUTES`    | No       | Additional OTEL resource attributes           |
+| `OTEL_EXPORTER_OTLP_HEADERS`  | No       | Headers for OTLP exporter (e.g., auth tokens) |
 
 ## Architecture
 
@@ -72,6 +73,7 @@ HTTP request → middleware stack → handler → domain Service → Repository 
 All routes are prefixed with `/v1/` via `http.StripPrefix`. Routes are registered in `internal/server/server.go` using `http.ServeMux` with method prefixes (e.g., `GET /resources/{id}`).
 
 Middleware composition:
+
 - **Global**: `loggingMiddleware` → `commonHeadersMiddleware` → `maxBodySizeMiddleware`
 - **Session-only routes**: wrapped with `sessionOnly(handler)` — cookie auth only (token management, signout)
 - **Session or token routes**: wrapped with `sessionOrToken(handler)` — cookie or Bearer token (resources, me)
@@ -92,6 +94,7 @@ All JSON responses: `{"status": "ok"|"error", "data": ...}`
 ### Authentication
 
 Two auth methods, configured per-route via `AuthConfig{UseSession, UseToken}`:
+
 - **Sessions** — UUID stored in `session_id` cookie. Have a 30-day sliding expiry (renewed when < 15 days remaining). Used for browser-based access.
 - **API Tokens** — Format `yp_<random>`, sent via `Authorization: Bearer <token>` header. No expiry. Stored as SHA-256 hash. Used for programmatic access.
 

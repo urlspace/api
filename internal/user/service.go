@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/config"
-	"github.com/hreftools/api/internal/emails"
+	"github.com/urlspace/api/internal/config"
+	"github.com/urlspace/api/internal/emails"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -339,7 +339,7 @@ func (s *Service) Signup(ctx context.Context, username, email, password string) 
 		To:      []string{email},
 		Text:    bodyText,
 		Html:    bodyHtml,
-		Subject: "Hello from href.tools",
+		Subject: "Hello from url.space",
 	})
 	if err != nil {
 		log.Printf("Failed to send email: %v", err)

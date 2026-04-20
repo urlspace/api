@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/hreftools/api/internal/user"
+	"github.com/urlspace/api/internal/user"
 )
 
 type tokenCreateBody struct {

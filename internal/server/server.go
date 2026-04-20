@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/user"
+	"github.com/urlspace/api/internal/resource"
+	"github.com/urlspace/api/internal/user"
 )
 
 func New(port string, userSvc *user.Service, resourceSvc *resource.Service) *http.Server {

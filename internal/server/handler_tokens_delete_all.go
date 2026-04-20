@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/hreftools/api/internal/user"
+	"github.com/urlspace/api/internal/user"
 )
 
 type tokenDeleteAllResponse struct {

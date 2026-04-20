@@ -3,8 +3,8 @@ package server
 import (
 	"net/http"
 
-	"github.com/hreftools/api/internal/config"
-	"github.com/hreftools/api/internal/user"
+	"github.com/urlspace/api/internal/config"
+	"github.com/urlspace/api/internal/user"
 )
 
 type authSignoutResponse struct {

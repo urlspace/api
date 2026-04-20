@@ -11,15 +11,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hreftools/api/internal/config"
-	"github.com/hreftools/api/internal/db"
-	"github.com/hreftools/api/internal/emails"
-	"github.com/hreftools/api/internal/postgres"
-	"github.com/hreftools/api/internal/resource"
-	"github.com/hreftools/api/internal/server"
-	"github.com/hreftools/api/internal/user"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/resend/resend-go/v3"
+	"github.com/urlspace/api/internal/config"
+	"github.com/urlspace/api/internal/db"
+	"github.com/urlspace/api/internal/emails"
+	"github.com/urlspace/api/internal/postgres"
+	"github.com/urlspace/api/internal/resource"
+	"github.com/urlspace/api/internal/server"
+	"github.com/urlspace/api/internal/user"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 

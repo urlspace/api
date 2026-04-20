@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/hreftools/api/internal/user"
+	"github.com/urlspace/api/internal/user"
 )
 
 func adminMiddleware(svc *user.Service) middleware {

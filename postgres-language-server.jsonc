@@ -13,7 +13,7 @@
     "enabled" : true
   },
   "db": {
-    "connectionString": "postgres://postgres:postgres@localhost:5432/hreftools?sslmode=disable",
+    "connectionString": "postgres://postgres:postgres@localhost:5432/urlspace?sslmode=disable",
     "allowStatementExecutionsAgainst": ["127.0.0.1/*", "localhost/*"]
   }
 }

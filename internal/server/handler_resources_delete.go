@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/hreftools/api/internal/resource"
+	"github.com/urlspace/api/internal/resource"
 )
 
 type resourceDeleteResponse struct {

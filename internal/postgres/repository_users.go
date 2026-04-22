@@ -41,6 +41,7 @@ func toUser(u db.User) user.User {
 		PasswordResetToken:              u.PasswordResetToken,
 		PasswordResetTokenExpiresAt:     u.PasswordResetTokenExpiresAt,
 		Username:                        u.Username,
+		DisplayName:                     u.DisplayName,
 		IsAdmin:                         u.IsAdmin,
 		IsPro:                           u.IsPro,
 		CreatedAt:                       u.CreatedAt,
@@ -101,6 +102,7 @@ func (r *UserRepository) Create(ctx context.Context, params user.CreateParams) (
 		EmailVerificationTokenExpiresAt: params.EmailVerificationTokenExpiresAt,
 		Password:                        params.Password,
 		Username:                        params.Username,
+		DisplayName:                     params.DisplayName,
 		IsAdmin:                         params.IsAdmin,
 		IsPro:                           params.IsPro,
 	}

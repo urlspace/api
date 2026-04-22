@@ -20,12 +20,13 @@ INSERT INTO users (
     email_verification_token_expires_at,
     password,
     username,
+    display_name,
     is_admin,
     is_pro
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
-RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -35,6 +36,7 @@ type CreateUserParams struct {
 	EmailVerificationTokenExpiresAt *time.Time
 	Password                        string
 	Username                        string
+	DisplayName                     string
 	IsAdmin                         bool
 	IsPro                           bool
 }
@@ -47,6 +49,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.EmailVerificationTokenExpiresAt,
 		arg.Password,
 		arg.Username,
+		arg.DisplayName,
 		arg.IsAdmin,
 		arg.IsPro,
 	)
@@ -61,6 +64,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -72,7 +76,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 const deleteUser = `-- name: DeleteUser :one
 DELETE FROM users
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (User, error) {
@@ -88,6 +92,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -97,7 +102,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
 WHERE
     email
     =
@@ -118,6 +123,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -127,7 +133,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserByEmailVerificationToken = `-- name: GetUserByEmailVerificationToken :one
-SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
 WHERE
     email_verification_token
     =
@@ -148,6 +154,7 @@ func (q *Queries) GetUserByEmailVerificationToken(ctx context.Context, emailVeri
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -157,7 +164,7 @@ func (q *Queries) GetUserByEmailVerificationToken(ctx context.Context, emailVeri
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
 WHERE
     id
     =
@@ -178,6 +185,7 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -187,7 +195,7 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 }
 
 const getUserByPasswordResetToken = `-- name: GetUserByPasswordResetToken :one
-SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
 WHERE password_reset_token = $1
 LIMIT 1
 `
@@ -205,6 +213,7 @@ func (q *Queries) GetUserByPasswordResetToken(ctx context.Context, passwordReset
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -214,7 +223,7 @@ func (q *Queries) GetUserByPasswordResetToken(ctx context.Context, passwordReset
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
 ORDER BY created_at
 `
 
@@ -237,6 +246,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.PasswordResetToken,
 			&i.PasswordResetTokenExpiresAt,
 			&i.Username,
+			&i.DisplayName,
 			&i.IsAdmin,
 			&i.IsPro,
 			&i.CreatedAt,
@@ -262,7 +272,7 @@ SET
     password_reset_token = NULL,
     password_reset_token_expires_at = NULL
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
 `
 
 type ResetUserPasswordParams struct {
@@ -283,6 +293,7 @@ func (q *Queries) ResetUserPassword(ctx context.Context, arg ResetUserPasswordPa
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -297,7 +308,7 @@ SET
     password_reset_token = $2,
     password_reset_token_expires_at = $3
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
 `
 
 type UpdatePasswordResetTokenParams struct {
@@ -319,6 +330,7 @@ func (q *Queries) UpdatePasswordResetToken(ctx context.Context, arg UpdatePasswo
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -333,7 +345,7 @@ SET
     email_verification_token = $2,
     email_verification_token_expires_at = $3
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
 `
 
 type UpdateVerificationTokenParams struct {
@@ -355,6 +367,7 @@ func (q *Queries) UpdateVerificationToken(ctx context.Context, arg UpdateVerific
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,
@@ -370,7 +383,7 @@ SET
     email_verification_token = NULL,
     email_verification_token_expires_at = NULL
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token, email_verification_token_expires_at, password, password_reset_token, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
 `
 
 func (q *Queries) VerifyUser(ctx context.Context, id uuid.UUID) (User, error) {
@@ -386,6 +399,7 @@ func (q *Queries) VerifyUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PasswordResetToken,
 		&i.PasswordResetTokenExpiresAt,
 		&i.Username,
+		&i.DisplayName,
 		&i.IsAdmin,
 		&i.IsPro,
 		&i.CreatedAt,

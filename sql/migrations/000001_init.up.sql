@@ -20,6 +20,7 @@ CREATE TABLE users (
     password_reset_token UUID,
     password_reset_token_expires_at TIMESTAMPTZ,
     username TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_pro BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

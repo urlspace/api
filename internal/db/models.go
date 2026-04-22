@@ -49,6 +49,7 @@ type User struct {
 	PasswordResetToken              uuid.NullUUID
 	PasswordResetTokenExpiresAt     *time.Time
 	Username                        string
+	DisplayName                     string
 	IsAdmin                         bool
 	IsPro                           bool
 	CreatedAt                       time.Time

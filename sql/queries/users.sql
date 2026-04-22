@@ -34,10 +34,11 @@ INSERT INTO users (
     email_verification_token_expires_at,
     password,
     username,
+    display_name,
     is_admin,
     is_pro
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
 RETURNING *;
 

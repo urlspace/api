@@ -4,6 +4,7 @@ import (
 	"net/mail"
 	"regexp"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
@@ -209,6 +210,39 @@ func validateUsername(u string) (string, error) {
 	}
 
 	return u, nil
+}
+
+const (
+	displayNameLengthMin = 3
+	displayNameLengthMax = 32
+)
+
+func validateDisplayName(d string) (string, error) {
+	d = strings.TrimSpace(d)
+
+	if len(d) == 0 {
+		return d, ErrValidationDisplayNameRequired
+	}
+
+	if utf8.RuneCountInString(d) < displayNameLengthMin {
+		return d, ErrValidationDisplayNameTooShort
+	}
+
+	if utf8.RuneCountInString(d) > displayNameLengthMax {
+		return d, ErrValidationDisplayNameTooLong
+	}
+
+	if strings.Contains(d, "  ") {
+		return d, ErrValidationDisplayNameConsecutiveSpaces
+	}
+
+	for _, r := range d {
+		if !unicode.IsLetter(r) && !unicode.IsNumber(r) && r != ' ' && r != '-' && r != '_' {
+			return d, ErrValidationDisplayNameCharacters
+		}
+	}
+
+	return d, nil
 }
 
 const tokenDescriptionLengthMax = 255

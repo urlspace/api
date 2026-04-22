@@ -210,6 +210,103 @@ func Test_validateToken(t *testing.T) {
 	}
 }
 
+func Test_validateDisplayName(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantResult string
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:       "Valid display name",
+			input:      "Pawel Grzybek",
+			wantResult: "Pawel Grzybek",
+			wantErr:    false,
+		},
+		{
+			name:       "Leading and trailing whitespace is trimmed",
+			input:      "  Pawel  ",
+			wantResult: "Pawel",
+			wantErr:    false,
+		},
+		{
+			name:       "Unicode letters are allowed",
+			input:      "Paweł Grzybek",
+			wantResult: "Paweł Grzybek",
+			wantErr:    false,
+		},
+		{
+			name:       "Numbers are allowed",
+			input:      "Pawel 42",
+			wantResult: "Pawel 42",
+			wantErr:    false,
+		},
+		{
+			name:       "Hyphens and underscores are allowed",
+			input:      "Pawel-G_42",
+			wantResult: "Pawel-G_42",
+			wantErr:    false,
+		},
+		{
+			name:       "Empty display name",
+			input:      "",
+			wantErr:    true,
+			wantErrMsg: "display name is required",
+		},
+		{
+			name:       "Display name too short",
+			input:      "ab",
+			wantErr:    true,
+			wantErrMsg: "display name must be min 3 characters",
+		},
+		{
+			name:       "Display name too long",
+			input:      strings.Repeat("a", 33),
+			wantErr:    true,
+			wantErrMsg: "display name must be max 32 characters",
+		},
+		{
+			name:       "Consecutive spaces are rejected",
+			input:      "Pawel  Grzybek",
+			wantErr:    true,
+			wantErrMsg: "display name cannot contain consecutive spaces",
+		},
+		{
+			name:       "Special characters are rejected",
+			input:      "Pawel @Grzybek",
+			wantErr:    true,
+			wantErrMsg: "display name can only contain letters, numbers, spaces, hyphens, and underscores",
+		},
+		{
+			name:       "Emoji is rejected",
+			input:      "Pawel 🚀",
+			wantErr:    true,
+			wantErrMsg: "display name can only contain letters, numbers, spaces, hyphens, and underscores",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult, gotErr := validateDisplayName(tt.input)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("DisplayName() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("DisplayName() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("DisplayName() succeeded unexpectedly")
+			}
+			if tt.wantResult != "" && gotResult != tt.wantResult {
+				t.Errorf("DisplayName() result = %v, want %v", gotResult, tt.wantResult)
+			}
+		})
+	}
+}
+
 func Test_validateUsername(t *testing.T) {
 	tests := []struct {
 		name       string

@@ -34,6 +34,11 @@ func MapErrorToHTTP(err error) (int, string) {
 		errors.Is(err, ErrValidationTokenFormat) ||
 		errors.Is(err, ErrValidationIsAdminRequired) ||
 		errors.Is(err, ErrValidationIsProRequired) ||
+		errors.Is(err, ErrValidationDisplayNameRequired) ||
+		errors.Is(err, ErrValidationDisplayNameTooShort) ||
+		errors.Is(err, ErrValidationDisplayNameTooLong) ||
+		errors.Is(err, ErrValidationDisplayNameCharacters) ||
+		errors.Is(err, ErrValidationDisplayNameConsecutiveSpaces) ||
 		errors.Is(err, ErrValidationTokenDescriptionRequired) ||
 		errors.Is(err, ErrValidationTokenDescriptionTooLong) {
 		return http.StatusBadRequest, err.Error()

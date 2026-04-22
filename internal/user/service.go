@@ -26,6 +26,7 @@ type CreateParams struct {
 	EmailVerificationTokenExpiresAt *time.Time
 	Password                        string
 	Username                        string
+	DisplayName                     string
 	IsAdmin                         bool
 	IsPro                           bool
 }
@@ -245,6 +246,13 @@ var (
 	ErrValidationPasswordTooShort = errors.New("password must be at least 12 characters")
 	ErrValidationPasswordTooLong  = errors.New("password must be at most 128 characters")
 
+	// validation display name
+	ErrValidationDisplayNameRequired         = errors.New("display name is required")
+	ErrValidationDisplayNameTooShort         = errors.New("display name must be min 3 characters")
+	ErrValidationDisplayNameTooLong          = errors.New("display name must be max 32 characters")
+	ErrValidationDisplayNameCharacters       = errors.New("display name can only contain letters, numbers, spaces, hyphens, and underscores")
+	ErrValidationDisplayNameConsecutiveSpaces = errors.New("display name cannot contain consecutive spaces")
+
 	// validation token
 	ErrValidationTokenRequired = errors.New("token is required")
 	ErrValidationTokenFormat   = errors.New("token is invalid")
@@ -314,6 +322,7 @@ func (s *Service) Signup(ctx context.Context, username, email, password string) 
 		EmailVerificationTokenExpiresAt: &expiresAt,
 		Password:                        passwordHash,
 		Username:                        username,
+		DisplayName:                     username,
 		IsAdmin:                         false,
 		IsPro:                           false,
 	})
@@ -643,6 +652,7 @@ func (s *Service) AdminCreate(ctx context.Context, username, email, password str
 		EmailVerificationTokenExpiresAt: nil,
 		Password:                        passwordHash,
 		Username:                        username,
+		DisplayName:                     username,
 		IsAdmin:                         isAdminValue,
 		IsPro:                           isProValue,
 	})

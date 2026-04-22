@@ -35,10 +35,11 @@ func newResponseResource(r resource.Resource) responseResource {
 }
 
 type responseUser struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	Username  string    `json:"username"`
-	IsAdmin   bool      `json:"isAdmin"`
+	ID          uuid.UUID `json:"id"`
+	Email       string    `json:"email"`
+	Username    string    `json:"username"`
+	DisplayName string    `json:"displayName"`
+	IsAdmin     bool      `json:"isAdmin"`
 	IsPro     bool      `json:"isPro"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -47,9 +48,10 @@ type responseUser struct {
 func newResponseUser(u user.User) responseUser {
 	return responseUser{
 		ID:        u.ID,
-		Email:     u.Email,
-		Username:  u.Username,
-		IsAdmin:   u.IsAdmin,
+		Email:       u.Email,
+		Username:    u.Username,
+		DisplayName: u.DisplayName,
+		IsAdmin:     u.IsAdmin,
 		IsPro:     u.IsPro,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
@@ -65,6 +67,7 @@ type responseUserAdmin struct {
 	PasswordResetToken              uuid.NullUUID `json:"passwordResetToken"`
 	PasswordResetTokenExpiresAt     *time.Time    `json:"passwordResetTokenExpiresAt"`
 	Username                        string        `json:"username"`
+	DisplayName                     string        `json:"displayName"`
 	IsAdmin                         bool          `json:"isAdmin"`
 	IsPro                           bool          `json:"isPro"`
 	CreatedAt                       time.Time     `json:"createdAt"`
@@ -81,6 +84,7 @@ func newResponseUserAdmin(u user.User) responseUserAdmin {
 		PasswordResetToken:              u.PasswordResetToken,
 		PasswordResetTokenExpiresAt:     u.PasswordResetTokenExpiresAt,
 		Username:                        u.Username,
+		DisplayName:                     u.DisplayName,
 		IsAdmin:                         u.IsAdmin,
 		IsPro:                           u.IsPro,
 		CreatedAt:                       u.CreatedAt,

@@ -16,14 +16,14 @@ func Test_ValidateTitle(t *testing.T) {
 	}{
 		{
 			name:       "Valid title",
-			input:      "My Resource",
-			wantResult: "My Resource",
+			input:      "My Link",
+			wantResult: "My Link",
 			wantErr:    false,
 		},
 		{
 			name:       "Title is trimmed",
-			input:      "  My Resource  ",
-			wantResult: "My Resource",
+			input:      "  My Link  ",
+			wantResult: "My Link",
 			wantErr:    false,
 		},
 		{
@@ -40,13 +40,13 @@ func Test_ValidateTitle(t *testing.T) {
 		},
 		{
 			name:       "Title with null byte is rejected",
-			input:      "My \x00 Resource",
+			input:      "My \x00 Link",
 			wantErr:    true,
 			wantErrMsg: "title must not contain control characters",
 		},
 		{
 			name:       "Title with tab is rejected",
-			input:      "My \t Resource",
+			input:      "My \t Link",
 			wantErr:    true,
 			wantErrMsg: "title must not contain control characters",
 		},
@@ -89,8 +89,8 @@ func Test_ValidateDescription(t *testing.T) {
 	}{
 		{
 			name:       "Valid description",
-			input:      "A helpful resource description.",
-			wantResult: "A helpful resource description.",
+			input:      "A helpful link description.",
+			wantResult: "A helpful link description.",
 			wantErr:    false,
 		},
 		{
@@ -100,8 +100,8 @@ func Test_ValidateDescription(t *testing.T) {
 		},
 		{
 			name:       "Description is trimmed",
-			input:      "  A helpful resource description.  ",
-			wantResult: "A helpful resource description.",
+			input:      "  A helpful link description.  ",
+			wantResult: "A helpful link description.",
 			wantErr:    false,
 		},
 		{
@@ -273,18 +273,18 @@ func Test_ValidateURL(t *testing.T) {
 			gotResult, gotErr := ValidateURL(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("Url() failed: %v", gotErr)
+					t.Errorf("ValidateURL() failed: %v", gotErr)
 				}
 				if gotErr.Error() != tt.wantErrMsg {
-					t.Errorf("Url() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+					t.Errorf("ValidateURL() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("Url() succeeded unexpectedly")
+				t.Fatal("ValidateURL() succeeded unexpectedly")
 			}
 			if tt.wantResult != "" && gotResult != tt.wantResult {
-				t.Errorf("Url() result = %v, want %v", gotResult, tt.wantResult)
+				t.Errorf("ValidateURL() result = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
 	}

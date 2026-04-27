@@ -15,18 +15,18 @@ import (
 	"github.com/urlspace/api/internal/user"
 )
 
-type responseResourceCollection struct {
+type responseLinkCollection struct {
 	ID    uuid.UUID `json:"id"`
 	Title string    `json:"title"`
 }
 
-type responseResource struct {
+type responseLink struct {
 	ID          uuid.UUID                   `json:"id"`
 	Title       string                      `json:"title"`
 	Description string                      `json:"description"`
 	URL         string                      `json:"url"`
 	Tags        []string                    `json:"tags"`
-	Collection  *responseResourceCollection `json:"collection"`
+	Collection  *responseLinkCollection `json:"collection"`
 	CreatedAt   time.Time                   `json:"createdAt"`
 	UpdatedAt   time.Time                   `json:"updatedAt"`
 }
@@ -40,12 +40,12 @@ type responseCollection struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
-func newResponseResource(r uow.EnrichedResource) responseResource {
-	var col *responseResourceCollection
+func newResponseLink(r uow.EnrichedLink) responseLink {
+	var col *responseLinkCollection
 	if r.Collection != nil {
-		col = &responseResourceCollection{ID: r.Collection.ID, Title: r.Collection.Title}
+		col = &responseLinkCollection{ID: r.Collection.ID, Title: r.Collection.Title}
 	}
-	return responseResource{
+	return responseLink{
 		ID:          r.ID,
 		Title:       r.Title,
 		Description: r.Description,

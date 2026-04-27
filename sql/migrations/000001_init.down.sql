@@ -4,14 +4,14 @@ DROP TRIGGER IF EXISTS update_tags_updated_at ON tags;
 DROP TRIGGER IF EXISTS update_tokens_updated_at ON tokens;
 DROP TRIGGER IF EXISTS update_sessions_updated_at ON sessions;
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;
-DROP TRIGGER IF EXISTS update_resources_updated_at ON resources;
+DROP TRIGGER IF EXISTS update_links_updated_at ON links;
 
 -- Drop tables (dependents first, then parent tables)
-DROP TABLE IF EXISTS resource_tags;
+DROP TABLE IF EXISTS link_tags;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS tokens;
 DROP TABLE IF EXISTS sessions;
-DROP TABLE IF EXISTS resources;
+DROP TABLE IF EXISTS links;
 DROP TABLE IF EXISTS collections;
 DROP TABLE IF EXISTS users;
 

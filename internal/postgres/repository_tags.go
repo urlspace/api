@@ -99,8 +99,8 @@ func (r *TagRepository) UpsertByName(ctx context.Context, userID uuid.UUID, name
 	return toTag(row), nil
 }
 
-func (r *TagRepository) GetTagsForResource(ctx context.Context, resourceID uuid.UUID) ([]string, error) {
-	tags, err := r.queries.GetTagsForResource(ctx, resourceID)
+func (r *TagRepository) GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]string, error) {
+	tags, err := r.queries.GetTagsForLink(ctx, linkID)
 	if err != nil {
 		return nil, translateTagError(err)
 	}
@@ -108,28 +108,28 @@ func (r *TagRepository) GetTagsForResource(ctx context.Context, resourceID uuid.
 	return tags, nil
 }
 
-func (r *TagRepository) GetTagsForResources(ctx context.Context, resourceIDs []uuid.UUID) (map[uuid.UUID][]string, error) {
-	rows, err := r.queries.GetTagsForResources(ctx, resourceIDs)
+func (r *TagRepository) GetTagsForLinks(ctx context.Context, linkIDs []uuid.UUID) (map[uuid.UUID][]string, error) {
+	rows, err := r.queries.GetTagsForLinks(ctx, linkIDs)
 	if err != nil {
 		return nil, translateTagError(err)
 	}
 
-	result := make(map[uuid.UUID][]string, len(resourceIDs))
+	result := make(map[uuid.UUID][]string, len(linkIDs))
 	for _, row := range rows {
-		result[row.ResourceID] = append(result[row.ResourceID], row.Name)
+		result[row.LinkID] = append(result[row.LinkID], row.Name)
 	}
 	return result, nil
 }
 
-func (r *TagRepository) ReplaceResourceTags(ctx context.Context, resourceID uuid.UUID, tagIDs []uuid.UUID) error {
-	if err := r.queries.DeleteResourceTags(ctx, resourceID); err != nil {
+func (r *TagRepository) ReplaceLinkTags(ctx context.Context, linkID uuid.UUID, tagIDs []uuid.UUID) error {
+	if err := r.queries.DeleteLinkTags(ctx, linkID); err != nil {
 		return translateTagError(err)
 	}
 
 	for _, tagID := range tagIDs {
-		if err := r.queries.CreateResourceTag(ctx, db.CreateResourceTagParams{
-			ResourceID: resourceID,
-			TagID:      tagID,
+		if err := r.queries.CreateLinkTag(ctx, db.CreateLinkTagParams{
+			LinkID: linkID,
+			TagID:  tagID,
 		}); err != nil {
 			return translateTagError(err)
 		}

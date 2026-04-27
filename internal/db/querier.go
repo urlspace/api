@@ -12,14 +12,14 @@ import (
 
 type Querier interface {
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error)
-	CreateResource(ctx context.Context, arg CreateResourceParams) (Resource, error)
-	CreateResourceTag(ctx context.Context, arg CreateResourceTagParams) error
+	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
+	CreateLinkTag(ctx context.Context, arg CreateLinkTagParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteCollection(ctx context.Context, arg DeleteCollectionParams) (Collection, error)
-	DeleteResource(ctx context.Context, arg DeleteResourceParams) (Resource, error)
-	DeleteResourceTags(ctx context.Context, resourceID uuid.UUID) error
+	DeleteLink(ctx context.Context, arg DeleteLinkParams) (Link, error)
+	DeleteLinkTags(ctx context.Context, linkID uuid.UUID) error
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteTag(ctx context.Context, arg DeleteTagParams) (Tag, error)
@@ -27,12 +27,12 @@ type Querier interface {
 	DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetCollection(ctx context.Context, arg GetCollectionParams) (Collection, error)
-	GetResource(ctx context.Context, arg GetResourceParams) (GetResourceRow, error)
+	GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, error)
 	GetSessionById(ctx context.Context, id uuid.UUID) (Session, error)
 	GetTag(ctx context.Context, arg GetTagParams) (Tag, error)
 	GetTagByName(ctx context.Context, arg GetTagByNameParams) (Tag, error)
-	GetTagsForResource(ctx context.Context, resourceID uuid.UUID) ([]string, error)
-	GetTagsForResources(ctx context.Context, dollar_1 []uuid.UUID) ([]GetTagsForResourcesRow, error)
+	GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]string, error)
+	GetTagsForLinks(ctx context.Context, dollar_1 []uuid.UUID) ([]GetTagsForLinksRow, error)
 	GetTokenByHash(ctx context.Context, hash string) (Token, error)
 	GetTokenById(ctx context.Context, arg GetTokenByIdParams) (Token, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
@@ -40,14 +40,14 @@ type Querier interface {
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByPasswordResetToken(ctx context.Context, passwordResetToken uuid.NullUUID) (User, error)
 	ListCollections(ctx context.Context, userID uuid.UUID) ([]Collection, error)
-	ListResources(ctx context.Context, userID uuid.UUID) ([]ListResourcesRow, error)
+	ListLinks(ctx context.Context, userID uuid.UUID) ([]ListLinksRow, error)
 	ListTags(ctx context.Context, userID uuid.UUID) ([]Tag, error)
 	ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]Token, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	ResetUserPassword(ctx context.Context, arg ResetUserPasswordParams) (User, error)
 	UpdateCollection(ctx context.Context, arg UpdateCollectionParams) (Collection, error)
+	UpdateLink(ctx context.Context, arg UpdateLinkParams) (Link, error)
 	UpdatePasswordResetToken(ctx context.Context, arg UpdatePasswordResetTokenParams) (User, error)
-	UpdateResource(ctx context.Context, arg UpdateResourceParams) (Resource, error)
 	UpdateSessionExpiresAt(ctx context.Context, arg UpdateSessionExpiresAtParams) (Session, error)
 	UpdateTag(ctx context.Context, arg UpdateTagParams) (Tag, error)
 	UpdateTokenLastUsedAt(ctx context.Context, id uuid.UUID) error

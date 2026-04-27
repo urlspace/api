@@ -1,4 +1,4 @@
-package resource
+package link
 
 import (
 	"strings"
@@ -62,18 +62,18 @@ func Test_ValidateTitle(t *testing.T) {
 			gotResult, gotErr := ValidateTitle(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("ResourceTitle() failed: %v", gotErr)
+					t.Errorf("ValidateTitle() failed: %v", gotErr)
 				}
 				if gotErr.Error() != tt.wantErrMsg {
-					t.Errorf("ResourceTitle() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+					t.Errorf("ValidateTitle() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("ResourceTitle() succeeded unexpectedly")
+				t.Fatal("ValidateTitle() succeeded unexpectedly")
 			}
 			if tt.wantResult != "" && gotResult != tt.wantResult {
-				t.Errorf("ResourceTitle() result = %v, want %v", gotResult, tt.wantResult)
+				t.Errorf("ValidateTitle() result = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
 	}
@@ -134,18 +134,18 @@ func Test_ValidateDescription(t *testing.T) {
 			gotResult, gotErr := ValidateDescription(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("ResourceDescription() failed: %v", gotErr)
+					t.Errorf("ValidateDescription() failed: %v", gotErr)
 				}
 				if gotErr.Error() != tt.wantErrMsg {
-					t.Errorf("ResourceDescription() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+					t.Errorf("ValidateDescription() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("ResourceDescription() succeeded unexpectedly")
+				t.Fatal("ValidateDescription() succeeded unexpectedly")
 			}
 			if tt.wantResult != "" && gotResult != tt.wantResult {
-				t.Errorf("ResourceDescription() result = %v, want %v", gotResult, tt.wantResult)
+				t.Errorf("ValidateDescription() result = %v, want %v", gotResult, tt.wantResult)
 			}
 		})
 	}

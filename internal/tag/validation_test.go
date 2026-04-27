@@ -180,7 +180,7 @@ func Test_ValidateTagNames(t *testing.T) {
 			name:       "11 unique tags is rejected",
 			input:      []string{"a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a0", "a11"},
 			wantErr:    true,
-			wantErrMsg: "a resource can have at most 10 tags",
+			wantErrMsg: "a link can have at most 10 tags",
 		},
 		{
 			name:       "12 tags with duplicates reducing to 10 is allowed",

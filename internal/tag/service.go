@@ -12,7 +12,7 @@ var (
 	ErrValidationNameLength     = errors.New("tag name must be between 2 and 50 characters")
 	ErrValidationNameCharacters = errors.New("tag name must contain only lowercase letters, digits, and hyphens")
 	ErrValidationNameHyphens    = errors.New("tag name must not start, end with, or contain consecutive hyphens")
-	ErrValidationTooManyTags    = errors.New("a resource can have at most 10 tags")
+	ErrValidationTooManyTags    = errors.New("a link can have at most 10 tags")
 
 	ErrNotFound = errors.New("not found")
 	ErrConflict = errors.New("conflict")
@@ -23,9 +23,9 @@ type Repository interface {
 	Update(ctx context.Context, params UpdateParams) (Tag, error)
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Tag, error)
 	UpsertByName(ctx context.Context, userID uuid.UUID, name string) (Tag, error)
-	GetTagsForResource(ctx context.Context, resourceID uuid.UUID) ([]string, error)
-	GetTagsForResources(ctx context.Context, resourceIDs []uuid.UUID) (map[uuid.UUID][]string, error)
-	ReplaceResourceTags(ctx context.Context, resourceID uuid.UUID, tagIDs []uuid.UUID) error
+	GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]string, error)
+	GetTagsForLinks(ctx context.Context, linkIDs []uuid.UUID) (map[uuid.UUID][]string, error)
+	ReplaceLinkTags(ctx context.Context, linkID uuid.UUID, tagIDs []uuid.UUID) error
 }
 
 type UpdateParams struct {

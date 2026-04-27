@@ -7,12 +7,12 @@ import (
 	"github.com/urlspace/api/internal/uow"
 )
 
-type resourceDeleteResponse struct {
-	Status string           `json:"status"`
-	Data   responseResource `json:"data"`
+type linkDeleteResponse struct {
+	Status string       `json:"status"`
+	Data   responseLink `json:"data"`
 }
 
-func handleResourcesDelete(uowSvc *uow.Service) http.HandlerFunc {
+func handleLinksDelete(uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := userIDFromContext(r.Context())
 
@@ -23,16 +23,16 @@ func handleResourcesDelete(uowSvc *uow.Service) http.HandlerFunc {
 			return
 		}
 
-		result, err := uowSvc.DeleteResource(r.Context(), idUuid, userID)
+		result, err := uowSvc.DeleteLink(r.Context(), idUuid, userID)
 		if err != nil {
 			statusCode, errorMessage := uow.MapErrorToHTTP(err)
 			writeJSONError(w, statusCode, errorMessage)
 			return
 		}
 
-		writeJSONSuccess(w, http.StatusOK, resourceDeleteResponse{
+		writeJSONSuccess(w, http.StatusOK, linkDeleteResponse{
 			Status: "ok",
-			Data:   newResponseResource(result),
+			Data:   newResponseLink(result),
 		})
 	}
 }

@@ -1,4 +1,4 @@
-package resource
+package link
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Resource struct {
+type Link struct {
 	ID              uuid.UUID
 	UserID          uuid.UUID
 	Title           string
@@ -56,9 +56,9 @@ type UpdateParams struct {
 }
 
 type Repository interface {
-	List(ctx context.Context, userID uuid.UUID) ([]Resource, error)
-	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Resource, error)
-	Create(ctx context.Context, params CreateParams) (Resource, error)
-	Update(ctx context.Context, params UpdateParams) (Resource, error)
-	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Resource, error)
+	List(ctx context.Context, userID uuid.UUID) ([]Link, error)
+	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Link, error)
+	Create(ctx context.Context, params CreateParams) (Link, error)
+	Update(ctx context.Context, params UpdateParams) (Link, error)
+	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Link, error)
 }

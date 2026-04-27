@@ -11,29 +11,29 @@ import (
 	"github.com/google/uuid"
 )
 
-const createResourceTag = `-- name: CreateResourceTag :exec
-INSERT INTO resource_tags (resource_id, tag_id)
+const createLinkTag = `-- name: CreateLinkTag :exec
+INSERT INTO link_tags (link_id, tag_id)
 VALUES ($1, $2)
 ON CONFLICT DO NOTHING
 `
 
-type CreateResourceTagParams struct {
-	ResourceID uuid.UUID
-	TagID      uuid.UUID
+type CreateLinkTagParams struct {
+	LinkID uuid.UUID
+	TagID  uuid.UUID
 }
 
-func (q *Queries) CreateResourceTag(ctx context.Context, arg CreateResourceTagParams) error {
-	_, err := q.db.Exec(ctx, createResourceTag, arg.ResourceID, arg.TagID)
+func (q *Queries) CreateLinkTag(ctx context.Context, arg CreateLinkTagParams) error {
+	_, err := q.db.Exec(ctx, createLinkTag, arg.LinkID, arg.TagID)
 	return err
 }
 
-const deleteResourceTags = `-- name: DeleteResourceTags :exec
-DELETE FROM resource_tags
-WHERE resource_id = $1
+const deleteLinkTags = `-- name: DeleteLinkTags :exec
+DELETE FROM link_tags
+WHERE link_id = $1
 `
 
-func (q *Queries) DeleteResourceTags(ctx context.Context, resourceID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteResourceTags, resourceID)
+func (q *Queries) DeleteLinkTags(ctx context.Context, linkID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteLinkTags, linkID)
 	return err
 }
 
@@ -109,15 +109,15 @@ func (q *Queries) GetTagByName(ctx context.Context, arg GetTagByNameParams) (Tag
 	return i, err
 }
 
-const getTagsForResource = `-- name: GetTagsForResource :many
+const getTagsForLink = `-- name: GetTagsForLink :many
 SELECT t.name
 FROM tags t
-    JOIN resource_tags rt ON t.id = rt.tag_id
-WHERE rt.resource_id = $1
+    JOIN link_tags lt ON t.id = lt.tag_id
+WHERE lt.link_id = $1
 `
 
-func (q *Queries) GetTagsForResource(ctx context.Context, resourceID uuid.UUID) ([]string, error) {
-	rows, err := q.db.Query(ctx, getTagsForResource, resourceID)
+func (q *Queries) GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]string, error) {
+	rows, err := q.db.Query(ctx, getTagsForLink, linkID)
 	if err != nil {
 		return nil, err
 	}
@@ -136,28 +136,28 @@ func (q *Queries) GetTagsForResource(ctx context.Context, resourceID uuid.UUID) 
 	return items, nil
 }
 
-const getTagsForResources = `-- name: GetTagsForResources :many
-SELECT rt.resource_id, t.name
-FROM resource_tags rt
-    JOIN tags t ON t.id = rt.tag_id
-WHERE rt.resource_id = ANY($1::uuid [])
+const getTagsForLinks = `-- name: GetTagsForLinks :many
+SELECT lt.link_id, t.name
+FROM link_tags lt
+    JOIN tags t ON t.id = lt.tag_id
+WHERE lt.link_id = ANY($1::uuid [])
 `
 
-type GetTagsForResourcesRow struct {
-	ResourceID uuid.UUID
-	Name       string
+type GetTagsForLinksRow struct {
+	LinkID uuid.UUID
+	Name   string
 }
 
-func (q *Queries) GetTagsForResources(ctx context.Context, dollar_1 []uuid.UUID) ([]GetTagsForResourcesRow, error) {
-	rows, err := q.db.Query(ctx, getTagsForResources, dollar_1)
+func (q *Queries) GetTagsForLinks(ctx context.Context, dollar_1 []uuid.UUID) ([]GetTagsForLinksRow, error) {
+	rows, err := q.db.Query(ctx, getTagsForLinks, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetTagsForResourcesRow{}
+	items := []GetTagsForLinksRow{}
 	for rows.Next() {
-		var i GetTagsForResourcesRow
-		if err := rows.Scan(&i.ResourceID, &i.Name); err != nil {
+		var i GetTagsForLinksRow
+		if err := rows.Scan(&i.LinkID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -171,10 +171,10 @@ func (q *Queries) GetTagsForResources(ctx context.Context, dollar_1 []uuid.UUID)
 const listTags = `-- name: ListTags :many
 SELECT t.id, t.user_id, t.name, t.created_at, t.updated_at
 FROM tags t
-    LEFT JOIN resource_tags rt ON t.id = rt.tag_id
+    LEFT JOIN link_tags lt ON t.id = lt.tag_id
 WHERE t.user_id = $1
 GROUP BY t.id
-ORDER BY COUNT(rt.resource_id) DESC, t.name
+ORDER BY COUNT(lt.link_id) DESC, t.name
 `
 
 func (q *Queries) ListTags(ctx context.Context, userID uuid.UUID) ([]Tag, error) {

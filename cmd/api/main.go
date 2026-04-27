@@ -64,7 +64,7 @@ func run(ctx context.Context) error {
 	userRepo := postgres.NewUserRepository(queries)
 	sessionRepo := postgres.NewSessionRepository(queries)
 	tokenRepo := postgres.NewTokenRepository(queries)
-	resourceRepo := postgres.NewResourceRepository(queries)
+	linkRepo := postgres.NewLinkRepository(queries)
 	tagRepo := postgres.NewTagRepository(queries)
 	collectionRepo := postgres.NewCollectionRepository(queries)
 
@@ -77,7 +77,7 @@ func run(ctx context.Context) error {
 	tagSvc := tag.NewService(tagRepo)
 	collectionSvc := collection.NewService(collectionRepo)
 	uowSvc := uow.NewService(uow.Repositories{
-		Resources:   resourceRepo,
+		Links:       linkRepo,
 		Tags:        tagRepo,
 		Collections: collectionRepo,
 	}, unitOfWork)

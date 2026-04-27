@@ -7,12 +7,12 @@ import (
 	"github.com/urlspace/api/internal/uow"
 )
 
-type resourcesGetResponse struct {
-	Status string           `json:"status"`
-	Data   responseResource `json:"data"`
+type linkGetResponse struct {
+	Status string       `json:"status"`
+	Data   responseLink `json:"data"`
 }
 
-func handleResourcesGet(uowSvc *uow.Service) http.HandlerFunc {
+func handleLinksGet(uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := userIDFromContext(r.Context())
 
@@ -23,16 +23,16 @@ func handleResourcesGet(uowSvc *uow.Service) http.HandlerFunc {
 			return
 		}
 
-		result, err := uowSvc.GetResource(r.Context(), idUuid, userID)
+		result, err := uowSvc.GetLink(r.Context(), idUuid, userID)
 		if err != nil {
 			statusCode, errorMessage := uow.MapErrorToHTTP(err)
 			writeJSONError(w, statusCode, errorMessage)
 			return
 		}
 
-		writeJSONSuccess(w, http.StatusOK, resourcesGetResponse{
+		writeJSONSuccess(w, http.StatusOK, linkGetResponse{
 			Status: "ok",
-			Data:   newResponseResource(result),
+			Data:   newResponseLink(result),
 		})
 	}
 }

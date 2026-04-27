@@ -49,14 +49,17 @@ go test ./internal/user/ -run TestValidateUsername
 
 ## Architecture
 
-The codebase follows a **domain-driven layout** with two domain packages (`user`, `resource`), each defining their own models, repository interfaces, validation, services, and error types.
+The codebase follows a **domain-driven layout** with domain packages (`user`, `link`, `tag`, `collection`), each defining their own models, repository interfaces, validation, services, and error types. The `uow` (unit of work) package coordinates cross-domain operations.
 
 ### Key layers
 
 - **`cmd/api/main.go`** — Entry point. Wires config, database, repositories, services, tracing, and server. Handles graceful shutdown.
 - **`internal/user/`** — User domain: `User`, `Session`, and `Token` models, `Repository`, `SessionRepository`, and `TokenRepository` interfaces, `Service` (business logic for auth flows, CRUD, API token management), validation functions, and sentinel errors.
-- **`internal/resource/`** — Resource domain: `Resource` model, `Repository` interface, `Service`, validation, and sentinel errors.
-- **`internal/postgres/`** — PostgreSQL implementations of repository interfaces. `Connect()` sets up the connection pool. One file per repository (`repository_users.go`, `repository_sessions.go`, `repository_tokens.go`, `repository_resources.go`).
+- **`internal/link/`** — Link domain: `Link` model, `Repository` interface, validation, and sentinel errors.
+- **`internal/tag/`** — Tag domain: `Tag` model, `Repository` interface, `Service`, validation, and sentinel errors.
+- **`internal/collection/`** — Collection domain: `Collection` model, `Repository` interface, `Service`, validation, and sentinel errors.
+- **`internal/uow/`** — Unit of work: coordinates link + tag + collection operations within transactions. Defines `EnrichedLink` (link with tags and collection info).
+- **`internal/postgres/`** — PostgreSQL implementations of repository interfaces. `Connect()` sets up the connection pool. One file per repository (`repository_users.go`, `repository_sessions.go`, `repository_tokens.go`, `repository_links.go`, `repository_tags.go`, `repository_collections.go`).
 - **`internal/server/`** — HTTP layer: route registration (`server.go`), all handlers (`handler_*.go`), all middlewares (`middleware_*.go`), JSON response helpers and response DTOs (`helpers.go`).
 - **`internal/db/`** — sqlc-generated code. Do not edit manually; regenerate with `make gen`.
 - **`internal/config/`** — `LoadConfig()` reads env vars. Shared constants: session durations, context keys.
@@ -70,18 +73,18 @@ HTTP request → middleware stack → handler → domain Service → Repository 
 
 ### Routing
 
-All routes are prefixed with `/v1/` via `http.StripPrefix`. Routes are registered in `internal/server/server.go` using `http.ServeMux` with method prefixes (e.g., `GET /resources/{id}`).
+All routes are prefixed with `/v1/` via `http.StripPrefix`. Routes are registered in `internal/server/server.go` using `http.ServeMux` with method prefixes (e.g., `GET /links/{id}`).
 
 Middleware composition:
 
 - **Global**: `loggingMiddleware` → `commonHeadersMiddleware` → `maxBodySizeMiddleware`
 - **Session-only routes**: wrapped with `sessionOnly(handler)` — cookie auth only (token management, signout)
-- **Session or token routes**: wrapped with `sessionOrToken(handler)` — cookie or Bearer token (resources, me)
+- **Session or token routes**: wrapped with `sessionOrToken(handler)` — cookie or Bearer token (links, tags, collections, me)
 - **Admin routes**: wrapped with `adminOnly(handler)` (which is `middlewareStack(sessionOrToken, admin)`)
 
 ### Validation pattern
 
-Each domain package contains its own validation functions (e.g., `user/validation.go`, `resource/validation.go`). Validators are called by the service layer before any repository calls. They return sanitized values alongside errors.
+Each domain package contains its own validation functions (e.g., `user/validation.go`, `link/validation.go`, `collection/validation.go`). Validators are called by the service layer before any repository calls. They return sanitized values alongside errors.
 
 ### Error mapping
 
@@ -113,5 +116,5 @@ Cookie is checked first. On success, user ID is stored in request context via `c
 ## SQL & Migrations
 
 - Migrations live in `sql/migrations/` (sequential numbered, `.up.sql`/`.down.sql`)
-- Queries live in `sql/queries/` (one file per domain: `resources.sql`, `sessions.sql`, `tokens.sql`, `users.sql`)
+- Queries live in `sql/queries/` (one file per domain: `links.sql`, `tags.sql`, `collections.sql`, `sessions.sql`, `tokens.sql`, `users.sql`)
 - sqlc config: `sqlc.yml` — generates to `internal/db/` with `emit_interface: true` and `emit_empty_slices: true`

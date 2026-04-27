@@ -21,10 +21,10 @@ sql:
               import: "github.com/google/uuid"
               type: "NullUUID"
             nullable: true
-          - column: "resources.created_at"
+          - column: "links.created_at"
             go_type:
               type: "time.Time"
-          - column: "resources.updated_at"
+          - column: "links.updated_at"
             go_type:
               type: "time.Time"
           - column: "users.created_at"

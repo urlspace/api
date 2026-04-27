@@ -8,7 +8,7 @@ import (
 	"github.com/urlspace/api/internal/uow"
 )
 
-type resourceCreateBody struct {
+type linkUpdateBody struct {
 	Title        string   `json:"title"`
 	URL          string   `json:"url"`
 	Description  string   `json:"description"`
@@ -16,16 +16,23 @@ type resourceCreateBody struct {
 	Tags         []string `json:"tags"`
 }
 
-type resourceCreateResponse struct {
-	Status string           `json:"status"`
-	Data   responseResource `json:"data"`
+type linkUpdateResponse struct {
+	Status string       `json:"status"`
+	Data   responseLink `json:"data"`
 }
 
-func handleResourcesCreate(uowSvc *uow.Service) http.HandlerFunc {
+func handleLinksUpdate(uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := userIDFromContext(r.Context())
 
-		var body resourceCreateBody
+		id := r.PathValue("id")
+		idUuid, err := uuid.Parse(id)
+		if err != nil {
+			handleClientError(w, err, "invalid id parameter")
+			return
+		}
+
+		var body linkUpdateBody
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
@@ -43,7 +50,8 @@ func handleResourcesCreate(uowSvc *uow.Service) http.HandlerFunc {
 			collectionID = &id
 		}
 
-		result, err := uowSvc.CreateResource(r.Context(), uow.CreateResourceParams{
+		result, err := uowSvc.UpdateLink(r.Context(), uow.UpdateLinkParams{
+			ID:           idUuid,
 			UserID:       userID,
 			Title:        body.Title,
 			URL:          body.URL,
@@ -57,9 +65,9 @@ func handleResourcesCreate(uowSvc *uow.Service) http.HandlerFunc {
 			return
 		}
 
-		writeJSONSuccess(w, http.StatusCreated, resourceCreateResponse{
+		writeJSONSuccess(w, http.StatusOK, linkUpdateResponse{
 			Status: "ok",
-			Data:   newResponseResource(result),
+			Data:   newResponseLink(result),
 		})
 	}
 }

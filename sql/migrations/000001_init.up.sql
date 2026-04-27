@@ -51,8 +51,8 @@ BEFORE UPDATE ON collections
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
--- resources
-CREATE TABLE resources (
+-- links
+CREATE TABLE links (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -63,11 +63,11 @@ CREATE TABLE resources (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX ON resources (user_id);
-CREATE INDEX ON resources (collection_id);
+CREATE INDEX ON links (user_id);
+CREATE INDEX ON links (collection_id);
 
-CREATE TRIGGER update_resources_updated_at
-BEFORE UPDATE ON resources
+CREATE TRIGGER update_links_updated_at
+BEFORE UPDATE ON links
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
@@ -123,11 +123,11 @@ BEFORE UPDATE ON tags
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
--- resource_tags (join table)
-CREATE TABLE resource_tags (
-    resource_id UUID NOT NULL REFERENCES resources (id) ON DELETE CASCADE,
+-- link_tags (join table)
+CREATE TABLE link_tags (
+    link_id UUID NOT NULL REFERENCES links (id) ON DELETE CASCADE,
     tag_id UUID NOT NULL REFERENCES tags (id) ON DELETE CASCADE,
-    PRIMARY KEY (resource_id, tag_id)
+    PRIMARY KEY (link_id, tag_id)
 );
 
-CREATE INDEX ON resource_tags (tag_id);
+CREATE INDEX ON link_tags (tag_id);

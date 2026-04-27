@@ -20,7 +20,7 @@ type Collection struct {
 	UpdatedAt   time.Time
 }
 
-type Resource struct {
+type Link struct {
 	ID           uuid.UUID
 	UserID       uuid.UUID
 	Title        string
@@ -31,9 +31,9 @@ type Resource struct {
 	UpdatedAt    time.Time
 }
 
-type ResourceTag struct {
-	ResourceID uuid.UUID
-	TagID      uuid.UUID
+type LinkTag struct {
+	LinkID uuid.UUID
+	TagID  uuid.UUID
 }
 
 type Session struct {

@@ -6,28 +6,28 @@ import (
 	"github.com/urlspace/api/internal/uow"
 )
 
-type resourcesListResponse struct {
-	Status string             `json:"status"`
-	Data   []responseResource `json:"data"`
+type linksListResponse struct {
+	Status string         `json:"status"`
+	Data   []responseLink `json:"data"`
 }
 
-func handleResourcesList(uowSvc *uow.Service) http.HandlerFunc {
+func handleLinksList(uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := userIDFromContext(r.Context())
 
-		list, err := uowSvc.ListResources(r.Context(), userID)
+		list, err := uowSvc.ListLinks(r.Context(), userID)
 		if err != nil {
 			statusCode, errorMessage := uow.MapErrorToHTTP(err)
 			writeJSONError(w, statusCode, errorMessage)
 			return
 		}
 
-		items := make([]responseResource, len(list))
+		items := make([]responseLink, len(list))
 		for i, item := range list {
-			items[i] = newResponseResource(item)
+			items[i] = newResponseLink(item)
 		}
 
-		writeJSONSuccess(w, http.StatusOK, resourcesListResponse{
+		writeJSONSuccess(w, http.StatusOK, linksListResponse{
 			Status: "ok",
 			Data:   items,
 		})

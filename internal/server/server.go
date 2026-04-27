@@ -37,12 +37,12 @@ func New(port string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc 
 	// me (authenticated)
 	mux.Handle("GET /me", sessionOrToken(handleMeGet(userSvc)))
 
-	// resources (protected)
-	mux.Handle("GET /resources", sessionOrToken(handleResourcesList(uowSvc)))
-	mux.Handle("GET /resources/{id}", sessionOrToken(handleResourcesGet(uowSvc)))
-	mux.Handle("POST /resources", sessionOrToken(handleResourcesCreate(uowSvc)))
-	mux.Handle("PUT /resources/{id}", sessionOrToken(handleResourcesUpdate(uowSvc)))
-	mux.Handle("DELETE /resources/{id}", sessionOrToken(handleResourcesDelete(uowSvc)))
+	// links (protected)
+	mux.Handle("GET /links", sessionOrToken(handleLinksList(uowSvc)))
+	mux.Handle("GET /links/{id}", sessionOrToken(handleLinksGet(uowSvc)))
+	mux.Handle("POST /links", sessionOrToken(handleLinksCreate(uowSvc)))
+	mux.Handle("PUT /links/{id}", sessionOrToken(handleLinksUpdate(uowSvc)))
+	mux.Handle("DELETE /links/{id}", sessionOrToken(handleLinksDelete(uowSvc)))
 
 	// tags (protected)
 	mux.Handle("GET /tags", sessionOrToken(handleTagsList(tagSvc)))

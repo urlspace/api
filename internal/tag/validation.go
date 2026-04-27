@@ -8,7 +8,7 @@ import (
 const (
 	tagNameLengthMin  = 2
 	tagNameLengthMax  = 50
-	tagMaxPerResource = 10
+	tagMaxPerLink = 10
 )
 
 // Only lowercase ASCII letters, digits, and hyphens are allowed.
@@ -38,7 +38,7 @@ func validateName(n string) (string, error) {
 	return n, nil
 }
 
-// ValidateTagNames is exported because the resource service needs to validate
+// ValidateTagNames is exported because the uow service needs to validate
 // tag names before upserting them within a cross-repository transaction.
 func ValidateTagNames(names []string) ([]string, error) {
 	seen := make(map[string]struct{}, len(names))
@@ -57,7 +57,7 @@ func ValidateTagNames(names []string) ([]string, error) {
 		validated = append(validated, name)
 	}
 
-	if len(validated) > tagMaxPerResource {
+	if len(validated) > tagMaxPerLink {
 		return nil, ErrValidationTooManyTags
 	}
 

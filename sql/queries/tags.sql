@@ -1,10 +1,10 @@
 -- name: ListTags :many
 SELECT t.*
 FROM tags t
-    LEFT JOIN resource_tags rt ON t.id = rt.tag_id
+    LEFT JOIN link_tags lt ON t.id = lt.tag_id
 WHERE t.user_id = $1
 GROUP BY t.id
-ORDER BY COUNT(rt.resource_id) DESC, t.name;
+ORDER BY COUNT(lt.link_id) DESC, t.name;
 
 -- name: GetTag :one
 SELECT * FROM tags
@@ -33,23 +33,23 @@ DELETE FROM tags
 WHERE id = $1 AND user_id = $2
 RETURNING *;
 
--- name: GetTagsForResource :many
+-- name: GetTagsForLink :many
 SELECT t.name
 FROM tags t
-    JOIN resource_tags rt ON t.id = rt.tag_id
-WHERE rt.resource_id = $1;
+    JOIN link_tags lt ON t.id = lt.tag_id
+WHERE lt.link_id = $1;
 
--- name: GetTagsForResources :many
-SELECT rt.resource_id, t.name
-FROM resource_tags rt
-    JOIN tags t ON t.id = rt.tag_id
-WHERE rt.resource_id = ANY($1::uuid []);
+-- name: GetTagsForLinks :many
+SELECT lt.link_id, t.name
+FROM link_tags lt
+    JOIN tags t ON t.id = lt.tag_id
+WHERE lt.link_id = ANY($1::uuid []);
 
--- name: DeleteResourceTags :exec
-DELETE FROM resource_tags
-WHERE resource_id = $1;
+-- name: DeleteLinkTags :exec
+DELETE FROM link_tags
+WHERE link_id = $1;
 
--- name: CreateResourceTag :exec
-INSERT INTO resource_tags (resource_id, tag_id)
+-- name: CreateLinkTag :exec
+INSERT INTO link_tags (link_id, tag_id)
 VALUES ($1, $2)
 ON CONFLICT DO NOTHING;

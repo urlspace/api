@@ -1,4 +1,4 @@
-package resource
+package link
 
 import (
 	"net"
@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	resourceTitleLengthMin = 3
-	resourceTitleLengthMax = 255
+	linkTitleLengthMin = 3
+	linkTitleLengthMax = 255
 )
 
 // ValidateTitle is exported because the uow service needs to validate
-// resource fields before writing them within a cross-repository transaction.
+// link fields before writing them within a cross-repository transaction.
 func ValidateTitle(t string) (string, error) {
 	t = strings.TrimSpace(t)
 
@@ -23,7 +23,7 @@ func ValidateTitle(t string) (string, error) {
 	// in UTF-8 and would inflate the byte count, causing valid titles to be
 	// rejected or invalid ones to pass.
 	n := utf8.RuneCountInString(t)
-	if n < resourceTitleLengthMin || n > resourceTitleLengthMax {
+	if n < linkTitleLengthMin || n > linkTitleLengthMax {
 		return t, ErrValidationTitleLength
 	}
 
@@ -39,11 +39,11 @@ func ValidateTitle(t string) (string, error) {
 }
 
 const (
-	resourceDescriptionLengthMax = 512
+	linkDescriptionLengthMax = 512
 )
 
 // ValidateDescription is exported because the uow service needs to validate
-// resource fields before writing them within a cross-repository transaction.
+// link fields before writing them within a cross-repository transaction.
 func ValidateDescription(d string) (string, error) {
 	d = strings.TrimSpace(d)
 
@@ -51,7 +51,7 @@ func ValidateDescription(d string) (string, error) {
 	// not bytes. Non-ASCII characters (e.g. Polish ąęł, CJK) are multi-byte
 	// in UTF-8 and would inflate the byte count, causing valid descriptions to be
 	// rejected or invalid ones to pass.
-	if utf8.RuneCountInString(d) > resourceDescriptionLengthMax {
+	if utf8.RuneCountInString(d) > linkDescriptionLengthMax {
 		return d, ErrValidationDescriptionLength
 	}
 
@@ -67,7 +67,7 @@ func ValidateDescription(d string) (string, error) {
 }
 
 // ValidateURL is exported because the uow service needs to validate
-// resource fields before writing them within a cross-repository transaction.
+// link fields before writing them within a cross-repository transaction.
 func ValidateURL(u string) (string, error) {
 	u = strings.TrimSpace(u)
 

@@ -48,10 +48,21 @@ func authenticateSession(w http.ResponseWriter, r *http.Request, svc *user.Servi
 		return
 	}
 
-	// Clear the cookie on the client to prevent repeated lookups of the same expired session on subsequent requests.
+	// Session is past its expiry. Reject the request, clear the cookie on the
+	// client, and fire-and-forget a delete so the dead row doesn't linger in
+	// the table. Clearing the cookie and deleting the row each prevent the
+	// same expired cookie from triggering another lookup; together they keep
+	// client and server state in sync.
 	if time.Now().After(sess.ExpiresAt) {
 		clearSessionCookie(w)
 		writeJSONError(w, http.StatusUnauthorized, "unauthorized")
+		go func() {
+			// Errors are intentionally swallowed: a failed delete just means
+			// the row will be cleaned up on the next expired-session hit, or
+			// not at all if the user never returns — neither is a correctness
+			// problem because the middleware refuses the session regardless.
+			_ = svc.Signout(context.Background(), session)
+		}()
 		return
 	}
 

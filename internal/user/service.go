@@ -680,7 +680,24 @@ func (s *Service) ResetPasswordConfirm(ctx context.Context, token, newPassword s
 		return err
 	}
 
-	go s.SessionRepo.DeleteAllByUserID(context.Background(), u.ID)
+	// Decision (future me): fire-and-forget session cleanup. We don't fail
+	// the request on error — the password reset itself already succeeded and
+	// the caller can't usefully retry. Log on error so we notice if old
+	// sessions are silently surviving a reset. WithoutCancel preserves trace
+	// context across the detached call. Recover protects the process from a
+	// panic in pgx/tracing/etc., since an unrecovered panic in a goroutine
+	// crashes the whole API server.
+	detached := context.WithoutCancel(ctx)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.ErrorContext(detached, "session deletion panicked", "recover", r)
+			}
+		}()
+		if err := s.SessionRepo.DeleteAllByUserID(detached, u.ID); err != nil {
+			slog.ErrorContext(detached, "failed to delete sessions after password reset", "error", err, "user_id", u.ID)
+		}
+	}()
 
 	return nil
 }

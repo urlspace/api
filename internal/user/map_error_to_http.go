@@ -60,12 +60,6 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	if errors.Is(err, ErrTokenExpired) {
 		return http.StatusUnauthorized, err.Error()
 	}
-	if errors.Is(err, ErrResendTooFrequent) {
-		return http.StatusTooManyRequests, err.Error()
-	}
-	if errors.Is(err, ErrPasswordResetTooFrequent) {
-		return http.StatusTooManyRequests, err.Error()
-	}
 
 	slog.ErrorContext(ctx, "service error", "error", err)
 	return http.StatusInternalServerError, "internal server error"

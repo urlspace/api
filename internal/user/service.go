@@ -273,9 +273,7 @@ var (
 	ErrConflict                 = errors.New("conflict")
 	ErrInvalidCredentials       = errors.New("invalid credentials")
 	ErrEmailNotVerified         = errors.New("invalid email or password")
-	ErrTokenExpired             = errors.New("token has expired")
-	ErrResendTooFrequent        = errors.New("verification email already sent, please wait before requesting a new one")
-	ErrPasswordResetTooFrequent = errors.New("password reset email already sent, please wait before requesting a new one")
+	ErrTokenExpired       = errors.New("token has expired")
 )
 
 type Service struct {
@@ -457,7 +455,9 @@ func (s *Service) Verify(ctx context.Context, token string) error {
 }
 
 // ResendVerification generates a new verification token and sends an email.
-// Returns ErrResendTooFrequent if the last token was generated less than 5 minutes ago.
+// Throttles silently (returns nil) if the last token was issued < 5 min ago,
+// so the response is indistinguishable from the unknown-email and already-
+// verified branches and can't be used to enumerate accounts.
 func (s *Service) ResendVerification(ctx context.Context, email string) error {
 	email, err := validateEmail(email)
 	if err != nil {
@@ -480,7 +480,8 @@ func (s *Service) ResendVerification(ctx context.Context, email string) error {
 
 	tokenAge := config.EmailVerificationTokenExpiryDuration - time.Until(*u.EmailVerificationTokenExpiresAt)
 	if tokenAge < time.Minute*5 {
-		return ErrResendTooFrequent
+		slog.InfoContext(ctx, "verification resend throttled", "user_id", u.ID)
+		return nil
 	}
 
 	token, err := generateToken()
@@ -525,7 +526,9 @@ func (s *Service) ResendVerification(ctx context.Context, email string) error {
 }
 
 // ResetPasswordRequest generates a password reset token and sends an email.
-// Returns ErrPasswordResetTooFrequent if the last token was generated less than 5 minutes ago.
+// Throttles silently (returns nil) if the last token was issued < 5 min ago,
+// so the response is indistinguishable from the unknown-email branch and
+// can't be used to enumerate accounts.
 func (s *Service) ResetPasswordRequest(ctx context.Context, email string) error {
 	email, err := validateEmail(email)
 	if err != nil {
@@ -542,7 +545,8 @@ func (s *Service) ResetPasswordRequest(ctx context.Context, email string) error 
 	if u.PasswordResetTokenExpiresAt != nil {
 		tokenAge := config.PasswordResetTokenExpiryDuration - time.Until(*u.PasswordResetTokenExpiresAt)
 		if tokenAge < time.Minute*5 {
-			return ErrPasswordResetTooFrequent
+			slog.InfoContext(ctx, "password reset throttled", "user_id", u.ID)
+			return nil
 		}
 	}
 

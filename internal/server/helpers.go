@@ -198,7 +198,7 @@ func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 // "url.space" so url.space SSR can also read the cookie).
 func setSessionCookie(w http.ResponseWriter, r *http.Request, value string, expires time.Time) {
 	if expires.IsZero() {
-		slog.Error("setSessionCookie called with zero expires time, cookie not set")
+		slog.ErrorContext(r.Context(), "setSessionCookie called with zero expires time, cookie not set")
 		return
 	}
 	domain := "url.space"

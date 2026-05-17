@@ -38,10 +38,12 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		}
 
 		slog.Log(r.Context(), level, "http request",
-			"status", wrapped.statusCode,
-			"method", r.Method,
-			"path", r.URL.Path,
-			"duration", time.Since(start),
+			slog.Int("status_code", wrapped.statusCode),
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Int64("duration_nano", time.Since(start).Nanoseconds()),
+			slog.Int64("duration_micro", time.Since(start).Microseconds()),
+			slog.Int64("duration_milli", time.Since(start).Milliseconds()),
 		)
 	})
 }

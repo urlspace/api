@@ -53,15 +53,6 @@ func (h multiHandler) WithGroup(name string) slog.Handler {
 	return next
 }
 
-// newStdoutHandler picks JSON or text based on LOG_FORMAT. JSON is what
-// Railway parses for level/message; text is easier to read locally.
-func newStdoutHandler() slog.Handler {
-	if os.Getenv("LOG_FORMAT") == "json" {
-		return slog.NewJSONHandler(os.Stdout, nil)
-	}
-	return slog.NewTextHandler(os.Stdout, nil)
-}
-
 // initLoggerProvider builds an OTel logger provider that exports via OTLP/HTTP.
 // Endpoint, headers, etc. are picked up from the standard OTEL_* env vars.
 func initLoggerProvider(ctx context.Context) (*sdklog.LoggerProvider, error) {
@@ -79,5 +70,5 @@ func initLoggerProvider(ctx context.Context) (*sdklog.LoggerProvider, error) {
 // OTel bridge, so logs reach Grafana without losing terminal/Railway output.
 func attachOtelLogger(provider *sdklog.LoggerProvider) {
 	otelHandler := otelslog.NewHandler("github.com/urlspace/api", otelslog.WithLoggerProvider(provider))
-	slog.SetDefault(slog.New(multiHandler{newStdoutHandler(), otelHandler}))
+	slog.SetDefault(slog.New(multiHandler{slog.NewJSONHandler(os.Stdout, nil), otelHandler}))
 }

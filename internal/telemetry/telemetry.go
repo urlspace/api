@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 )
 
 // Setup installs the slog default and wires up OTel tracing + logging.
@@ -15,7 +16,7 @@ import (
 // The returned shutdown function flushes both providers; callers should defer
 // it with a fresh context (the parent ctx may already be cancelled at exit).
 func Setup(ctx context.Context) (shutdown func(context.Context) error, err error) {
-	slog.SetDefault(slog.New(newStdoutHandler()))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
 	tp, err := initTracerProvider(ctx)
 	if err != nil {

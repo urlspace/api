@@ -5,6 +5,9 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
@@ -62,5 +65,8 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	}
 
 	slog.ErrorContext(ctx, "service error", slog.String("error", err.Error()), slog.String("domain", "user"))
+	span := trace.SpanFromContext(ctx)
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
 	return http.StatusInternalServerError, "internal server error"
 }

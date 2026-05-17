@@ -9,6 +9,8 @@ import (
 	"github.com/urlspace/api/internal/collection"
 	"github.com/urlspace/api/internal/link"
 	"github.com/urlspace/api/internal/tag"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // MapErrorToHTTP maps errors from the uow service to HTTP status codes.
@@ -49,5 +51,8 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	}
 
 	slog.ErrorContext(ctx, "service error", slog.String("error", err.Error()), slog.String("domain", "uow"))
+	span := trace.SpanFromContext(ctx)
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
 	return http.StatusInternalServerError, "internal server error"
 }

@@ -269,13 +269,6 @@ var (
 	ErrValidationPasswordTooLong         = errors.New("password must be at most 128 characters")
 	ErrValidationPasswordContainsContext = errors.New("password cannot contain your username, display name, or email")
 
-	// Display name validation errors.
-	ErrValidationDisplayNameRequired          = errors.New("display name is required")
-	ErrValidationDisplayNameTooShort          = errors.New("display name must be min 3 characters")
-	ErrValidationDisplayNameTooLong           = errors.New("display name must be max 32 characters")
-	ErrValidationDisplayNameCharacters        = errors.New("display name can only contain letters, numbers, spaces, hyphens, and underscores")
-	ErrValidationDisplayNameConsecutiveSpaces = errors.New("display name cannot contain consecutive spaces")
-
 	// Token validation errors.
 	ErrValidationTokenRequired = errors.New("token is required")
 	ErrValidationTokenFormat   = errors.New("token is invalid")

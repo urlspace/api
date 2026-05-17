@@ -48,6 +48,6 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		return http.StatusConflict, "conflict"
 	}
 
-	slog.ErrorContext(ctx, "service error", "error", err)
+	slog.ErrorContext(ctx, "service error", slog.String("error", err.Error()), slog.String("domain", "uow"))
 	return http.StatusInternalServerError, "internal server error"
 }

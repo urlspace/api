@@ -377,7 +377,7 @@ func (s *Service) Signup(ctx context.Context, username, email, password string) 
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				slog.ErrorContext(detached, "email send panicked", "recover", r)
+				slog.ErrorContext(detached, "email send panicked", slog.Any("recover", r))
 			}
 		}()
 		if err := s.EmailSender.Send(detached, emails.EmailSendParams{
@@ -386,7 +386,7 @@ func (s *Service) Signup(ctx context.Context, username, email, password string) 
 			Html:    bodyHtml,
 			Subject: "Hello from url.space",
 		}); err != nil {
-			slog.ErrorContext(detached, "failed to send email", "error", err)
+			slog.ErrorContext(detached, "failed to send email", slog.String("error", err.Error()))
 		}
 	}()
 
@@ -511,7 +511,7 @@ func (s *Service) ResendVerification(ctx context.Context, email string) error {
 	if tokenAge < time.Minute*5 {
 		// Decision (future me): silent return (not 429) — see function doc.
 		// A 429 here would confirm the email is registered and unverified.
-		slog.InfoContext(ctx, "verification resend throttled", "user_id", u.ID)
+		slog.InfoContext(ctx, "verification resend throttled", slog.String("user_id", u.ID.String()))
 		return nil
 	}
 
@@ -554,7 +554,7 @@ func (s *Service) ResendVerification(ctx context.Context, email string) error {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				slog.ErrorContext(detached, "email send panicked", "recover", r)
+				slog.ErrorContext(detached, "email send panicked", slog.Any("recover", r))
 			}
 		}()
 		if err := s.EmailSender.Send(detached, emails.EmailSendParams{
@@ -563,7 +563,7 @@ func (s *Service) ResendVerification(ctx context.Context, email string) error {
 			Html:    bodyHtml,
 			Subject: "Verification token has been requested",
 		}); err != nil {
-			slog.ErrorContext(detached, "failed to send email", "error", err)
+			slog.ErrorContext(detached, "failed to send email", slog.String("error", err.Error()))
 		}
 	}()
 
@@ -592,7 +592,7 @@ func (s *Service) ResetPasswordRequest(ctx context.Context, email string) error 
 		if tokenAge < time.Minute*5 {
 			// Decision (future me): silent return (not 429) — see function doc.
 			// A 429 here would confirm the email is registered.
-			slog.InfoContext(ctx, "password reset throttled", "user_id", u.ID)
+			slog.InfoContext(ctx, "password reset throttled", slog.String("user_id", u.ID.String()))
 			return nil
 		}
 	}
@@ -636,7 +636,7 @@ func (s *Service) ResetPasswordRequest(ctx context.Context, email string) error 
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				slog.ErrorContext(detached, "email send panicked", "recover", r)
+				slog.ErrorContext(detached, "email send panicked", slog.Any("recover", r))
 			}
 		}()
 		if err := s.EmailSender.Send(detached, emails.EmailSendParams{
@@ -645,7 +645,7 @@ func (s *Service) ResetPasswordRequest(ctx context.Context, email string) error 
 			Html:    bodyHtml,
 			Subject: "Password reset has been requested",
 		}); err != nil {
-			slog.ErrorContext(detached, "failed to send email", "error", err)
+			slog.ErrorContext(detached, "failed to send email", slog.String("error", err.Error()))
 		}
 	}()
 
@@ -700,11 +700,11 @@ func (s *Service) ResetPasswordConfirm(ctx context.Context, token, newPassword s
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				slog.ErrorContext(detached, "session deletion panicked", "recover", r)
+				slog.ErrorContext(detached, "session deletion panicked", slog.Any("recover", r))
 			}
 		}()
 		if err := s.SessionRepo.DeleteAllByUserID(detached, u.ID); err != nil {
-			slog.ErrorContext(detached, "failed to delete sessions after password reset", "error", err, "user_id", u.ID)
+			slog.ErrorContext(detached, "failed to delete sessions after password reset", slog.String("error", err.Error()), slog.String("user_id", u.ID.String()))
 		}
 	}()
 

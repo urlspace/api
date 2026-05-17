@@ -65,7 +65,7 @@ func authenticateSession(w http.ResponseWriter, r *http.Request, svc *user.Servi
 		go func() {
 			defer func() {
 				if rec := recover(); rec != nil {
-					slog.ErrorContext(detached, "expired session cleanup panicked", "recover", rec)
+					slog.ErrorContext(detached, "expired session cleanup panicked", slog.Any("recover", rec))
 				}
 			}()
 			_ = svc.Signout(detached, session)
@@ -90,7 +90,7 @@ func authenticateSession(w http.ResponseWriter, r *http.Request, svc *user.Servi
 		go func() {
 			defer func() {
 				if rec := recover(); rec != nil {
-					slog.ErrorContext(detached, "session renewal panicked", "recover", rec)
+					slog.ErrorContext(detached, "session renewal panicked", slog.Any("recover", rec))
 				}
 			}()
 			_, _ = svc.UpdateSessionExpiresAt(detached, user.SessionUpdateExpiresAtParams{
@@ -126,7 +126,7 @@ func authenticateToken(w http.ResponseWriter, r *http.Request, svc *user.Service
 	go func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				slog.ErrorContext(detached, "token last_used_at update panicked", "recover", rec)
+				slog.ErrorContext(detached, "token last_used_at update panicked", slog.Any("recover", rec))
 			}
 		}()
 		_ = svc.UpdateTokenLastUsedAt(detached, token.ID)

@@ -15,10 +15,10 @@ func recoveryMiddleware(next http.Handler) http.Handler {
 		defer func() {
 			if rec := recover(); rec != nil {
 				slog.ErrorContext(r.Context(), "handler panicked",
-					"recover", rec,
-					"method", r.Method,
-					"path", r.URL.Path,
-					"stack", string(debug.Stack()),
+					slog.Any("recover", rec),
+					slog.String("method", r.Method),
+					slog.String("path", r.URL.Path),
+					slog.String("stack", string(debug.Stack())),
 				)
 				writeJSONError(w, http.StatusInternalServerError, "internal server error")
 			}

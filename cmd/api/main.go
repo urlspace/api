@@ -71,7 +71,7 @@ func run(ctx context.Context) error {
 
 	chServer := make(chan error, 1)
 
-	slog.Info("starting server", "port", cfg.Port)
+	slog.Info("starting server", slog.String("port", cfg.Port))
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			chServer <- err
@@ -84,9 +84,9 @@ func run(ctx context.Context) error {
 
 	select {
 	case <-ctxSignal.Done():
-		slog.Info("shutting down server", "signal", context.Cause(ctxSignal))
+		slog.Info("shutting down server", slog.String("signal", context.Cause(ctxSignal).Error()))
 	case err := <-chServer:
-		slog.Error("server error", "error", err)
+		slog.Error("server error", slog.String("error", err.Error()))
 		return err
 	}
 
@@ -94,10 +94,10 @@ func run(ctx context.Context) error {
 	defer stop()
 
 	if err := srv.Shutdown(ctxTimeout); err != nil {
-		slog.Error("server shutdown failed", "error", err)
+		slog.Error("server shutdown failed", slog.String("error", err.Error()))
 
 		if closeErr := srv.Close(); closeErr != nil {
-			slog.Error("server close failed", "error", closeErr)
+			slog.Error("server close failed", slog.String("error", closeErr.Error()))
 			return errors.Join(err, closeErr)
 		}
 
@@ -112,7 +112,7 @@ func main() {
 	ctx := context.Background()
 
 	if err := run(ctx); err != nil {
-		slog.Error("fatal error", "error", err)
+		slog.Error("fatal error", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 }

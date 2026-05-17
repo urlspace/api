@@ -254,11 +254,11 @@ func writeJSONError(w http.ResponseWriter, statusCode int, message string) {
 }
 
 func handleClientError(ctx context.Context, w http.ResponseWriter, err error, message string) {
-	slog.WarnContext(ctx, "client error", "error", err, "message", message)
+	slog.WarnContext(ctx, "client error", slog.String("error", err.Error()), slog.String("message", message))
 	writeJSONError(w, http.StatusBadRequest, message)
 }
 
 func handleServerError(ctx context.Context, w http.ResponseWriter, err error, message string) {
-	slog.ErrorContext(ctx, "server error", "error", err, "message", message)
+	slog.ErrorContext(ctx, "server error", slog.String("error", err.Error()), slog.String("message", message))
 	writeJSONError(w, http.StatusInternalServerError, "internal server error")
 }

@@ -15,11 +15,11 @@ import (
 
 const createLink = `-- name: CreateLink :one
 INSERT INTO links (
-    user_id, title, description, url, collection_id
+    user_id, title, description, url, collection_id, favourite, for_later
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, user_id, title, description, url, collection_id, created_at, updated_at
+RETURNING id, user_id, title, description, url, collection_id, favourite, for_later, created_at, updated_at
 `
 
 type CreateLinkParams struct {
@@ -28,6 +28,8 @@ type CreateLinkParams struct {
 	Description  string
 	Url          string
 	CollectionID uuid.NullUUID
+	Favourite    bool
+	ForLater     bool
 }
 
 func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error) {
@@ -37,6 +39,8 @@ func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (Link, e
 		arg.Description,
 		arg.Url,
 		arg.CollectionID,
+		arg.Favourite,
+		arg.ForLater,
 	)
 	var i Link
 	err := row.Scan(
@@ -46,6 +50,8 @@ func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (Link, e
 		&i.Description,
 		&i.Url,
 		&i.CollectionID,
+		&i.Favourite,
+		&i.ForLater,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -55,7 +61,7 @@ func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (Link, e
 const deleteLink = `-- name: DeleteLink :one
 DELETE FROM links
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, title, description, url, collection_id, created_at, updated_at
+RETURNING id, user_id, title, description, url, collection_id, favourite, for_later, created_at, updated_at
 `
 
 type DeleteLinkParams struct {
@@ -73,6 +79,8 @@ func (q *Queries) DeleteLink(ctx context.Context, arg DeleteLinkParams) (Link, e
 		&i.Description,
 		&i.Url,
 		&i.CollectionID,
+		&i.Favourite,
+		&i.ForLater,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -80,7 +88,7 @@ func (q *Queries) DeleteLink(ctx context.Context, arg DeleteLinkParams) (Link, e
 }
 
 const getLink = `-- name: GetLink :one
-SELECT l.id, l.user_id, l.title, l.description, l.url, l.collection_id, l.created_at, l.updated_at, c.name AS collection_name
+SELECT l.id, l.user_id, l.title, l.description, l.url, l.collection_id, l.favourite, l.for_later, l.created_at, l.updated_at, c.name AS collection_name
 FROM links l
     LEFT JOIN collections c ON l.collection_id = c.id
 WHERE l.id = $1 AND l.user_id = $2
@@ -99,6 +107,8 @@ type GetLinkRow struct {
 	Description    string
 	Url            string
 	CollectionID   uuid.NullUUID
+	Favourite      bool
+	ForLater       bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	CollectionName pgtype.Text
@@ -114,6 +124,8 @@ func (q *Queries) GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, e
 		&i.Description,
 		&i.Url,
 		&i.CollectionID,
+		&i.Favourite,
+		&i.ForLater,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CollectionName,
@@ -122,7 +134,7 @@ func (q *Queries) GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, e
 }
 
 const listLinks = `-- name: ListLinks :many
-SELECT l.id, l.user_id, l.title, l.description, l.url, l.collection_id, l.created_at, l.updated_at, c.name AS collection_name
+SELECT l.id, l.user_id, l.title, l.description, l.url, l.collection_id, l.favourite, l.for_later, l.created_at, l.updated_at, c.name AS collection_name
 FROM links l
     LEFT JOIN collections c ON l.collection_id = c.id
 WHERE l.user_id = $1
@@ -136,6 +148,8 @@ type ListLinksRow struct {
 	Description    string
 	Url            string
 	CollectionID   uuid.NullUUID
+	Favourite      bool
+	ForLater       bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	CollectionName pgtype.Text
@@ -157,6 +171,8 @@ func (q *Queries) ListLinks(ctx context.Context, userID uuid.UUID) ([]ListLinksR
 			&i.Description,
 			&i.Url,
 			&i.CollectionID,
+			&i.Favourite,
+			&i.ForLater,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CollectionName,
@@ -177,9 +193,11 @@ SET
     title = $3,
     description = $4,
     url = $5,
-    collection_id = $6
+    collection_id = $6,
+    favourite = $7,
+    for_later = $8
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, title, description, url, collection_id, created_at, updated_at
+RETURNING id, user_id, title, description, url, collection_id, favourite, for_later, created_at, updated_at
 `
 
 type UpdateLinkParams struct {
@@ -189,6 +207,8 @@ type UpdateLinkParams struct {
 	Description  string
 	Url          string
 	CollectionID uuid.NullUUID
+	Favourite    bool
+	ForLater     bool
 }
 
 func (q *Queries) UpdateLink(ctx context.Context, arg UpdateLinkParams) (Link, error) {
@@ -199,6 +219,8 @@ func (q *Queries) UpdateLink(ctx context.Context, arg UpdateLinkParams) (Link, e
 		arg.Description,
 		arg.Url,
 		arg.CollectionID,
+		arg.Favourite,
+		arg.ForLater,
 	)
 	var i Link
 	err := row.Scan(
@@ -208,6 +230,8 @@ func (q *Queries) UpdateLink(ctx context.Context, arg UpdateLinkParams) (Link, e
 		&i.Description,
 		&i.Url,
 		&i.CollectionID,
+		&i.Favourite,
+		&i.ForLater,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

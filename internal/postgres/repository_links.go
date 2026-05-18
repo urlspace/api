@@ -56,6 +56,8 @@ func toLink(l db.Link) link.Link {
 		Description:  l.Description,
 		URL:          l.Url,
 		CollectionID: toCollectionID(l.CollectionID),
+		Favourite:    l.Favourite,
+		ForLater:     l.ForLater,
 		CreatedAt:    l.CreatedAt,
 		UpdatedAt:    l.UpdatedAt,
 	}
@@ -77,6 +79,8 @@ func (r *LinkRepository) List(ctx context.Context, userID uuid.UUID) ([]link.Lin
 			URL:            row.Url,
 			CollectionID:   toCollectionID(row.CollectionID),
 			CollectionName: row.CollectionName.String,
+			Favourite:      row.Favourite,
+			ForLater:       row.ForLater,
 			CreatedAt:      row.CreatedAt,
 			UpdatedAt:      row.UpdatedAt,
 		}
@@ -100,6 +104,8 @@ func (r *LinkRepository) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID
 		URL:            row.Url,
 		CollectionID:   toCollectionID(row.CollectionID),
 		CollectionName: row.CollectionName.String,
+		Favourite:      row.Favourite,
+		ForLater:       row.ForLater,
 		CreatedAt:      row.CreatedAt,
 		UpdatedAt:      row.UpdatedAt,
 	}, nil
@@ -112,6 +118,8 @@ func (r *LinkRepository) Create(ctx context.Context, params link.CreateParams) (
 		Description:  params.Description,
 		Url:          params.URL,
 		CollectionID: toNullUUID(params.CollectionID),
+		Favourite:    params.Favourite,
+		ForLater:     params.ForLater,
 	}
 	row, err := r.queries.CreateLink(ctx, args)
 	if err != nil {
@@ -128,6 +136,8 @@ func (r *LinkRepository) Update(ctx context.Context, params link.UpdateParams) (
 		Description:  params.Description,
 		Url:          params.URL,
 		CollectionID: toNullUUID(params.CollectionID),
+		Favourite:    params.Favourite,
+		ForLater:     params.ForLater,
 	}
 	row, err := r.queries.UpdateLink(ctx, args)
 	if err != nil {

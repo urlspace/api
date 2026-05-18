@@ -30,6 +30,8 @@ type responseLink struct {
 	Title       string                  `json:"title"`
 	Description string                  `json:"description"`
 	URL         string                  `json:"url"`
+	Favourite   bool                    `json:"favourite"`
+	ForLater    bool                    `json:"forLater"`
 	Tags        []responseLinkTag       `json:"tags"`
 	Collection  *responseLinkCollection `json:"collection"`
 	CreatedAt   time.Time               `json:"createdAt"`
@@ -59,6 +61,8 @@ func newResponseLink(r uow.EnrichedLink) responseLink {
 		Title:       r.Title,
 		Description: r.Description,
 		URL:         r.URL,
+		Favourite:   r.Favourite,
+		ForLater:    r.ForLater,
 		Tags:        tags,
 		Collection:  col,
 		CreatedAt:   r.CreatedAt,

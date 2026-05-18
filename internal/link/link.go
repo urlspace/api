@@ -16,6 +16,8 @@ type Link struct {
 	URL            string
 	CollectionID   *uuid.UUID
 	CollectionName string // populated by Get/List via JOIN, empty on Create/Update/Delete
+	Favourite      bool
+	ForLater       bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -44,6 +46,8 @@ type CreateParams struct {
 	Description  string
 	URL          string
 	CollectionID *uuid.UUID
+	Favourite    bool
+	ForLater     bool
 }
 
 type UpdateParams struct {
@@ -53,6 +57,8 @@ type UpdateParams struct {
 	Description  string
 	URL          string
 	CollectionID *uuid.UUID
+	Favourite    bool
+	ForLater     bool
 }
 
 type Repository interface {

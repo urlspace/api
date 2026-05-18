@@ -90,6 +90,8 @@ type CreateLinkParams struct {
 	URL          string
 	CollectionID *uuid.UUID
 	Tags         []string
+	Favourite    bool
+	ForLater     bool
 }
 
 func (s *Service) CreateLink(ctx context.Context, params CreateLinkParams) (EnrichedLink, error) {
@@ -131,6 +133,8 @@ func (s *Service) CreateLink(ctx context.Context, params CreateLinkParams) (Enri
 			Description:  description,
 			URL:          url,
 			CollectionID: params.CollectionID,
+			Favourite:    params.Favourite,
+			ForLater:     params.ForLater,
 		})
 		if err != nil {
 			return err
@@ -174,6 +178,8 @@ type UpdateLinkParams struct {
 	URL          string
 	CollectionID *uuid.UUID
 	Tags         []string
+	Favourite    bool
+	ForLater     bool
 }
 
 func (s *Service) UpdateLink(ctx context.Context, params UpdateLinkParams) (EnrichedLink, error) {
@@ -216,6 +222,8 @@ func (s *Service) UpdateLink(ctx context.Context, params UpdateLinkParams) (Enri
 			Description:  description,
 			URL:          url,
 			CollectionID: params.CollectionID,
+			Favourite:    params.Favourite,
+			ForLater:     params.ForLater,
 		})
 		if err != nil {
 			return err

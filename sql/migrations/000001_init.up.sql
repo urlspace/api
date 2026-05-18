@@ -59,6 +59,8 @@ CREATE TABLE links (
     description TEXT NOT NULL,
     url TEXT NOT NULL,
     collection_id UUID REFERENCES collections (id) ON DELETE SET NULL,
+    favourite BOOLEAN NOT NULL DEFAULT FALSE,
+    for_later BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

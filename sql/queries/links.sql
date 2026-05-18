@@ -14,9 +14,9 @@ ORDER BY l.created_at DESC;
 
 -- name: CreateLink :one
 INSERT INTO links (
-    user_id, title, description, url, collection_id
+    user_id, title, description, url, collection_id, favourite, for_later
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING *;
 
@@ -26,7 +26,9 @@ SET
     title = $3,
     description = $4,
     url = $5,
-    collection_id = $6
+    collection_id = $6,
+    favourite = $7,
+    for_later = $8
 WHERE id = $1 AND user_id = $2
 RETURNING *;
 

@@ -14,6 +14,8 @@ type linkCreateBody struct {
 	Description  string   `json:"description"`
 	CollectionID *string  `json:"collectionId"`
 	Tags         []string `json:"tags"`
+	Favourite    bool     `json:"favourite"`
+	ForLater     bool     `json:"forLater"`
 }
 
 type linkCreateResponse struct {
@@ -50,6 +52,8 @@ func handleLinksCreate(uowSvc *uow.Service) http.HandlerFunc {
 			Description:  body.Description,
 			CollectionID: collectionID,
 			Tags:         body.Tags,
+			Favourite:    body.Favourite,
+			ForLater:     body.ForLater,
 		})
 		if err != nil {
 			statusCode, errorMessage := uow.MapErrorToHTTP(r.Context(), err)

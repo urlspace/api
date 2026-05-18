@@ -10,7 +10,7 @@ SELECT l.*, c.name AS collection_name
 FROM links l
     LEFT JOIN collections c ON l.collection_id = c.id
 WHERE l.user_id = $1
-ORDER BY l.created_at;
+ORDER BY l.created_at DESC;
 
 -- name: CreateLink :one
 INSERT INTO links (

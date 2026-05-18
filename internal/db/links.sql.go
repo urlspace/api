@@ -126,7 +126,7 @@ SELECT l.id, l.user_id, l.title, l.description, l.url, l.collection_id, l.create
 FROM links l
     LEFT JOIN collections c ON l.collection_id = c.id
 WHERE l.user_id = $1
-ORDER BY l.created_at
+ORDER BY l.created_at DESC
 `
 
 type ListLinksRow struct {

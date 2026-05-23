@@ -65,7 +65,7 @@ CREATE TABLE links (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX ON links (user_id);
+CREATE INDEX ON links (user_id, created_at DESC);
 CREATE INDEX ON links (collection_id);
 
 CREATE TRIGGER update_links_updated_at

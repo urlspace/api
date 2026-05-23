@@ -62,7 +62,8 @@ type UpdateParams struct {
 }
 
 type Repository interface {
-	List(ctx context.Context, userID uuid.UUID) ([]Link, error)
+	List(ctx context.Context, userID uuid.UUID, limit, offset int) ([]Link, error)
+	Count(ctx context.Context, userID uuid.UUID) (int, error)
 	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Link, error)
 	Create(ctx context.Context, params CreateParams) (Link, error)
 	Update(ctx context.Context, params UpdateParams) (Link, error)

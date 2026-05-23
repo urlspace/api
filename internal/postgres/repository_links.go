@@ -63,8 +63,12 @@ func toLink(l db.Link) link.Link {
 	}
 }
 
-func (r *LinkRepository) List(ctx context.Context, userID uuid.UUID) ([]link.Link, error) {
-	rows, err := r.queries.ListLinks(ctx, userID)
+func (r *LinkRepository) List(ctx context.Context, userID uuid.UUID, limit, offset int) ([]link.Link, error) {
+	rows, err := r.queries.ListLinks(ctx, db.ListLinksParams{
+		UserID: userID,
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
 	if err != nil {
 		return nil, translateLinkError(err)
 	}
@@ -86,6 +90,14 @@ func (r *LinkRepository) List(ctx context.Context, userID uuid.UUID) ([]link.Lin
 		}
 	}
 	return links, nil
+}
+
+func (r *LinkRepository) Count(ctx context.Context, userID uuid.UUID) (int, error) {
+	count, err := r.queries.CountLinks(ctx, userID)
+	if err != nil {
+		return 0, translateLinkError(err)
+	}
+	return int(count), nil
 }
 
 func (r *LinkRepository) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (link.Link, error) {

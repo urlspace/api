@@ -2,6 +2,7 @@ package uow
 
 import (
 	"context"
+	"math"
 
 	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/collection"
@@ -259,14 +260,48 @@ func (s *Service) UpdateLink(ctx context.Context, params UpdateLinkParams) (Enri
 	return result, err
 }
 
-func (s *Service) ListLinks(ctx context.Context, userID uuid.UUID) ([]EnrichedLink, error) {
-	list, err := s.repos.Links.List(ctx, userID)
+type ListLinksParams struct {
+	UserID   uuid.UUID
+	Page     int
+	PageSize int
+}
+
+type ListLinksResult struct {
+	Links      []EnrichedLink
+	TotalCount int
+}
+
+func (s *Service) ListLinks(ctx context.Context, params ListLinksParams) (ListLinksResult, error) {
+	totalCount, err := s.repos.Links.Count(ctx, params.UserID)
 	if err != nil {
-		return nil, err
+		return ListLinksResult{}, err
 	}
 
+	// Decision (future me): three cases collapse into one short-circuit:
+	// (1) empty table, (2) well-formed request for a page beyond totalPages,
+	// (3) pathologically large Page that would overflow the int multiplication
+	// and emit garbage to the int32 cast at the repo layer. Skip the data
+	// query — no rows to fetch. The overflow check uses MaxInt/PageSize as
+	// the largest safe (Page-1); above that the multiplication wraps. The
+	// offset value computed in the overflow case is discarded.
+	offset := (params.Page - 1) * params.PageSize
+	overflow := params.Page > 1 && params.Page-1 > math.MaxInt/params.PageSize
+	if overflow || offset >= totalCount {
+		return ListLinksResult{Links: []EnrichedLink{}, TotalCount: totalCount}, nil
+	}
+
+	list, err := s.repos.Links.List(ctx, params.UserID, params.PageSize, offset)
+	if err != nil {
+		return ListLinksResult{}, err
+	}
+
+	// Decision (future me): race-safety net, not redundant with the offset
+	// check above. If a link is deleted between Count and List, the requested
+	// page can come back empty even though offset was in range. Skip the
+	// tag-enrichment join — calling GetTagsForLinks with an empty slice is
+	// wasted work. Super edge casy, but not impossible.
 	if len(list) == 0 {
-		return []EnrichedLink{}, nil
+		return ListLinksResult{Links: []EnrichedLink{}, TotalCount: totalCount}, nil
 	}
 
 	linkIDs := make([]uuid.UUID, len(list))
@@ -276,19 +311,19 @@ func (s *Service) ListLinks(ctx context.Context, userID uuid.UUID) ([]EnrichedLi
 
 	tagsMap, err := s.repos.Tags.GetTagsForLinks(ctx, linkIDs)
 	if err != nil {
-		return nil, err
+		return ListLinksResult{}, err
 	}
 
-	result := make([]EnrichedLink, len(list))
+	links := make([]EnrichedLink, len(list))
 	for i, item := range list {
-		result[i] = EnrichedLink{
+		links[i] = EnrichedLink{
 			Link:       item,
 			Tags:       tagInfosFromTags(tagsMap[item.ID]),
 			Collection: collectionInfoFromLink(item),
 		}
 	}
 
-	return result, nil
+	return ListLinksResult{Links: links, TotalCount: totalCount}, nil
 }
 
 func (s *Service) GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) (EnrichedLink, error) {

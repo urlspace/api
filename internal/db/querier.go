@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	CountLinks(ctx context.Context, userID uuid.UUID) (int64, error)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error)
 	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
 	CreateLinkTag(ctx context.Context, arg CreateLinkTagParams) error
@@ -40,7 +41,7 @@ type Querier interface {
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByPasswordResetTokenHash(ctx context.Context, passwordResetTokenHash *string) (User, error)
 	ListCollections(ctx context.Context, userID uuid.UUID) ([]Collection, error)
-	ListLinks(ctx context.Context, userID uuid.UUID) ([]ListLinksRow, error)
+	ListLinks(ctx context.Context, arg ListLinksParams) ([]ListLinksRow, error)
 	ListTags(ctx context.Context, userID uuid.UUID) ([]Tag, error)
 	ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]Token, error)
 	ListUsers(ctx context.Context) ([]User, error)

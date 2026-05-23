@@ -13,6 +13,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countLinks = `-- name: CountLinks :one
+SELECT COUNT(*) FROM links
+WHERE user_id = $1
+`
+
+func (q *Queries) CountLinks(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countLinks, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createLink = `-- name: CreateLink :one
 INSERT INTO links (
     user_id, title, description, url, collection_id, favourite, for_later
@@ -139,7 +151,14 @@ FROM links l
     LEFT JOIN collections c ON l.collection_id = c.id
 WHERE l.user_id = $1
 ORDER BY l.created_at DESC
+LIMIT $2 OFFSET $3
 `
+
+type ListLinksParams struct {
+	UserID uuid.UUID
+	Limit  int32
+	Offset int32
+}
 
 type ListLinksRow struct {
 	ID             uuid.UUID
@@ -155,8 +174,8 @@ type ListLinksRow struct {
 	CollectionName pgtype.Text
 }
 
-func (q *Queries) ListLinks(ctx context.Context, userID uuid.UUID) ([]ListLinksRow, error) {
-	rows, err := q.db.Query(ctx, listLinks, userID)
+func (q *Queries) ListLinks(ctx context.Context, arg ListLinksParams) ([]ListLinksRow, error) {
+	rows, err := q.db.Query(ctx, listLinks, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ import (
 )
 
 type Querier interface {
-	CountLinks(ctx context.Context, userID uuid.UUID) (int64, error)
+	CountLinks(ctx context.Context, arg CountLinksParams) (int64, error)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error)
 	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
 	CreateLinkTag(ctx context.Context, arg CreateLinkTagParams) error

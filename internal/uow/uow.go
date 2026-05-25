@@ -3,6 +3,7 @@ package uow
 import (
 	"context"
 	"math"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/collection"
@@ -82,6 +83,19 @@ func tagInfosFromTags(tags []tag.Tag) []TagInfo {
 		result[i] = TagInfo{ID: t.ID, Name: t.Name}
 	}
 	return result
+}
+
+// normalizeLikePattern trims whitespace and escapes the LIKE wildcards
+// %, _, and \ so user input is treated as literal text. Without escaping,
+// searching for "100%" matches any title containing "100", and "foo_bar"
+// matches "foo<X>bar". Postgres uses backslash as the default LIKE escape,
+// so no ESCAPE clause is needed.
+func normalizeLikePattern(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `%`, `\%`)
+	s = strings.ReplaceAll(s, `_`, `\_`)
+	return s
 }
 
 type CreateLinkParams struct {
@@ -261,9 +275,14 @@ func (s *Service) UpdateLink(ctx context.Context, params UpdateLinkParams) (Enri
 }
 
 type ListLinksParams struct {
-	UserID   uuid.UUID
-	Page     int
-	PageSize int
+	UserID       uuid.UUID
+	Page         int
+	PageSize     int
+	CollectionID *uuid.UUID
+	TagIDs       []uuid.UUID
+	Query        string
+	Favourite    *bool
+	ForLater     *bool
 }
 
 type ListLinksResult struct {
@@ -272,8 +291,37 @@ type ListLinksResult struct {
 }
 
 func (s *Service) ListLinks(ctx context.Context, params ListLinksParams) (ListLinksResult, error) {
-	totalCount, err := s.repos.Links.Count(ctx, params.UserID)
+	ctx, span := tracer.Start(ctx, "uow.ListLinks")
+	defer span.End()
+
+	// Decision (future me): dedupe TagIDs. The SQL compares
+	// COUNT(DISTINCT tag_id) to cardinality($4), so duplicates in the input
+	// would inflate the required count and exclude matching links.
+	var tagIDs []uuid.UUID
+	if len(params.TagIDs) > 0 {
+		seen := make(map[uuid.UUID]struct{}, len(params.TagIDs))
+		tagIDs = make([]uuid.UUID, 0, len(params.TagIDs))
+		for _, id := range params.TagIDs {
+			if _, ok := seen[id]; !ok {
+				seen[id] = struct{}{}
+				tagIDs = append(tagIDs, id)
+			}
+		}
+	}
+
+	filter := link.ListFilter{
+		UserID:       params.UserID,
+		CollectionID: params.CollectionID,
+		TagIDs:       tagIDs,
+		Query:        normalizeLikePattern(params.Query),
+		Favourite:    params.Favourite,
+		ForLater:     params.ForLater,
+	}
+
+	totalCount, err := s.repos.Links.Count(ctx, filter)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return ListLinksResult{}, err
 	}
 
@@ -290,8 +338,10 @@ func (s *Service) ListLinks(ctx context.Context, params ListLinksParams) (ListLi
 		return ListLinksResult{Links: []EnrichedLink{}, TotalCount: totalCount}, nil
 	}
 
-	list, err := s.repos.Links.List(ctx, params.UserID, params.PageSize, offset)
+	list, err := s.repos.Links.List(ctx, filter, params.PageSize, offset)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return ListLinksResult{}, err
 	}
 
@@ -311,6 +361,8 @@ func (s *Service) ListLinks(ctx context.Context, params ListLinksParams) (ListLi
 
 	tagsMap, err := s.repos.Tags.GetTagsForLinks(ctx, linkIDs)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return ListLinksResult{}, err
 	}
 

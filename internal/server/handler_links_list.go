@@ -4,13 +4,20 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"unicode/utf8"
 
+	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/uow"
 )
 
 const (
 	linksListDefaultPageSize = 250
 	linksListMaxPageSize     = 500
+	// linksListMaxQueryLength matches the max title length. A query longer
+	// than any title that could exist cannot match anything, so it's malformed
+	// by definition. When description matching is added, bump to the larger of
+	// title (255) and description (512) max lengths.
+	linksListMaxQueryLength = 255
 )
 
 type responsePagination struct {
@@ -29,11 +36,12 @@ type linksListResponse struct {
 func handleLinksList(uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := userIDFromContext(r.Context())
+		q := r.URL.Query()
 
 		page := 1
 		pageSize := linksListDefaultPageSize
 
-		if v := r.URL.Query().Get("page"); v != "" {
+		if v := q.Get("page"); v != "" {
 			n, err := strconv.Atoi(v)
 			if err != nil || n < 1 {
 				writeJSONError(w, http.StatusBadRequest, "page must be a positive integer")
@@ -42,7 +50,7 @@ func handleLinksList(uowSvc *uow.Service) http.HandlerFunc {
 			page = n
 		}
 
-		if v := r.URL.Query().Get("pageSize"); v != "" {
+		if v := q.Get("pageSize"); v != "" {
 			n, err := strconv.Atoi(v)
 			if err != nil || n < 1 || n > linksListMaxPageSize {
 				writeJSONError(w, http.StatusBadRequest, fmt.Sprintf("pageSize must be between 1 and %d", linksListMaxPageSize))
@@ -51,10 +59,61 @@ func handleLinksList(uowSvc *uow.Service) http.HandlerFunc {
 			pageSize = n
 		}
 
+		var collectionID *uuid.UUID
+		if v := q.Get("collectionId"); v != "" {
+			id, err := uuid.Parse(v)
+			if err != nil {
+				writeJSONError(w, http.StatusBadRequest, "collectionId must be a valid uuid")
+				return
+			}
+			collectionID = &id
+		}
+
+		var tagIDs []uuid.UUID
+		for _, v := range q["tagId"] {
+			id, err := uuid.Parse(v)
+			if err != nil {
+				writeJSONError(w, http.StatusBadRequest, "tagId must be a valid uuid")
+				return
+			}
+			tagIDs = append(tagIDs, id)
+		}
+
+		var favourite *bool
+		if v := q.Get("favourite"); v != "" {
+			b, err := strconv.ParseBool(v)
+			if err != nil {
+				writeJSONError(w, http.StatusBadRequest, "favourite must be true or false")
+				return
+			}
+			favourite = &b
+		}
+
+		var forLater *bool
+		if v := q.Get("forLater"); v != "" {
+			b, err := strconv.ParseBool(v)
+			if err != nil {
+				writeJSONError(w, http.StatusBadRequest, "forLater must be true or false")
+				return
+			}
+			forLater = &b
+		}
+
+		query := q.Get("query")
+		if utf8.RuneCountInString(query) > linksListMaxQueryLength {
+			writeJSONError(w, http.StatusBadRequest, fmt.Sprintf("query must be at most %d characters", linksListMaxQueryLength))
+			return
+		}
+
 		result, err := uowSvc.ListLinks(r.Context(), uow.ListLinksParams{
-			UserID:   userID,
-			Page:     page,
-			PageSize: pageSize,
+			UserID:       userID,
+			Page:         page,
+			PageSize:     pageSize,
+			CollectionID: collectionID,
+			TagIDs:       tagIDs,
+			Query:        query,
+			Favourite:    favourite,
+			ForLater:     forLater,
 		})
 		if err != nil {
 			statusCode, errorMessage := uow.MapErrorToHTTP(r.Context(), err)

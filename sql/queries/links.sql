@@ -9,13 +9,33 @@ LIMIT 1;
 SELECT l.*, c.name AS collection_name
 FROM links l
     LEFT JOIN collections c ON l.collection_id = c.id
-WHERE l.user_id = $1
+WHERE l.user_id = sqlc.arg('user_id')
+  AND (sqlc.narg('collection_id')::uuid IS NULL OR l.collection_id = sqlc.narg('collection_id'))
+  AND (sqlc.arg('query')::text = '' OR l.title ILIKE '%' || sqlc.arg('query') || '%')
+  AND (cardinality(sqlc.arg('tag_ids')::uuid[]) = 0 OR l.id IN (
+      SELECT link_id FROM link_tags
+      WHERE tag_id = ANY(sqlc.arg('tag_ids'))
+      GROUP BY link_id
+      HAVING COUNT(DISTINCT tag_id) = cardinality(sqlc.arg('tag_ids'))
+  ))
+  AND (sqlc.narg('favourite')::bool IS NULL OR l.favourite = sqlc.narg('favourite'))
+  AND (sqlc.narg('for_later')::bool IS NULL OR l.for_later = sqlc.narg('for_later'))
 ORDER BY l.created_at DESC
-LIMIT $2 OFFSET $3;
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 -- name: CountLinks :one
-SELECT COUNT(*) FROM links
-WHERE user_id = $1;
+SELECT COUNT(*) FROM links l
+WHERE l.user_id = sqlc.arg('user_id')
+  AND (sqlc.narg('collection_id')::uuid IS NULL OR l.collection_id = sqlc.narg('collection_id'))
+  AND (sqlc.arg('query')::text = '' OR l.title ILIKE '%' || sqlc.arg('query') || '%')
+  AND (cardinality(sqlc.arg('tag_ids')::uuid[]) = 0 OR l.id IN (
+      SELECT link_id FROM link_tags
+      WHERE tag_id = ANY(sqlc.arg('tag_ids'))
+      GROUP BY link_id
+      HAVING COUNT(DISTINCT tag_id) = cardinality(sqlc.arg('tag_ids'))
+  ))
+  AND (sqlc.narg('favourite')::bool IS NULL OR l.favourite = sqlc.narg('favourite'))
+  AND (sqlc.narg('for_later')::bool IS NULL OR l.for_later = sqlc.narg('for_later'));
 
 -- name: CreateLink :one
 INSERT INTO links (

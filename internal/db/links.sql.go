@@ -14,12 +14,38 @@ import (
 )
 
 const countLinks = `-- name: CountLinks :one
-SELECT COUNT(*) FROM links
-WHERE user_id = $1
+SELECT COUNT(*) FROM links l
+WHERE l.user_id = $1
+  AND ($2::uuid IS NULL OR l.collection_id = $2)
+  AND ($3::text = '' OR l.title ILIKE '%' || $3 || '%')
+  AND (cardinality($4::uuid[]) = 0 OR l.id IN (
+      SELECT link_id FROM link_tags
+      WHERE tag_id = ANY($4)
+      GROUP BY link_id
+      HAVING COUNT(DISTINCT tag_id) = cardinality($4)
+  ))
+  AND ($5::bool IS NULL OR l.favourite = $5)
+  AND ($6::bool IS NULL OR l.for_later = $6)
 `
 
-func (q *Queries) CountLinks(ctx context.Context, userID uuid.UUID) (int64, error) {
-	row := q.db.QueryRow(ctx, countLinks, userID)
+type CountLinksParams struct {
+	UserID       uuid.UUID
+	CollectionID uuid.NullUUID
+	Query        string
+	TagIds       []uuid.UUID
+	Favourite    pgtype.Bool
+	ForLater     pgtype.Bool
+}
+
+func (q *Queries) CountLinks(ctx context.Context, arg CountLinksParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countLinks,
+		arg.UserID,
+		arg.CollectionID,
+		arg.Query,
+		arg.TagIds,
+		arg.Favourite,
+		arg.ForLater,
+	)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -150,14 +176,29 @@ SELECT l.id, l.user_id, l.title, l.description, l.url, l.collection_id, l.favour
 FROM links l
     LEFT JOIN collections c ON l.collection_id = c.id
 WHERE l.user_id = $1
+  AND ($2::uuid IS NULL OR l.collection_id = $2)
+  AND ($3::text = '' OR l.title ILIKE '%' || $3 || '%')
+  AND (cardinality($4::uuid[]) = 0 OR l.id IN (
+      SELECT link_id FROM link_tags
+      WHERE tag_id = ANY($4)
+      GROUP BY link_id
+      HAVING COUNT(DISTINCT tag_id) = cardinality($4)
+  ))
+  AND ($5::bool IS NULL OR l.favourite = $5)
+  AND ($6::bool IS NULL OR l.for_later = $6)
 ORDER BY l.created_at DESC
-LIMIT $2 OFFSET $3
+LIMIT $8 OFFSET $7
 `
 
 type ListLinksParams struct {
-	UserID uuid.UUID
-	Limit  int32
-	Offset int32
+	UserID       uuid.UUID
+	CollectionID uuid.NullUUID
+	Query        string
+	TagIds       []uuid.UUID
+	Favourite    pgtype.Bool
+	ForLater     pgtype.Bool
+	Offset       int32
+	Limit        int32
 }
 
 type ListLinksRow struct {
@@ -175,7 +216,16 @@ type ListLinksRow struct {
 }
 
 func (q *Queries) ListLinks(ctx context.Context, arg ListLinksParams) ([]ListLinksRow, error) {
-	rows, err := q.db.Query(ctx, listLinks, arg.UserID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listLinks,
+		arg.UserID,
+		arg.CollectionID,
+		arg.Query,
+		arg.TagIds,
+		arg.Favourite,
+		arg.ForLater,
+		arg.Offset,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

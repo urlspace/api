@@ -77,7 +77,7 @@ EXECUTE FUNCTION update_updated_at_column();
 CREATE TABLE sessions (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    hash TEXT NOT NULL UNIQUE,
+    session_hash TEXT NOT NULL UNIQUE,
     description TEXT,
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -96,7 +96,7 @@ CREATE TABLE tokens (
     id UUID PRIMARY KEY DEFAULT uuidv7(),
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     description TEXT NOT NULL,
-    hash TEXT NOT NULL UNIQUE,
+    token_hash TEXT NOT NULL UNIQUE,
     last_used_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -21,7 +21,7 @@ type Querier interface {
 	DeleteCollection(ctx context.Context, arg DeleteCollectionParams) (Collection, error)
 	DeleteLink(ctx context.Context, arg DeleteLinkParams) (Link, error)
 	DeleteLinkTags(ctx context.Context, linkID uuid.UUID) error
-	DeleteSessionByHash(ctx context.Context, hash string) error
+	DeleteSessionByHash(ctx context.Context, sessionHash string) error
 	DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteTag(ctx context.Context, arg DeleteTagParams) (Tag, error)
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
@@ -29,12 +29,12 @@ type Querier interface {
 	DeleteUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetCollection(ctx context.Context, arg GetCollectionParams) (Collection, error)
 	GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, error)
-	GetSessionByHash(ctx context.Context, hash string) (Session, error)
+	GetSessionByHash(ctx context.Context, sessionHash string) (Session, error)
 	GetTag(ctx context.Context, arg GetTagParams) (Tag, error)
 	GetTagByName(ctx context.Context, arg GetTagByNameParams) (Tag, error)
 	GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]Tag, error)
 	GetTagsForLinks(ctx context.Context, dollar_1 []uuid.UUID) ([]GetTagsForLinksRow, error)
-	GetTokenByHash(ctx context.Context, hash string) (Token, error)
+	GetTokenByHash(ctx context.Context, tokenHash string) (Token, error)
 	GetTokenById(ctx context.Context, arg GetTokenByIdParams) (Token, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByEmailVerificationTokenHash(ctx context.Context, emailVerificationTokenHash *string) (User, error)

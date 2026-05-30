@@ -12,25 +12,25 @@ import (
 )
 
 const createToken = `-- name: CreateToken :one
-INSERT INTO tokens (user_id, description, hash)
+INSERT INTO tokens (user_id, description, token_hash)
 VALUES ($1, $2, $3)
-RETURNING id, user_id, description, hash, last_used_at, created_at, updated_at
+RETURNING id, user_id, description, token_hash, last_used_at, created_at, updated_at
 `
 
 type CreateTokenParams struct {
 	UserID      uuid.UUID
 	Description string
-	Hash        string
+	TokenHash   string
 }
 
 func (q *Queries) CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error) {
-	row := q.db.QueryRow(ctx, createToken, arg.UserID, arg.Description, arg.Hash)
+	row := q.db.QueryRow(ctx, createToken, arg.UserID, arg.Description, arg.TokenHash)
 	var i Token
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Description,
-		&i.Hash,
+		&i.TokenHash,
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -64,19 +64,19 @@ func (q *Queries) DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) er
 }
 
 const getTokenByHash = `-- name: GetTokenByHash :one
-SELECT id, user_id, description, hash, last_used_at, created_at, updated_at FROM tokens
-WHERE hash = $1
+SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at FROM tokens
+WHERE token_hash = $1
 LIMIT 1
 `
 
-func (q *Queries) GetTokenByHash(ctx context.Context, hash string) (Token, error) {
-	row := q.db.QueryRow(ctx, getTokenByHash, hash)
+func (q *Queries) GetTokenByHash(ctx context.Context, tokenHash string) (Token, error) {
+	row := q.db.QueryRow(ctx, getTokenByHash, tokenHash)
 	var i Token
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Description,
-		&i.Hash,
+		&i.TokenHash,
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -85,7 +85,7 @@ func (q *Queries) GetTokenByHash(ctx context.Context, hash string) (Token, error
 }
 
 const getTokenById = `-- name: GetTokenById :one
-SELECT id, user_id, description, hash, last_used_at, created_at, updated_at FROM tokens
+SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at FROM tokens
 WHERE id = $1 AND user_id = $2
 LIMIT 1
 `
@@ -102,7 +102,7 @@ func (q *Queries) GetTokenById(ctx context.Context, arg GetTokenByIdParams) (Tok
 		&i.ID,
 		&i.UserID,
 		&i.Description,
-		&i.Hash,
+		&i.TokenHash,
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -111,7 +111,7 @@ func (q *Queries) GetTokenById(ctx context.Context, arg GetTokenByIdParams) (Tok
 }
 
 const listTokensByUserID = `-- name: ListTokensByUserID :many
-SELECT id, user_id, description, hash, last_used_at, created_at, updated_at FROM tokens
+SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at FROM tokens
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -129,7 +129,7 @@ func (q *Queries) ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]T
 			&i.ID,
 			&i.UserID,
 			&i.Description,
-			&i.Hash,
+			&i.TokenHash,
 			&i.LastUsedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,

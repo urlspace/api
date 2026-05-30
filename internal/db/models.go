@@ -41,7 +41,7 @@ type LinkTag struct {
 type Session struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
-	Hash        string
+	SessionHash string
 	Description *string
 	ExpiresAt   time.Time
 	CreatedAt   time.Time
@@ -60,7 +60,7 @@ type Token struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Description string
-	Hash        string
+	TokenHash   string
 	LastUsedAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

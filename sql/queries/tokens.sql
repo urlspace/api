@@ -1,5 +1,5 @@
 -- name: CreateToken :one
-INSERT INTO tokens (user_id, description, hash)
+INSERT INTO tokens (user_id, description, token_hash)
 VALUES ($1, $2, $3)
 RETURNING *;
 
@@ -10,7 +10,7 @@ LIMIT 1;
 
 -- name: GetTokenByHash :one
 SELECT * FROM tokens
-WHERE hash = $1
+WHERE token_hash = $1
 LIMIT 1;
 
 -- name: ListTokensByUserID :many

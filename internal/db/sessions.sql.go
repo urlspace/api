@@ -13,14 +13,14 @@ import (
 )
 
 const createSession = `-- name: CreateSession :one
-INSERT INTO sessions (user_id, hash, description, expires_at)
+INSERT INTO sessions (user_id, session_hash, description, expires_at)
 VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, hash, description, expires_at, created_at, updated_at
+RETURNING id, user_id, session_hash, description, expires_at, created_at, updated_at
 `
 
 type CreateSessionParams struct {
 	UserID      uuid.UUID
-	Hash        string
+	SessionHash string
 	Description *string
 	ExpiresAt   time.Time
 }
@@ -28,7 +28,7 @@ type CreateSessionParams struct {
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
 	row := q.db.QueryRow(ctx, createSession,
 		arg.UserID,
-		arg.Hash,
+		arg.SessionHash,
 		arg.Description,
 		arg.ExpiresAt,
 	)
@@ -36,7 +36,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Hash,
+		&i.SessionHash,
 		&i.Description,
 		&i.ExpiresAt,
 		&i.CreatedAt,
@@ -47,11 +47,11 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 
 const deleteSessionByHash = `-- name: DeleteSessionByHash :exec
 DELETE FROM sessions
-WHERE hash = $1
+WHERE session_hash = $1
 `
 
-func (q *Queries) DeleteSessionByHash(ctx context.Context, hash string) error {
-	_, err := q.db.Exec(ctx, deleteSessionByHash, hash)
+func (q *Queries) DeleteSessionByHash(ctx context.Context, sessionHash string) error {
+	_, err := q.db.Exec(ctx, deleteSessionByHash, sessionHash)
 	return err
 }
 
@@ -66,18 +66,18 @@ func (q *Queries) DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) 
 }
 
 const getSessionByHash = `-- name: GetSessionByHash :one
-SELECT id, user_id, hash, description, expires_at, created_at, updated_at FROM sessions
-WHERE hash = $1
+SELECT id, user_id, session_hash, description, expires_at, created_at, updated_at FROM sessions
+WHERE session_hash = $1
 LIMIT 1
 `
 
-func (q *Queries) GetSessionByHash(ctx context.Context, hash string) (Session, error) {
-	row := q.db.QueryRow(ctx, getSessionByHash, hash)
+func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (Session, error) {
+	row := q.db.QueryRow(ctx, getSessionByHash, sessionHash)
 	var i Session
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Hash,
+		&i.SessionHash,
 		&i.Description,
 		&i.ExpiresAt,
 		&i.CreatedAt,
@@ -90,7 +90,7 @@ const updateSessionExpiresAt = `-- name: UpdateSessionExpiresAt :one
 UPDATE sessions
 SET expires_at = $2
 WHERE id = $1
-RETURNING id, user_id, hash, description, expires_at, created_at, updated_at
+RETURNING id, user_id, session_hash, description, expires_at, created_at, updated_at
 `
 
 type UpdateSessionExpiresAtParams struct {
@@ -104,7 +104,7 @@ func (q *Queries) UpdateSessionExpiresAt(ctx context.Context, arg UpdateSessionE
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Hash,
+		&i.SessionHash,
 		&i.Description,
 		&i.ExpiresAt,
 		&i.CreatedAt,

@@ -1,11 +1,11 @@
 -- name: CreateSession :one
-INSERT INTO sessions (user_id, hash, description, expires_at)
+INSERT INTO sessions (user_id, session_hash, description, expires_at)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetSessionByHash :one
 SELECT * FROM sessions
-WHERE hash = $1
+WHERE session_hash = $1
 LIMIT 1;
 
 -- name: UpdateSessionExpiresAt :one
@@ -16,7 +16,7 @@ RETURNING *;
 
 -- name: DeleteSessionByHash :exec
 DELETE FROM sessions
-WHERE hash = $1;
+WHERE session_hash = $1;
 
 -- name: DeleteSessionsByUserID :exec
 DELETE FROM sessions

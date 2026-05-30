@@ -29,7 +29,7 @@ func toSession(s db.Session) user.Session {
 	return user.Session{
 		ID:          s.ID,
 		UserID:      s.UserID,
-		Hash:        s.Hash,
+		SessionHash: s.SessionHash,
 		Description: s.Description,
 		ExpiresAt:   s.ExpiresAt,
 		CreatedAt:   s.CreatedAt,
@@ -40,7 +40,7 @@ func toSession(s db.Session) user.Session {
 func (r *SessionRepository) Create(ctx context.Context, params user.SessionCreateParams) (user.Session, error) {
 	args := db.CreateSessionParams{
 		UserID:      params.UserID,
-		Hash:        params.Hash,
+		SessionHash: params.SessionHash,
 		Description: params.Description,
 		ExpiresAt:   params.ExpiresAt,
 	}

@@ -63,7 +63,7 @@ type Repository interface {
 
 type SessionCreateParams struct {
 	UserID      uuid.UUID
-	Hash        string
+	SessionHash string
 	Description *string
 	ExpiresAt   time.Time
 }
@@ -84,7 +84,7 @@ type SessionRepository interface {
 type TokenCreateParams struct {
 	UserID      uuid.UUID
 	Description string
-	Hash        string
+	TokenHash   string
 }
 
 type TokenRepository interface {
@@ -457,7 +457,7 @@ func (s *Service) Signin(ctx context.Context, email, password string, descriptio
 	expiresAt := time.Now().Add(config.SessionExpiryDuration)
 	_, err = s.SessionRepo.Create(ctx, SessionCreateParams{
 		UserID:      u.ID,
-		Hash:        hashToken(session),
+		SessionHash: hashToken(session),
 		Description: description,
 		ExpiresAt:   expiresAt,
 	})
@@ -902,7 +902,7 @@ func (s *Service) TokenCreate(ctx context.Context, userID uuid.UUID, password, d
 	_, err = s.TokenRepo.Create(ctx, TokenCreateParams{
 		UserID:      userID,
 		Description: description,
-		Hash:        hashToken(token),
+		TokenHash:   hashToken(token),
 	})
 	if err != nil {
 		return TokenCreateResult{}, err

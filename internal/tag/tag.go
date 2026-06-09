@@ -13,3 +13,8 @@ type Tag struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+type TagWithLinkCount struct {
+	Tag
+	LinkCount int
+}

@@ -36,7 +36,7 @@ type UpdateParams struct {
 }
 
 type Repository interface {
-	List(ctx context.Context, userID uuid.UUID) ([]Collection, error)
+	List(ctx context.Context, userID uuid.UUID) ([]CollectionWithLinkCount, error)
 	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Collection, error)
 	Create(ctx context.Context, params CreateParams) (Collection, error)
 	Update(ctx context.Context, params UpdateParams) (Collection, error)
@@ -51,7 +51,7 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) List(ctx context.Context, userID uuid.UUID) ([]Collection, error) {
+func (s *Service) List(ctx context.Context, userID uuid.UUID) ([]CollectionWithLinkCount, error) {
 	return s.repo.List(ctx, userID)
 }
 

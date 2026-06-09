@@ -9,9 +9,12 @@ WHERE id = $1 AND user_id = $2
 LIMIT 1;
 
 -- name: ListCollections :many
-SELECT * FROM collections
-WHERE user_id = $1
-ORDER BY created_at;
+SELECT c.*, COUNT(l.id) AS link_count
+FROM collections c
+    LEFT JOIN links l ON l.collection_id = c.id
+WHERE c.user_id = $1
+GROUP BY c.id
+ORDER BY link_count DESC, c.name;
 
 -- name: UpdateCollection :one
 UPDATE collections

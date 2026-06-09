@@ -44,7 +44,13 @@ CREATE TABLE collections (
     UNIQUE (user_id, name)
 );
 
-CREATE INDEX ON collections (user_id);
+-- Decision (future me): the single-column index on user_id is redundant because
+-- the UNIQUE (user_id, name) constraint above already creates a btree on
+-- (user_id, name), and Postgres serves WHERE user_id = $1 from the leading
+-- column of that composite at identical cost. Left commented out so the
+-- decision is visible at the call site; revisit only if write-amplification
+-- on collections becomes measurable (it shouldn't — collections are low-churn).
+-- CREATE INDEX ON collections (user_id);
 
 CREATE TRIGGER update_collections_updated_at
 BEFORE UPDATE ON collections
@@ -119,7 +125,14 @@ CREATE TABLE tags (
     UNIQUE (user_id, name)
 );
 
-CREATE INDEX ON tags (user_id);
+-- Decision (future me): the single-column index on user_id is redundant because
+-- the UNIQUE (user_id, name) constraint above already creates a btree on
+-- (user_id, name), and Postgres serves WHERE user_id = $1 from the leading
+-- column of that composite at identical cost. Left commented out so the
+-- decision is visible at the call site; revisit only if write-amplification
+-- on tags becomes measurable (tags are higher-churn than collections, but the
+-- upsert-by-name path already uses the composite index, so removal is safe).
+-- CREATE INDEX ON tags (user_id);
 
 CREATE TRIGGER update_tags_updated_at
 BEFORE UPDATE ON tags

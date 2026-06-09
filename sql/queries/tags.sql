@@ -1,10 +1,10 @@
 -- name: ListTags :many
-SELECT t.*
+SELECT t.*, COUNT(lt.link_id) AS link_count
 FROM tags t
     LEFT JOIN link_tags lt ON t.id = lt.tag_id
 WHERE t.user_id = $1
 GROUP BY t.id
-ORDER BY COUNT(lt.link_id) DESC, t.name;
+ORDER BY link_count DESC, t.name;
 
 -- name: GetTag :one
 SELECT * FROM tags

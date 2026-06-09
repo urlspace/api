@@ -42,15 +42,26 @@ func toCollection(c db.Collection) collection.Collection {
 	}
 }
 
-func (r *CollectionRepository) List(ctx context.Context, userID uuid.UUID) ([]collection.Collection, error) {
+func (r *CollectionRepository) List(ctx context.Context, userID uuid.UUID) ([]collection.CollectionWithLinkCount, error) {
 	rows, err := r.queries.ListCollections(ctx, userID)
 	if err != nil {
 		return nil, translateCollectionError(err)
 	}
 
-	collections := make([]collection.Collection, len(rows))
+	collections := make([]collection.CollectionWithLinkCount, len(rows))
 	for i, row := range rows {
-		collections[i] = toCollection(row)
+		collections[i] = collection.CollectionWithLinkCount{
+			Collection: collection.Collection{
+				ID:          row.ID,
+				UserID:      row.UserID,
+				Name:        row.Name,
+				Description: row.Description,
+				Public:      row.Public,
+				CreatedAt:   row.CreatedAt,
+				UpdatedAt:   row.UpdatedAt,
+			},
+			LinkCount: int(row.LinkCount),
+		}
 	}
 	return collections, nil
 }

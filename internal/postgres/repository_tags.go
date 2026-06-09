@@ -40,15 +40,24 @@ func toTag(t db.Tag) tag.Tag {
 	}
 }
 
-func (r *TagRepository) List(ctx context.Context, userID uuid.UUID) ([]tag.Tag, error) {
+func (r *TagRepository) List(ctx context.Context, userID uuid.UUID) ([]tag.TagWithLinkCount, error) {
 	rows, err := r.queries.ListTags(ctx, userID)
 	if err != nil {
 		return nil, translateTagError(err)
 	}
 
-	tags := make([]tag.Tag, len(rows))
+	tags := make([]tag.TagWithLinkCount, len(rows))
 	for i, row := range rows {
-		tags[i] = toTag(row)
+		tags[i] = tag.TagWithLinkCount{
+			Tag: tag.Tag{
+				ID:        row.ID,
+				UserID:    row.UserID,
+				Name:      row.Name,
+				CreatedAt: row.CreatedAt,
+				UpdatedAt: row.UpdatedAt,
+			},
+			LinkCount: int(row.LinkCount),
+		}
 	}
 	return tags, nil
 }

@@ -187,29 +187,39 @@ func (q *Queries) GetTagsForLinks(ctx context.Context, dollar_1 []uuid.UUID) ([]
 }
 
 const listTags = `-- name: ListTags :many
-SELECT t.id, t.user_id, t.name, t.created_at, t.updated_at
+SELECT t.id, t.user_id, t.name, t.created_at, t.updated_at, COUNT(lt.link_id) AS link_count
 FROM tags t
     LEFT JOIN link_tags lt ON t.id = lt.tag_id
 WHERE t.user_id = $1
 GROUP BY t.id
-ORDER BY COUNT(lt.link_id) DESC, t.name
+ORDER BY link_count DESC, t.name
 `
 
-func (q *Queries) ListTags(ctx context.Context, userID uuid.UUID) ([]Tag, error) {
+type ListTagsRow struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	LinkCount int64
+}
+
+func (q *Queries) ListTags(ctx context.Context, userID uuid.UUID) ([]ListTagsRow, error) {
 	rows, err := q.db.Query(ctx, listTags, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Tag{}
+	items := []ListTagsRow{}
 	for rows.Next() {
-		var i Tag
+		var i ListTagsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
 			&i.Name,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.LinkCount,
 		); err != nil {
 			return nil, err
 		}

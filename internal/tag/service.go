@@ -19,7 +19,7 @@ var (
 )
 
 type Repository interface {
-	List(ctx context.Context, userID uuid.UUID) ([]Tag, error)
+	List(ctx context.Context, userID uuid.UUID) ([]TagWithLinkCount, error)
 	Update(ctx context.Context, params UpdateParams) (Tag, error)
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Tag, error)
 	UpsertByName(ctx context.Context, userID uuid.UUID, name string) (Tag, error)
@@ -42,7 +42,7 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) List(ctx context.Context, userID uuid.UUID) ([]Tag, error) {
+func (s *Service) List(ctx context.Context, userID uuid.UUID) ([]TagWithLinkCount, error) {
 	return s.repo.List(ctx, userID)
 }
 

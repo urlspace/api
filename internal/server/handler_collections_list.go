@@ -6,9 +6,14 @@ import (
 	"github.com/urlspace/api/internal/collection"
 )
 
+type responseCollectionListItem struct {
+	responseCollection
+	Count int `json:"count"`
+}
+
 type collectionsListResponse struct {
-	Status string               `json:"status"`
-	Data   []responseCollection `json:"data"`
+	Status string                       `json:"status"`
+	Data   []responseCollectionListItem `json:"data"`
 }
 
 func handleCollectionsList(collectionSvc *collection.Service) http.HandlerFunc {
@@ -22,9 +27,12 @@ func handleCollectionsList(collectionSvc *collection.Service) http.HandlerFunc {
 			return
 		}
 
-		items := make([]responseCollection, len(list))
+		items := make([]responseCollectionListItem, len(list))
 		for i, item := range list {
-			items[i] = newResponseCollection(item)
+			items[i] = responseCollectionListItem{
+				responseCollection: newResponseCollection(item.Collection),
+				Count:              item.LinkCount,
+			}
 		}
 
 		writeJSONSuccess(w, http.StatusOK, collectionsListResponse{

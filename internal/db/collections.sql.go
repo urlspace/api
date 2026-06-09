@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -97,20 +98,34 @@ func (q *Queries) GetCollection(ctx context.Context, arg GetCollectionParams) (C
 }
 
 const listCollections = `-- name: ListCollections :many
-SELECT id, user_id, name, description, public, created_at, updated_at FROM collections
-WHERE user_id = $1
-ORDER BY created_at
+SELECT c.id, c.user_id, c.name, c.description, c.public, c.created_at, c.updated_at, COUNT(l.id) AS link_count
+FROM collections c
+    LEFT JOIN links l ON l.collection_id = c.id
+WHERE c.user_id = $1
+GROUP BY c.id
+ORDER BY link_count DESC, c.name
 `
 
-func (q *Queries) ListCollections(ctx context.Context, userID uuid.UUID) ([]Collection, error) {
+type ListCollectionsRow struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Name        string
+	Description string
+	Public      bool
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	LinkCount   int64
+}
+
+func (q *Queries) ListCollections(ctx context.Context, userID uuid.UUID) ([]ListCollectionsRow, error) {
 	rows, err := q.db.Query(ctx, listCollections, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Collection{}
+	items := []ListCollectionsRow{}
 	for rows.Next() {
-		var i Collection
+		var i ListCollectionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -119,6 +134,7 @@ func (q *Queries) ListCollections(ctx context.Context, userID uuid.UUID) ([]Coll
 			&i.Public,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.LinkCount,
 		); err != nil {
 			return nil, err
 		}

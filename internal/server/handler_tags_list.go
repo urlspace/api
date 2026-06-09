@@ -6,9 +6,14 @@ import (
 	"github.com/urlspace/api/internal/tag"
 )
 
+type responseTagListItem struct {
+	responseTag
+	Count int `json:"count"`
+}
+
 type tagsListResponse struct {
-	Status string        `json:"status"`
-	Data   []responseTag `json:"data"`
+	Status string                `json:"status"`
+	Data   []responseTagListItem `json:"data"`
 }
 
 func handleTagsList(svc *tag.Service) http.HandlerFunc {
@@ -22,13 +27,16 @@ func handleTagsList(svc *tag.Service) http.HandlerFunc {
 			return
 		}
 
-		items := make([]responseTag, len(list))
+		items := make([]responseTagListItem, len(list))
 		for i, item := range list {
-			items[i] = responseTag{
-				ID:        item.ID,
-				Name:      item.Name,
-				CreatedAt: item.CreatedAt,
-				UpdatedAt: item.UpdatedAt,
+			items[i] = responseTagListItem{
+				responseTag: responseTag{
+					ID:        item.ID,
+					Name:      item.Name,
+					CreatedAt: item.CreatedAt,
+					UpdatedAt: item.UpdatedAt,
+				},
+				Count: item.LinkCount,
 			}
 		}
 

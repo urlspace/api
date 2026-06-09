@@ -15,3 +15,8 @@ type Collection struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+type CollectionWithLinkCount struct {
+	Collection
+	LinkCount int
+}

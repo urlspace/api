@@ -4,7 +4,7 @@ FROM tags t
     LEFT JOIN link_tags lt ON t.id = lt.tag_id
 WHERE t.user_id = $1
 GROUP BY t.id
-ORDER BY link_count DESC, t.name;
+ORDER BY t.name;
 
 -- name: GetTag :one
 SELECT * FROM tags

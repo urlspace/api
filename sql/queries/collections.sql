@@ -14,7 +14,7 @@ FROM collections c
     LEFT JOIN links l ON l.collection_id = c.id
 WHERE c.user_id = $1
 GROUP BY c.id
-ORDER BY link_count DESC, c.name;
+ORDER BY c.name;
 
 -- name: UpdateCollection :one
 UPDATE collections

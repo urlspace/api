@@ -37,6 +37,12 @@ func run(ctx context.Context) error {
 		return err
 	}
 
+	slog.Info("running database migrations")
+	if err := postgres.Migrate(cfg.DatabaseURL); err != nil {
+		return err
+	}
+	slog.Info("database migrations complete")
+
 	pool, err := postgres.Connect(cfg.DatabaseURL, telemetry.NewPgxTracer())
 	if err != nil {
 		return err

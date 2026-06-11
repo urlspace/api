@@ -93,6 +93,12 @@ func (r *LinkRepository) List(ctx context.Context, filter link.ListFilter, limit
 
 	links := make([]link.Link, len(rows))
 	for i, row := range rows {
+		// LEFT JOIN can produce a nil reference, making all joined columns
+		// nullable in the result regardless of their NOT NULL schema definition.
+		var collectionName string
+		if row.CollectionName != nil {
+			collectionName = *row.CollectionName
+		}
 		links[i] = link.Link{
 			ID:             row.ID,
 			UserID:         row.UserID,
@@ -100,7 +106,7 @@ func (r *LinkRepository) List(ctx context.Context, filter link.ListFilter, limit
 			Description:    row.Description,
 			URL:            row.Url,
 			CollectionID:   toCollectionID(row.CollectionID),
-			CollectionName: row.CollectionName.String,
+			CollectionName: collectionName,
 			Favourite:      row.Favourite,
 			ForLater:       row.ForLater,
 			CreatedAt:      row.CreatedAt,
@@ -138,6 +144,12 @@ func (r *LinkRepository) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID
 	if err != nil {
 		return link.Link{}, translateLinkError(err)
 	}
+	// LEFT JOIN can produce a nil reference, making all joined columns
+	// nullable in the result regardless of their NOT NULL schema definition.
+	var collectionName string
+	if row.CollectionName != nil {
+		collectionName = *row.CollectionName
+	}
 	return link.Link{
 		ID:             row.ID,
 		UserID:         row.UserID,
@@ -145,7 +157,7 @@ func (r *LinkRepository) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID
 		Description:    row.Description,
 		URL:            row.Url,
 		CollectionID:   toCollectionID(row.CollectionID),
-		CollectionName: row.CollectionName.String,
+		CollectionName: collectionName,
 		Favourite:      row.Favourite,
 		ForLater:       row.ForLater,
 		CreatedAt:      row.CreatedAt,

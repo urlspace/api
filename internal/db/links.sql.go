@@ -149,7 +149,7 @@ type GetLinkRow struct {
 	ForLater       bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	CollectionName pgtype.Text
+	CollectionName *string
 }
 
 func (q *Queries) GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, error) {
@@ -212,7 +212,7 @@ type ListLinksRow struct {
 	ForLater       bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	CollectionName pgtype.Text
+	CollectionName *string
 }
 
 func (q *Queries) ListLinks(ctx context.Context, arg ListLinksParams) ([]ListLinksRow, error) {

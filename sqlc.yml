@@ -30,15 +30,8 @@ sql:
               type: "time.Time"
               pointer: true
             nullable: true
-          - column: "users.email_verification_token_hash"
+          - db_type: "text"
             go_type:
               type: "string"
               pointer: true
-          - column: "users.password_reset_token_hash"
-            go_type:
-              type: "string"
-              pointer: true
-          - column: "sessions.description"
-            go_type:
-              type: "string"
-              pointer: true
+            nullable: true

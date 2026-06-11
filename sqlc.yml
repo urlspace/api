@@ -21,65 +21,24 @@ sql:
               import: "github.com/google/uuid"
               type: "NullUUID"
             nullable: true
-          - column: "links.created_at"
+          - db_type: "timestamptz"
             go_type:
               type: "time.Time"
-          - column: "links.updated_at"
+            nullable: false
+          - db_type: "timestamptz"
             go_type:
               type: "time.Time"
-          - column: "users.created_at"
-            go_type:
-              type: "time.Time"
-          - column: "users.updated_at"
-            go_type:
-              type: "time.Time"
+              pointer: true
+            nullable: true
           - column: "users.email_verification_token_hash"
             go_type:
               type: "string"
-              pointer: true
-          - column: "users.email_verification_token_expires_at"
-            go_type:
-              type: "time.Time"
               pointer: true
           - column: "users.password_reset_token_hash"
             go_type:
               type: "string"
               pointer: true
-          - column: "users.password_reset_token_expires_at"
-            go_type:
-              type: "time.Time"
-              pointer: true
           - column: "sessions.description"
             go_type:
               type: "string"
               pointer: true
-          - column: "sessions.expires_at"
-            go_type:
-              type: "time.Time"
-          - column: "sessions.created_at"
-            go_type:
-              type: "time.Time"
-          - column: "sessions.updated_at"
-            go_type:
-              type: "time.Time"
-          - column: "tokens.last_used_at"
-            go_type:
-              type: "time.Time"
-          - column: "tokens.created_at"
-            go_type:
-              type: "time.Time"
-          - column: "tokens.updated_at"
-            go_type:
-              type: "time.Time"
-          - column: "tags.created_at"
-            go_type:
-              type: "time.Time"
-          - column: "tags.updated_at"
-            go_type:
-              type: "time.Time"
-          - column: "collections.created_at"
-            go_type:
-              type: "time.Time"
-          - column: "collections.updated_at"
-            go_type:
-              type: "time.Time"

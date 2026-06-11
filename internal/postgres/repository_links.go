@@ -30,20 +30,6 @@ func translateLinkError(err error) error {
 	return err
 }
 
-func toCollectionID(n uuid.NullUUID) *uuid.UUID {
-	if n.Valid {
-		return &n.UUID
-	}
-	return nil
-}
-
-func toNullUUID(id *uuid.UUID) uuid.NullUUID {
-	if id != nil {
-		return uuid.NullUUID{UUID: *id, Valid: true}
-	}
-	return uuid.NullUUID{}
-}
-
 // toLink maps a db.Link to a domain Link. Used by Create, Update,
 // and Delete which return plain table columns via RETURNING *. Get and List
 // use a custom mapping because their LEFT JOIN returns additional columns
@@ -55,7 +41,7 @@ func toLink(l db.Link) link.Link {
 		Title:        l.Title,
 		Description:  l.Description,
 		URL:          l.Url,
-		CollectionID: toCollectionID(l.CollectionID),
+		CollectionID: l.CollectionID,
 		Favourite:    l.Favourite,
 		ForLater:     l.ForLater,
 		CreatedAt:    l.CreatedAt,
@@ -71,7 +57,7 @@ func (r *LinkRepository) List(ctx context.Context, filter link.ListFilter, limit
 
 	rows, err := r.queries.ListLinks(ctx, db.ListLinksParams{
 		UserID:       filter.UserID,
-		CollectionID: toNullUUID(filter.CollectionID),
+		CollectionID: filter.CollectionID,
 		Query:        filter.Query,
 		TagIds:       tagIDs,
 		Favourite:    filter.Favourite,
@@ -97,7 +83,7 @@ func (r *LinkRepository) List(ctx context.Context, filter link.ListFilter, limit
 			Title:          row.Title,
 			Description:    row.Description,
 			URL:            row.Url,
-			CollectionID:   toCollectionID(row.CollectionID),
+			CollectionID:   row.CollectionID,
 			CollectionName: collectionName,
 			Favourite:      row.Favourite,
 			ForLater:       row.ForLater,
@@ -116,7 +102,7 @@ func (r *LinkRepository) Count(ctx context.Context, filter link.ListFilter) (int
 
 	count, err := r.queries.CountLinks(ctx, db.CountLinksParams{
 		UserID:       filter.UserID,
-		CollectionID: toNullUUID(filter.CollectionID),
+		CollectionID: filter.CollectionID,
 		Query:        filter.Query,
 		TagIds:       tagIDs,
 		Favourite:    filter.Favourite,
@@ -148,7 +134,7 @@ func (r *LinkRepository) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID
 		Title:          row.Title,
 		Description:    row.Description,
 		URL:            row.Url,
-		CollectionID:   toCollectionID(row.CollectionID),
+		CollectionID:   row.CollectionID,
 		CollectionName: collectionName,
 		Favourite:      row.Favourite,
 		ForLater:       row.ForLater,
@@ -163,7 +149,7 @@ func (r *LinkRepository) Create(ctx context.Context, params link.CreateParams) (
 		Title:        params.Title,
 		Description:  params.Description,
 		Url:          params.URL,
-		CollectionID: toNullUUID(params.CollectionID),
+		CollectionID: params.CollectionID,
 		Favourite:    params.Favourite,
 		ForLater:     params.ForLater,
 	}
@@ -181,7 +167,7 @@ func (r *LinkRepository) Update(ctx context.Context, params link.UpdateParams) (
 		Title:        params.Title,
 		Description:  params.Description,
 		Url:          params.URL,
-		CollectionID: toNullUUID(params.CollectionID),
+		CollectionID: params.CollectionID,
 		Favourite:    params.Favourite,
 		ForLater:     params.ForLater,
 	}

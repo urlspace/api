@@ -29,7 +29,7 @@ WHERE l.user_id = $1
 
 type CountLinksParams struct {
 	UserID       uuid.UUID
-	CollectionID uuid.NullUUID
+	CollectionID *uuid.UUID
 	Query        string
 	TagIds       []uuid.UUID
 	Favourite    *bool
@@ -64,7 +64,7 @@ type CreateLinkParams struct {
 	Title        string
 	Description  string
 	Url          string
-	CollectionID uuid.NullUUID
+	CollectionID *uuid.UUID
 	Favourite    bool
 	ForLater     bool
 }
@@ -143,7 +143,7 @@ type GetLinkRow struct {
 	Title          string
 	Description    string
 	Url            string
-	CollectionID   uuid.NullUUID
+	CollectionID   *uuid.UUID
 	Favourite      bool
 	ForLater       bool
 	CreatedAt      time.Time
@@ -191,7 +191,7 @@ LIMIT $8 OFFSET $7
 
 type ListLinksParams struct {
 	UserID       uuid.UUID
-	CollectionID uuid.NullUUID
+	CollectionID *uuid.UUID
 	Query        string
 	TagIds       []uuid.UUID
 	Favourite    *bool
@@ -206,7 +206,7 @@ type ListLinksRow struct {
 	Title          string
 	Description    string
 	Url            string
-	CollectionID   uuid.NullUUID
+	CollectionID   *uuid.UUID
 	Favourite      bool
 	ForLater       bool
 	CreatedAt      time.Time
@@ -274,7 +274,7 @@ type UpdateLinkParams struct {
 	Title        string
 	Description  string
 	Url          string
-	CollectionID uuid.NullUUID
+	CollectionID *uuid.UUID
 	Favourite    bool
 	ForLater     bool
 }

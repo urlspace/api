@@ -26,7 +26,7 @@ type Link struct {
 	Title        string
 	Description  string
 	Url          string
-	CollectionID uuid.NullUUID
+	CollectionID *uuid.UUID
 	Favourite    bool
 	ForLater     bool
 	CreatedAt    time.Time

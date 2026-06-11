@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const countLinks = `-- name: CountLinks :one
@@ -33,8 +32,8 @@ type CountLinksParams struct {
 	CollectionID uuid.NullUUID
 	Query        string
 	TagIds       []uuid.UUID
-	Favourite    pgtype.Bool
-	ForLater     pgtype.Bool
+	Favourite    *bool
+	ForLater     *bool
 }
 
 func (q *Queries) CountLinks(ctx context.Context, arg CountLinksParams) (int64, error) {
@@ -195,8 +194,8 @@ type ListLinksParams struct {
 	CollectionID uuid.NullUUID
 	Query        string
 	TagIds       []uuid.UUID
-	Favourite    pgtype.Bool
-	ForLater     pgtype.Bool
+	Favourite    *bool
+	ForLater     *bool
 	Offset       int32
 	Limit        int32
 }

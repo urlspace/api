@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/urlspace/api/internal/db"
 	"github.com/urlspace/api/internal/link"
 )
@@ -45,13 +44,6 @@ func toNullUUID(id *uuid.UUID) uuid.NullUUID {
 	return uuid.NullUUID{}
 }
 
-func toPgBool(b *bool) pgtype.Bool {
-	if b != nil {
-		return pgtype.Bool{Bool: *b, Valid: true}
-	}
-	return pgtype.Bool{}
-}
-
 // toLink maps a db.Link to a domain Link. Used by Create, Update,
 // and Delete which return plain table columns via RETURNING *. Get and List
 // use a custom mapping because their LEFT JOIN returns additional columns
@@ -82,8 +74,8 @@ func (r *LinkRepository) List(ctx context.Context, filter link.ListFilter, limit
 		CollectionID: toNullUUID(filter.CollectionID),
 		Query:        filter.Query,
 		TagIds:       tagIDs,
-		Favourite:    toPgBool(filter.Favourite),
-		ForLater:     toPgBool(filter.ForLater),
+		Favourite:    filter.Favourite,
+		ForLater:     filter.ForLater,
 		Limit:        int32(limit),
 		Offset:       int32(offset),
 	})
@@ -127,8 +119,8 @@ func (r *LinkRepository) Count(ctx context.Context, filter link.ListFilter) (int
 		CollectionID: toNullUUID(filter.CollectionID),
 		Query:        filter.Query,
 		TagIds:       tagIDs,
-		Favourite:    toPgBool(filter.Favourite),
-		ForLater:     toPgBool(filter.ForLater),
+		Favourite:    filter.Favourite,
+		ForLater:     filter.ForLater,
 	})
 	if err != nil {
 		return 0, translateLinkError(err)

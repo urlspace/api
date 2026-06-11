@@ -35,3 +35,8 @@ sql:
               type: "string"
               pointer: true
             nullable: true
+          - db_type: "bool"
+            go_type:
+              type: "bool"
+              pointer: true
+            nullable: true

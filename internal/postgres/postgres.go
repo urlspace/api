@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
@@ -14,13 +14,17 @@ import (
 )
 
 func Migrate(databaseURL string) error {
-	// golang-migrate's pgx/v5 driver registers under the "pgx5" URL scheme,
-	// but Railway / pgx use "postgres://". Rewrite locally so the function
-	// takes a single databaseURL and callers don't care.
-	m, err := migrate.New(
-		"file://sql/migrations",
-		strings.Replace(databaseURL, "postgres://", "pgx5://", 1),
-	)
+	// golang-migrate's pgx/v5 driver registers under the "pgx5" URL scheme.
+	// Postgres URLs come in two equivalent forms ("postgres://" locally,
+	// "postgresql://" on Railway) — parsing and rewriting the scheme handles
+	// both without string-matching either prefix.
+	u, err := url.Parse(databaseURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse database URL: %w", err)
+	}
+	u.Scheme = "pgx5"
+
+	m, err := migrate.New("file://sql/migrations", u.String())
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}

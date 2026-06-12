@@ -518,7 +518,7 @@ func (s *Service) Verify(ctx context.Context, token string) error {
 			}
 		}()
 		if err := s.EmailSender.Send(detached, emails.EmailSendParams{
-			To:      []string{"mail@url.space"},
+			To:      []string{"grzybecki@gmail.com"},
 			Text:    bodyText,
 			Html:    bodyHtml,
 			Subject: "New user on url.space",

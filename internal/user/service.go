@@ -296,15 +296,17 @@ type Service struct {
 	TokenRepo   TokenRepository
 	EmailSender emails.EmailSender
 	AppURL      string
+	AdminEmail  string
 }
 
-func NewService(userRepo Repository, sessionRepo SessionRepository, tokenRepo TokenRepository, emailSender emails.EmailSender, appURL string) *Service {
+func NewService(userRepo Repository, sessionRepo SessionRepository, tokenRepo TokenRepository, emailSender emails.EmailSender, appURL string, adminEmail string) *Service {
 	return &Service{
 		UserRepo:    userRepo,
 		SessionRepo: sessionRepo,
 		TokenRepo:   tokenRepo,
 		EmailSender: emailSender,
 		AppURL:      appURL,
+		AdminEmail:  adminEmail,
 	}
 }
 

@@ -26,6 +26,7 @@ type Config struct {
 	DatabaseURL  string
 	ResendAPIKey string
 	AppURL       string
+	AdminEmail   string
 }
 
 func LoadConfig() (*Config, error) {
@@ -34,6 +35,7 @@ func LoadConfig() (*Config, error) {
 		DatabaseURL:  os.Getenv("DATABASE_URL"),
 		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
 		AppURL:       strings.TrimSuffix(os.Getenv("APP_URL"), "/"),
+		AdminEmail:   os.Getenv("ADMIN_EMAIL"),
 	}
 
 	var missing []string
@@ -49,6 +51,9 @@ func LoadConfig() (*Config, error) {
 	}
 	if cfg.AppURL == "" {
 		missing = append(missing, "APP_URL")
+	}
+	if cfg.AdminEmail == "" {
+		missing = append(missing, "ADMIN_EMAIL")
 	}
 
 	if len(missing) > 0 {

@@ -63,7 +63,7 @@ func run(ctx context.Context) error {
 	resendClient := resend.NewCustomClient(resendHTTPClient, cfg.ResendAPIKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
 
-	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, cfg.AppURL)
+	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, cfg.AppURL, cfg.AdminEmail)
 	tagSvc := tag.NewService(tagRepo)
 	collectionSvc := collection.NewService(collectionRepo)
 	uowSvc := uow.NewService(uow.Repositories{

@@ -1,6 +1,12 @@
 Welcome to url.space!
 
-Your username: {{.Username}}
-Your email: {{.Email}}
-Please verify your email using the following link: {{.Url}}
-This token will expire in 24 hours.
+Your account has been created with these details:
+
+Username: {{.Username}}
+Email: {{.Email}}
+
+Please verify your email address by visiting the following link:
+
+{{.Url}}
+
+This link will expire in 24 hours.

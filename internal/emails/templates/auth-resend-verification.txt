@@ -1,4 +1,7 @@
-New verification link!
+You requested a new verification link for your url.space account.
 
-Please verify your email using the following link: {{.Url}}
-This token will expire in 24 hours.
+Please verify your email address by visiting the following link:
+
+{{.Url}}
+
+This link will expire in 24 hours.

@@ -1,13 +1,13 @@
 <!doctype html>
-<html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>New verification link for url.space</title>
+  </head>
   <body>
-    <h1>New verification link!</h1>
-    <ul>
-      <li>Please verify your email using the following link:</li>
-      <li>
-        <a href="{{.Url}}">{{.Url}}</a>
-      </li>
-      <li>This token will expire in 24 hours.</li>
-    </ul>
+    <p>You requested a new verification link for your url.space account.</p>
+    <p>Please verify your email address by clicking the link below:</p>
+    <p><a href="{{.Url}}">{{.Url}}</a></p>
+    <p>This link will expire in 24 hours.</p>
   </body>
 </html>

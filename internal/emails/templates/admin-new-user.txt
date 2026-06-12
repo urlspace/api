@@ -1,4 +1,4 @@
-New user on url.space!
+A new user just verified their email on url.space.
 
 Username: {{.Username}}
 Email: {{.Email}}

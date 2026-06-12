@@ -1,15 +1,18 @@
 <!doctype html>
-<html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Welcome to url.space</title>
+  </head>
   <body>
-    <h1>Welcome to url.space!</h1>
+    <p>Welcome to url.space!</p>
+    <p>Your account has been created with these details:</p>
     <ul>
-      <li>Your username: {{.Username}}</li>
-      <li>Your email: {{.Email}}</li>
-      <li>Please verify your email using the following link:</li>
-      <li>
-        <a href="{{.Url}}">{{.Url}}</a>
-      </li>
-      <li>This token will expire in 24 hours.</li>
+      <li><strong>Username:</strong> {{.Username}}</li>
+      <li><strong>Email:</strong> {{.Email}}</li>
     </ul>
+    <p>Please verify your email address by clicking the link below:</p>
+    <p><a href="{{.Url}}">{{.Url}}</a></p>
+    <p>This link will expire in 24 hours.</p>
   </body>
 </html>

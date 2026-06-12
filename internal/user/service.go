@@ -468,7 +468,8 @@ func (s *Service) Signin(ctx context.Context, email, password string, descriptio
 	return SigninResult{Session: session, ExpiresAt: expiresAt}, nil
 }
 
-// Verify validates a verification token and marks the user as verified.
+// Verify validates a verification token, marks the user as verified, and
+// sends a fire-and-forget admin notification to mail@url.space.
 func (s *Service) Verify(ctx context.Context, token string) error {
 	token, err := validateToken(token)
 	if err != nil {
@@ -485,7 +486,48 @@ func (s *Service) Verify(ctx context.Context, token string) error {
 	}
 
 	_, err = s.UserRepo.Verify(ctx, u.ID)
-	return err
+	if err != nil {
+		return err
+	}
+
+	templateParams := emails.AdminNewUserParams{
+		Username: u.Username,
+		Email:    u.Email,
+	}
+	bodyHtml, err := emails.RenderTemplateHtml(emails.AdminNewUserTemplateHtml, templateParams)
+	if err != nil {
+		return fmt.Errorf("failed to render html email template: %w", err)
+	}
+	bodyText, err := emails.RenderTemplateTxt(emails.AdminNewUserTemplateTxt, templateParams)
+	if err != nil {
+		return fmt.Errorf("failed to render text email template: %w", err)
+	}
+
+	// Decision (future me): fire-and-forget admin notification. The Verify
+	// DB write above already succeeded, so failing this response because
+	// Resend is slow or down would be bad UX with no upside — the user is
+	// verified regardless. WithoutCancel is required, not defensive — the
+	// request context is cancelled the moment this handler returns, which
+	// would abort the in-flight Resend call. Recover protects the process
+	// from a panic in a detached goroutine.
+	detached := context.WithoutCancel(ctx)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.ErrorContext(detached, "email send panicked", slog.Any("recover", r))
+			}
+		}()
+		if err := s.EmailSender.Send(detached, emails.EmailSendParams{
+			To:      []string{"mail@url.space"},
+			Text:    bodyText,
+			Html:    bodyHtml,
+			Subject: "New user on url.space",
+		}); err != nil {
+			slog.ErrorContext(detached, "failed to send email", slog.String("error", err.Error()))
+		}
+	}()
+
+	return nil
 }
 
 // ResendVerification generates a new verification token and sends an email.

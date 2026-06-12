@@ -1,0 +1,4 @@
+New user on url.space!
+
+Username: {{.Username}}
+Email: {{.Email}}

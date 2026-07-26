@@ -2,39 +2,11 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/url"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-func Migrate(databaseURL string) error {
-	// golang-migrate's pgx/v5 driver registers under the "pgx5" URL scheme.
-	// Postgres URLs come in two equivalent forms ("postgres://" locally,
-	// "postgresql://" on Railway) — parsing and rewriting the scheme handles
-	// both without string-matching either prefix.
-	u, err := url.Parse(databaseURL)
-	if err != nil {
-		return fmt.Errorf("failed to parse database URL: %w", err)
-	}
-	u.Scheme = "pgx5"
-
-	m, err := migrate.New("file://sql/migrations", u.String())
-	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %w", err)
-	}
-	defer m.Close()
-
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return fmt.Errorf("failed to run migrations: %w", err)
-	}
-	return nil
-}
 
 func Connect(databaseURL string, tracer pgx.QueryTracer) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(databaseURL)

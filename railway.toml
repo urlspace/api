@@ -1,0 +1,6 @@
+"$schema" = "https://railway.com/railway.schema.json"
+
+# Run database migrations before the new version takes traffic. If this fails,
+# the deploy aborts and the currently running version keeps serving.
+[deploy]
+preDeployCommand = ['migrate -path /app/sql/migrations -database "$DATABASE_URL" up']

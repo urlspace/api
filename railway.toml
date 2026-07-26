@@ -1,4 +1,4 @@
 "$schema" = "https://railway.com/railway.schema.json"
 
 [deploy]
-preDeployCommand = 'migrate -path /app/sql/migrations -database "${{ Postgres.DATABASE_PUBLIC_URL }}" up'
+preDeployCommand = 'migrate -path /app/sql/migrations -database "$DATABASE_PUBLIC_URL" up'

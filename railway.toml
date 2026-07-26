@@ -1,4 +1,4 @@
 "$schema" = "https://railway.com/railway.schema.json"
 
 [deploy]
-preDeployCommand = "env | sort"
+preDeployCommand = "migrate -path ./sql/migrations -database $DATABASE_URL up"

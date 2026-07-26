@@ -11,9 +11,10 @@ RUN go mod download
 # Separate binary — it does not enter the app's go.mod or the app binary.
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.19.1
 
-# Build a static binary (CGO disabled), same as `make build`.
+# Build a static binary (CGO disabled). -ldflags="-w -s" strips the symbol table
+# and DWARF debug info to shrink the binary; Go stack traces stay intact.
 COPY . .
-RUN CGO_ENABLED=0 go build -o /out/api ./cmd/api
+RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o /out/api ./cmd/api
 
 # ---- Runtime stage ----
 FROM alpine:3.22

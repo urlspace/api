@@ -1,4 +1,5 @@
 "$schema" = "https://railway.com/railway.schema.json"
 
 [deploy]
+# Railway exec's this with no shell, so `sh -c` provides one to expand $DATABASE_URL.
 preDeployCommand = "sh -c 'migrate -path ./sql/migrations -database $DATABASE_URL up'"

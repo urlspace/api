@@ -2,14 +2,16 @@ BINARY_NAME=bin/api
 
 .SILENT:
 
-# Build the application
-# make build port=port db_url=db_url resend_api_key=resend_api_key
+# Build the application (compile only — otelc reads no OTEL_* at build time; the
+# SDK setup it injects reads them at runtime).
 build:
-	PORT=$(port) DATABASE_URL=$(db_url) RESEND_API_KEY=$(resend_api_key) CGO_ENABLED=0 go build -o ${BINARY_NAME} cmd/api/main.go
+	CGO_ENABLED=0 otelc go build -o ${BINARY_NAME} ./cmd/api
 
-# Run the built binary (production-like)
-run: build
-	./${BINARY_NAME}
+# Run the already-built binary (production-like). Run `make build` first.
+# Sources .env for app config (PORT, DATABASE_URL, ...) and the OTEL_* vars, so
+# telemetry ships to the dev Grafana — the same .env air loads.
+run:
+	set -a; [ -f .env ] && . .env; set +a; ./${BINARY_NAME}
 
 # Development mode with live reload
 dev:
@@ -33,6 +35,7 @@ install-tools:
 	go install github.com/air-verse/air@latest
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	go install go.opentelemetry.io/otelc/tool/cmd/otelc@v1.0.1
 
 # Generate code from SQL schema and queries
 gen:

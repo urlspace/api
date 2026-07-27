@@ -21,16 +21,13 @@ import (
 	"github.com/urlspace/api/internal/telemetry"
 	"github.com/urlspace/api/internal/uow"
 	"github.com/urlspace/api/internal/user"
-
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func run(ctx context.Context) error {
-	shutdownTelemetry, err := telemetry.Setup(ctx)
-	if err != nil {
-		return err
-	}
-	defer shutdownTelemetry(context.Background())
+	// otelc auto instrumentation configures tracing and metrics.
+	// logging is the only thing that needs a little bit of setup to setup
+	// multiHandler that propagates the logs to the otel endpoint and to stdout
+	telemetry.InitLogging()
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -53,8 +50,7 @@ func run(ctx context.Context) error {
 
 	unitOfWork := postgres.NewUnitOfWork(pool)
 
-	resendHTTPClient := &http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
-	resendClient := resend.NewCustomClient(resendHTTPClient, cfg.ResendAPIKey)
+	resendClient := resend.NewClient(cfg.ResendAPIKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
 
 	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, cfg.AppURL, cfg.AdminEmail)
@@ -67,7 +63,6 @@ func run(ctx context.Context) error {
 	}, unitOfWork)
 
 	srv := server.New(cfg.Port, cfg.AppURL, userSvc, tagSvc, collectionSvc, uowSvc)
-	srv.Handler = otelhttp.NewHandler(srv.Handler, "api")
 
 	chServer := make(chan error, 1)
 

@@ -11,10 +11,16 @@ RUN go mod download
 # Separate binary — it does not enter the app's go.mod or the app binary.
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.19.1
 
-# Build a static binary (CGO disabled). -ldflags="-w -s" strips the symbol table
-# and DWARF debug info to shrink the binary; Go stack traces stay intact.
+# Install otelc for compile-time OpenTelemetry instrumentation. It wraps the
+# build below and injects the SDK setup + auto-instrumentation (net/http, etc.).
+RUN go install go.opentelemetry.io/otelc/tool/cmd/otelc@v1.0.1
+
+# Build a static binary (CGO disabled) through otelc. otelc analyses the module's
+# dependency graph and generates a temporary instrumentation config for the
+# build, so no committed otel.instrumentation.go is required. -ldflags="-w -s"
+# strips the symbol table and DWARF debug info; Go stack traces stay intact.
 COPY . .
-RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o /out/api ./cmd/api
+RUN CGO_ENABLED=0 otelc go build -ldflags="-w -s" -o /out/api ./cmd/api
 
 # ---- Runtime stage ----
 FROM alpine:3.22

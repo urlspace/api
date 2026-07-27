@@ -14,5 +14,8 @@ tmp/
 # Go workspace file
 go.work
 
+# otelc compile-time instrumentation work dir
+.otelc-build/
+
 .env
 .DS_Store

@@ -1,10 +1,8 @@
-root = "."
-testdata_dir = "testdata"
-tmp_dir = "tmp"
+env_files = [".env"]
 
 [build]
   cmd = "go build -o ./tmp/main ./cmd/api"
-  full_bin = "sh -c 'set -a; [ -f .env ] && . .env; set +a; exec ./tmp/main'"
+  entrypoint = ["./tmp/main"]
 
 [log]
   silent = true

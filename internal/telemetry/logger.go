@@ -7,9 +7,28 @@ import (
 	"os"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
-	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
-	sdklog "go.opentelemetry.io/otel/sdk/log"
 )
+
+// InitLogging installs the default slog logger: a fan-out handler that writes
+// JSON to stdout (terminal + Railway) and bridges records into the OTel logs
+// pipeline (Grafana).
+//
+// There is no runtime OTel SDK setup here. When built with otelc (Docker/prod
+// and `make run`), otelc's compile-time instrumentation creates the global
+// tracer/meter/logger providers from OTEL_* env vars, and otelslog defaults to
+// that global logger provider. In a plain build (the air `make dev` loop) the
+// global provider is a no-op, so only stdout logging is active.
+//
+// Decision (future me): otelc's slog instrumentation only injects
+// trace_id/span_id attributes; it does NOT ship slog records to the OTLP logs
+// exporter, so this bridge is what actually delivers logs to Grafana.
+func InitLogging() {
+	otelHandler := otelslog.NewHandler("github.com/urlspace/api")
+	slog.SetDefault(slog.New(multiHandler{
+		slog.NewJSONHandler(os.Stdout, nil),
+		otelHandler,
+	}))
+}
 
 // multiHandler fans a single slog record out to several handlers so the same
 // log line can land in stdout (terminal + Railway) and the OTel bridge
@@ -51,24 +70,4 @@ func (h multiHandler) WithGroup(name string) slog.Handler {
 		next[i] = handler.WithGroup(name)
 	}
 	return next
-}
-
-// initLoggerProvider builds an OTel logger provider that exports via OTLP/HTTP.
-// Endpoint, headers, etc. are picked up from the standard OTEL_* env vars.
-func initLoggerProvider(ctx context.Context) (*sdklog.LoggerProvider, error) {
-	exporter, err := otlploghttp.New(ctx)
-	if err != nil {
-		return nil, err
-	}
-	provider := sdklog.NewLoggerProvider(
-		sdklog.WithProcessor(sdklog.NewBatchProcessor(exporter)),
-	)
-	return provider, nil
-}
-
-// attachOtelLogger upgrades the slog default to fan out to both stdout and the
-// OTel bridge, so logs reach Grafana without losing terminal/Railway output.
-func attachOtelLogger(provider *sdklog.LoggerProvider) {
-	otelHandler := otelslog.NewHandler("github.com/urlspace/api", otelslog.WithLoggerProvider(provider))
-	slog.SetDefault(slog.New(multiHandler{slog.NewJSONHandler(os.Stdout, nil), otelHandler}))
 }

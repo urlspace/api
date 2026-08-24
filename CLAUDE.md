@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Go HTTP API server (`github.com/urlspace/api`) using Go 1.26.0, the standard library's `net/http` package, PostgreSQL via `pgx`, and OpenTelemetry for tracing.
+Go HTTP API server (`github.com/urlspace/api`) using Go 1.27.0, the standard library's `net/http` package, PostgreSQL via `pgx`, and OpenTelemetry for tracing.
 
 ## Development Philosophy
 

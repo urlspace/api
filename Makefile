@@ -35,7 +35,7 @@ install-tools:
 	go install github.com/air-verse/air@latest
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-	go install go.opentelemetry.io/otelc/tool/cmd/otelc@v1.0.1
+	go install go.opentelemetry.io/otelc/tool/cmd/otelc@v1.1.0
 
 # Generate code from SQL schema and queries
 gen:

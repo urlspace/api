@@ -13,7 +13,7 @@ RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
 
 # Install otelc for compile-time OpenTelemetry instrumentation. It wraps the
 # build below and injects the SDK setup + auto-instrumentation (net/http, etc.).
-RUN go install go.opentelemetry.io/otelc/tool/cmd/otelc@v1.0.1
+RUN go install go.opentelemetry.io/otelc/tool/cmd/otelc@v1.1.0
 
 # Build a static binary (CGO disabled) through otelc. otelc analyses the module's
 # dependency graph and generates a temporary instrumentation config for the

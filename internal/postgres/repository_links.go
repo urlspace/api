@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/urlspace/api/internal/db"
 	"github.com/urlspace/api/internal/link"
+	"uuid"
 )
 
 type LinkRepository struct {

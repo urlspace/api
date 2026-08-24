@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	tagNameLengthMin  = 2
-	tagNameLengthMax  = 50
-	tagMaxPerLink = 10
+	tagNameLengthMin = 2
+	tagNameLengthMax = 50
+	tagMaxPerLink    = 10
 )
 
 // Only lowercase ASCII letters, digits, and hyphens are allowed.

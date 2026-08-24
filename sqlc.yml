@@ -12,12 +12,12 @@ sql:
         overrides:
           - db_type: "uuid"
             go_type:
-              import: "github.com/google/uuid"
+              import: "uuid"
               type: "UUID"
             nullable: false
           - db_type: "uuid"
             go_type:
-              import: "github.com/google/uuid"
+              import: "uuid"
               type: "UUID"
               pointer: true
             nullable: true

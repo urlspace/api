@@ -3,7 +3,7 @@ package collection
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type Collection struct {

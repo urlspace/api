@@ -3,8 +3,8 @@ package server
 import (
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/user"
+	"uuid"
 )
 
 type usersGetResponse struct {

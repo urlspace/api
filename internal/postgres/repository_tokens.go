@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/urlspace/api/internal/db"
 	"github.com/urlspace/api/internal/user"
+	"uuid"
 )
 
 type TokenRepository struct {

@@ -5,12 +5,12 @@ import (
 	"math"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/collection"
 	"github.com/urlspace/api/internal/link"
 	"github.com/urlspace/api/internal/tag"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	"uuid"
 )
 
 var tracer = otel.Tracer("github.com/urlspace/api/internal/uow")

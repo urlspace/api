@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/collection"
 	"github.com/urlspace/api/internal/config"
 	"github.com/urlspace/api/internal/uow"
 	"github.com/urlspace/api/internal/user"
+	"uuid"
 )
 
 type responseLinkCollection struct {

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/collection"
+	"uuid"
 )
 
 type collectionUpdateBody struct {

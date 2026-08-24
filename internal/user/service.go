@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/config"
 	"github.com/urlspace/api/internal/emails"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/crypto/argon2"
+	"uuid"
 )
 
 var tracer = otel.Tracer("github.com/urlspace/api/internal/user")

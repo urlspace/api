@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"unicode/utf8"
 
-	"github.com/google/uuid"
 	"github.com/urlspace/api/internal/uow"
+	"uuid"
 )
 
 const (

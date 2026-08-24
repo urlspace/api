@@ -3,7 +3,7 @@ package tag
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type Tag struct {

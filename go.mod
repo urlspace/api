@@ -3,7 +3,6 @@ module github.com/urlspace/api
 go 1.27.0
 
 require (
-	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/resend/resend-go/v3 v3.16.0
 	go.opentelemetry.io/contrib/bridges/otelslog v0.20.0

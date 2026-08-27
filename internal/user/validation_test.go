@@ -392,6 +392,85 @@ func Test_validateUsername(t *testing.T) {
 	}
 }
 
+func Test_validateDisplayName(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantResult string
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:       "Display name is valid",
+			input:      "Rocky",
+			wantResult: "Rocky",
+			wantErr:    false,
+		},
+		{
+			name:       "Display name is trimmed",
+			input:      "  Rocky  ",
+			wantResult: "Rocky",
+			wantErr:    false,
+		},
+		{
+			name:       "Missing display name",
+			input:      "",
+			wantErr:    true,
+			wantErrMsg: "display name is required",
+		},
+		{
+			name:       "Whitespace-only display name is rejected",
+			input:      "   ",
+			wantErr:    true,
+			wantErrMsg: "display name is required",
+		},
+		{
+			name:       "Display name at max length is accepted",
+			input:      strings.Repeat("a", 50),
+			wantResult: strings.Repeat("a", 50),
+			wantErr:    false,
+		},
+		{
+			name:       "Display name exceeding 50 characters is rejected",
+			input:      strings.Repeat("a", 51),
+			wantErr:    true,
+			wantErrMsg: "display name must be at most 50 characters",
+		},
+		{
+			name:       "Multi-byte characters are counted as runes not bytes",
+			input:      strings.Repeat("🔒", 50),
+			wantResult: strings.Repeat("🔒", 50),
+			wantErr:    false,
+		},
+		{
+			name:       "Multi-byte characters exceeding 50 runes are rejected",
+			input:      strings.Repeat("🔒", 51),
+			wantErr:    true,
+			wantErrMsg: "display name must be at most 50 characters",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult, gotErr := validateDisplayName(tt.input)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("DisplayName() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("DisplayName() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("DisplayName() succeeded unexpectedly")
+			}
+			if tt.wantResult != "" && gotResult != tt.wantResult {
+				t.Errorf("DisplayName() result = %v, want %v", gotResult, tt.wantResult)
+			}
+		})
+	}
+}
+
 func Test_validateIsAdmin(t *testing.T) {
 	boolTrue := true
 	boolFalse := false

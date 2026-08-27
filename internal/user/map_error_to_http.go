@@ -34,6 +34,8 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		errors.Is(err, ErrValidationPasswordTooShort) ||
 		errors.Is(err, ErrValidationPasswordTooLong) ||
 		errors.Is(err, ErrValidationPasswordContainsContext) ||
+		errors.Is(err, ErrValidationDisplayNameRequired) ||
+		errors.Is(err, ErrValidationDisplayNameTooLong) ||
 		errors.Is(err, ErrValidationTokenRequired) ||
 		errors.Is(err, ErrValidationTokenFormat) ||
 		errors.Is(err, ErrValidationIsAdminRequired) ||

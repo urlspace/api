@@ -72,6 +72,13 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: UpdateUserDisplayName :one
+UPDATE users
+SET
+    display_name = $2
+WHERE id = $1
+RETURNING *;
+
 -- name: ResetUserPassword :one
 UPDATE users
 SET

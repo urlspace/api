@@ -58,6 +58,7 @@ type Repository interface {
 	UpdateVerificationToken(ctx context.Context, params UpdateVerificationTokenParams) (User, error)
 	UpdatePasswordResetToken(ctx context.Context, params UpdatePasswordResetTokenParams) (User, error)
 	ResetPassword(ctx context.Context, id uuid.UUID, passwordHash string) (User, error)
+	UpdateDisplayName(ctx context.Context, id uuid.UUID, displayName string) (User, error)
 	Delete(ctx context.Context, id uuid.UUID) (User, error)
 }
 
@@ -268,6 +269,10 @@ var (
 	ErrValidationPasswordTooShort        = errors.New("password must be at least 12 characters")
 	ErrValidationPasswordTooLong         = errors.New("password must be at most 128 characters")
 	ErrValidationPasswordContainsContext = errors.New("password cannot contain your username, display name, or email")
+
+	// Display name validation errors.
+	ErrValidationDisplayNameRequired = errors.New("display name is required")
+	ErrValidationDisplayNameTooLong  = errors.New("display name must be at most 50 characters")
 
 	// Token validation errors.
 	ErrValidationTokenRequired = errors.New("token is required")
@@ -852,6 +857,16 @@ func (s *Service) DeleteSelf(ctx context.Context, userID uuid.UUID, password str
 
 	_, err = s.UserRepo.Delete(ctx, userID)
 	return err
+}
+
+// UpdateDisplayName changes the authenticated user's display name.
+func (s *Service) UpdateDisplayName(ctx context.Context, userID uuid.UUID, displayName string) (User, error) {
+	displayName, err := validateDisplayName(displayName)
+	if err != nil {
+		return User{}, err
+	}
+
+	return s.UserRepo.UpdateDisplayName(ctx, userID, displayName)
 }
 
 // tokenRandomBytes is the entropy budget for every server-issued bearer

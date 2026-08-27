@@ -36,6 +36,7 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 
 	// me (authenticated)
 	mux.Handle("GET /me", sessionOrToken(handleMeGet(userSvc)))
+	mux.Handle("POST /me/update-display-name", sessionOnly(handleMeUpdateDisplayName(userSvc)))
 
 	// links (protected)
 	mux.Handle("GET /links", sessionOrToken(handleLinksList(uowSvc)))

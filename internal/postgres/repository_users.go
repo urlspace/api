@@ -148,6 +148,18 @@ func (r *UserRepository) UpdatePasswordResetToken(ctx context.Context, params us
 	return toUser(row), nil
 }
 
+func (r *UserRepository) UpdateDisplayName(ctx context.Context, id uuid.UUID, displayName string) (user.User, error) {
+	args := db.UpdateUserDisplayNameParams{
+		ID:          id,
+		DisplayName: displayName,
+	}
+	row, err := r.queries.UpdateUserDisplayName(ctx, args)
+	if err != nil {
+		return user.User{}, translateUserError(err)
+	}
+	return toUser(row), nil
+}
+
 func (r *UserRepository) ResetPassword(ctx context.Context, id uuid.UUID, passwordHash string) (user.User, error) {
 	args := db.ResetUserPasswordParams{
 		ID:       id,

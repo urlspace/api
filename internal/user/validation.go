@@ -250,6 +250,22 @@ func validateUsername(u string) (string, error) {
 	return u, nil
 }
 
+const displayNameLengthMax = 50
+
+func validateDisplayName(d string) (string, error) {
+	d = strings.TrimSpace(d)
+
+	if len(d) == 0 {
+		return d, ErrValidationDisplayNameRequired
+	}
+
+	if utf8.RuneCountInString(d) > displayNameLengthMax {
+		return d, ErrValidationDisplayNameTooLong
+	}
+
+	return d, nil
+}
+
 const tokenDescriptionLengthMax = 255
 
 func validateTokenDescription(d string) (string, error) {

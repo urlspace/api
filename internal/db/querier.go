@@ -53,6 +53,7 @@ type Querier interface {
 	UpdateTag(ctx context.Context, arg UpdateTagParams) (Tag, error)
 	UpdateTokenLastUsedAt(ctx context.Context, id uuid.UUID) error
 	UpdateUserDisplayName(ctx context.Context, arg UpdateUserDisplayNameParams) (User, error)
+	UpdateUserUsername(ctx context.Context, arg UpdateUserUsernameParams) (User, error)
 	UpdateVerificationToken(ctx context.Context, arg UpdateVerificationTokenParams) (User, error)
 	UpsertTag(ctx context.Context, arg UpsertTagParams) (Tag, error)
 	VerifyUser(ctx context.Context, id uuid.UUID) (User, error)

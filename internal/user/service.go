@@ -59,6 +59,7 @@ type Repository interface {
 	UpdatePasswordResetToken(ctx context.Context, params UpdatePasswordResetTokenParams) (User, error)
 	ResetPassword(ctx context.Context, id uuid.UUID, passwordHash string) (User, error)
 	UpdateDisplayName(ctx context.Context, id uuid.UUID, displayName string) (User, error)
+	UpdateUsername(ctx context.Context, id uuid.UUID, username string) (User, error)
 	Delete(ctx context.Context, id uuid.UUID) (User, error)
 }
 
@@ -867,6 +868,30 @@ func (s *Service) UpdateDisplayName(ctx context.Context, userID uuid.UUID, displ
 	}
 
 	return s.UserRepo.UpdateDisplayName(ctx, userID, displayName)
+}
+
+// UpdateUsername changes the authenticated user's username after verifying
+// their password.
+func (s *Service) UpdateUsername(ctx context.Context, userID uuid.UUID, username, password string) (User, error) {
+	username, err := validateUsername(username)
+	if err != nil {
+		return User{}, err
+	}
+	password, err = validatePassword(password)
+	if err != nil {
+		return User{}, err
+	}
+
+	u, err := s.UserRepo.GetById(ctx, userID)
+	if err != nil {
+		return User{}, err
+	}
+
+	if !passwordMatchesHash(ctx, password, u.Password) {
+		return User{}, ErrInvalidCredentials
+	}
+
+	return s.UserRepo.UpdateUsername(ctx, userID, username)
 }
 
 // tokenRandomBytes is the entropy budget for every server-issued bearer

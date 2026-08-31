@@ -23,6 +23,7 @@ type Querier interface {
 	DeleteLink(ctx context.Context, arg DeleteLinkParams) (Link, error)
 	DeleteLinkTags(ctx context.Context, linkID uuid.UUID) error
 	DeleteSessionByHash(ctx context.Context, sessionHash string) error
+	DeleteSessionByID(ctx context.Context, arg DeleteSessionByIDParams) error
 	DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteTag(ctx context.Context, arg DeleteTagParams) (Tag, error)
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
@@ -44,6 +45,7 @@ type Querier interface {
 	GetUserByPasswordResetTokenHash(ctx context.Context, passwordResetTokenHash *string) (User, error)
 	ListCollections(ctx context.Context, userID uuid.UUID) ([]ListCollectionsRow, error)
 	ListLinks(ctx context.Context, arg ListLinksParams) ([]ListLinksRow, error)
+	ListSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]Session, error)
 	ListTags(ctx context.Context, userID uuid.UUID) ([]ListTagsRow, error)
 	ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]Token, error)
 	ListUsers(ctx context.Context) ([]User, error)
@@ -56,6 +58,7 @@ type Querier interface {
 	UpdateTag(ctx context.Context, arg UpdateTagParams) (Tag, error)
 	UpdateTokenLastUsedAt(ctx context.Context, id uuid.UUID) error
 	UpdateUserDisplayName(ctx context.Context, arg UpdateUserDisplayNameParams) (User, error)
+	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error)
 	UpdateUserUsername(ctx context.Context, arg UpdateUserUsernameParams) (User, error)
 	UpdateVerificationToken(ctx context.Context, arg UpdateVerificationTokenParams) (User, error)
 	UpsertTag(ctx context.Context, arg UpsertTagParams) (Tag, error)

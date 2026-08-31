@@ -14,6 +14,15 @@ SET expires_at = $2
 WHERE id = $1
 RETURNING *;
 
+-- name: ListSessionsByUserID :many
+SELECT * FROM sessions
+WHERE user_id = $1
+ORDER BY created_at DESC;
+
+-- name: DeleteSessionByID :exec
+DELETE FROM sessions
+WHERE id = $1 AND user_id = $2;
+
 -- name: DeleteSessionByHash :exec
 DELETE FROM sessions
 WHERE session_hash = $1;

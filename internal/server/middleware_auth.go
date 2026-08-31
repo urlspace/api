@@ -105,6 +105,7 @@ func authenticateSession(w http.ResponseWriter, r *http.Request, svc *user.Servi
 	trace.SpanFromContext(r.Context()).SetAttributes(attribute.String("user.id", sess.UserID.String()))
 
 	ctx := context.WithValue(r.Context(), config.UserIDContextKey, sess.UserID)
+	ctx = context.WithValue(ctx, config.SessionIDContextKey, sess.ID)
 	next.ServeHTTP(w, r.WithContext(ctx))
 }
 

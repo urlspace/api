@@ -40,6 +40,7 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	mux.Handle("POST /me/update-username", sessionOnly(handleMeUpdateUsername(userSvc)))
 	mux.Handle("POST /me/update-email", sessionOnly(handleMeUpdateEmail(userSvc)))
 	mux.Handle("POST /me/update-email-confirm", sessionOnly(handleMeUpdateEmailConfirm(userSvc)))
+	mux.Handle("POST /me/update-password", sessionOnly(handleMeUpdatePassword(userSvc)))
 
 	// links (protected)
 	mux.Handle("GET /links", sessionOrToken(handleLinksList(uowSvc)))
@@ -59,6 +60,11 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	mux.Handle("POST /collections", sessionOrToken(handleCollectionsCreate(collectionSvc)))
 	mux.Handle("PUT /collections/{id}", sessionOrToken(handleCollectionsUpdate(collectionSvc)))
 	mux.Handle("DELETE /collections/{id}", sessionOrToken(handleCollectionsDelete(collectionSvc)))
+
+	// sessions (session-only — session management requires an active session)
+	mux.Handle("GET /sessions", sessionOnly(handleSessionsList(userSvc)))
+	mux.Handle("DELETE /sessions/{id}", sessionOnly(handleSessionsDelete(userSvc)))
+	mux.Handle("DELETE /sessions", sessionOnly(handleSessionsDeleteAll(userSvc)))
 
 	// tokens (session-only — token management requires an active session)
 	mux.Handle("POST /tokens", sessionOnly(handleTokensCreate(userSvc)))

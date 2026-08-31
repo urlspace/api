@@ -59,6 +59,18 @@ func (r *SessionRepository) GetByHash(ctx context.Context, sessionHash string) (
 	return toSession(row), nil
 }
 
+func (r *SessionRepository) List(ctx context.Context, userID uuid.UUID) ([]user.Session, error) {
+	rows, err := r.queries.ListSessionsByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	sessions := make([]user.Session, len(rows))
+	for i, row := range rows {
+		sessions[i] = toSession(row)
+	}
+	return sessions, nil
+}
+
 func (r *SessionRepository) UpdateExpiresAt(ctx context.Context, params user.SessionUpdateExpiresAtParams) (user.Session, error) {
 	args := db.UpdateSessionExpiresAtParams{
 		ID:        params.ID,
@@ -73,6 +85,13 @@ func (r *SessionRepository) UpdateExpiresAt(ctx context.Context, params user.Ses
 
 func (r *SessionRepository) DeleteByHash(ctx context.Context, sessionHash string) error {
 	return r.queries.DeleteSessionByHash(ctx, sessionHash)
+}
+
+func (r *SessionRepository) DeleteByID(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+	return r.queries.DeleteSessionByID(ctx, db.DeleteSessionByIDParams{
+		ID:     id,
+		UserID: userID,
+	})
 }
 
 func (r *SessionRepository) DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error {

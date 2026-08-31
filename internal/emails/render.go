@@ -59,6 +59,14 @@ type EmailChangeNotifyParams struct {
 	NewEmail string
 }
 
+//go:embed templates/password-change-notify.html
+var PasswordChangeNotifyTemplateHtml string
+
+//go:embed templates/password-change-notify.txt
+var PasswordChangeNotifyTemplateTxt string
+
+type PasswordChangeNotifyParams struct{}
+
 //go:embed templates/admin-new-user.html
 var AdminNewUserTemplateHtml string
 

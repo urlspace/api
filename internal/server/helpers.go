@@ -165,6 +165,26 @@ func newResponseToken(t user.Token) responseToken {
 	}
 }
 
+type responseSession struct {
+	ID          uuid.UUID `json:"id"`
+	Description *string   `json:"description"`
+	Current     bool      `json:"current"`
+	ExpiresAt   time.Time `json:"expiresAt"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+func newResponseSession(s user.Session, currentSessionID uuid.UUID) responseSession {
+	return responseSession{
+		ID:          s.ID,
+		Description: s.Description,
+		Current:     s.ID == currentSessionID,
+		ExpiresAt:   s.ExpiresAt,
+		CreatedAt:   s.CreatedAt,
+		UpdatedAt:   s.UpdatedAt,
+	}
+}
+
 // Request helpers
 
 func resolveSession(r *http.Request) (string, bool) {
@@ -193,6 +213,11 @@ func resolveBearerToken(r *http.Request) (string, bool) {
 
 func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 	id, ok := ctx.Value(config.UserIDContextKey).(uuid.UUID)
+	return id, ok
+}
+
+func sessionIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	id, ok := ctx.Value(config.SessionIDContextKey).(uuid.UUID)
 	return id, ok
 }
 

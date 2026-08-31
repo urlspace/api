@@ -17,6 +17,7 @@ const SessionRenewalThreshold = 15 * 24 * time.Hour
 type contextKey string
 
 const UserIDContextKey contextKey = "userID"
+const SessionIDContextKey contextKey = "sessionID"
 
 // Decision (future me): __Host- prefix dropped because SSR on url.space can't
 // read a cookie host-scoped to api.url.space. Domain set in setSessionCookie.

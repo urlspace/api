@@ -221,6 +221,18 @@ func (r *UserRepository) ResetPassword(ctx context.Context, id uuid.UUID, passwo
 	return toUser(row), nil
 }
 
+func (r *UserRepository) UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) (user.User, error) {
+	args := db.UpdateUserPasswordParams{
+		ID:       id,
+		Password: passwordHash,
+	}
+	row, err := r.queries.UpdateUserPassword(ctx, args)
+	if err != nil {
+		return user.User{}, translateUserError(err)
+	}
+	return toUser(row), nil
+}
+
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) (user.User, error) {
 	row, err := r.queries.DeleteUser(ctx, id)
 	if err != nil {

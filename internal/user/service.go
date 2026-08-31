@@ -67,6 +67,7 @@ type Repository interface {
 	UpdateVerificationToken(ctx context.Context, params UpdateVerificationTokenParams) (User, error)
 	UpdatePasswordResetToken(ctx context.Context, params UpdatePasswordResetTokenParams) (User, error)
 	ResetPassword(ctx context.Context, id uuid.UUID, passwordHash string) (User, error)
+	UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) (User, error)
 	UpdateDisplayName(ctx context.Context, id uuid.UUID, displayName string) (User, error)
 	UpdateUsername(ctx context.Context, id uuid.UUID, username string) (User, error)
 	SetPendingEmail(ctx context.Context, params SetPendingEmailParams) (User, error)
@@ -89,8 +90,10 @@ type SessionUpdateExpiresAtParams struct {
 type SessionRepository interface {
 	Create(ctx context.Context, params SessionCreateParams) (Session, error)
 	GetByHash(ctx context.Context, sessionHash string) (Session, error)
+	List(ctx context.Context, userID uuid.UUID) ([]Session, error)
 	UpdateExpiresAt(ctx context.Context, params SessionUpdateExpiresAtParams) (Session, error)
 	DeleteByHash(ctx context.Context, sessionHash string) error
+	DeleteByID(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 	DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
@@ -788,6 +791,22 @@ func (s *Service) Signout(ctx context.Context, session string) error {
 	return s.SessionRepo.DeleteByHash(ctx, hashToken(session))
 }
 
+// SessionList returns all active sessions for the given user.
+func (s *Service) SessionList(ctx context.Context, userID uuid.UUID) ([]Session, error) {
+	return s.SessionRepo.List(ctx, userID)
+}
+
+// SessionDelete removes a single session by ID, scoped to the given user.
+func (s *Service) SessionDelete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+	return s.SessionRepo.DeleteByID(ctx, id, userID)
+}
+
+// SessionDeleteAll removes all sessions for the given user, including the one
+// making this request.
+func (s *Service) SessionDeleteAll(ctx context.Context, userID uuid.UUID) error {
+	return s.SessionRepo.DeleteAllByUserID(ctx, userID)
+}
+
 // GetSession retrieves a session record by the raw cookie value (used by auth
 // middleware). The cookie value is hashed before lookup; the DB never sees the
 // secret, so a read-only DB compromise does not yield usable session tokens.
@@ -908,6 +927,88 @@ func (s *Service) UpdateUsername(ctx context.Context, userID uuid.UUID, username
 	}
 
 	return s.UserRepo.UpdateUsername(ctx, userID, username)
+}
+
+// UpdatePassword changes the authenticated user's password after verifying
+// their current password. Like ResetPasswordConfirm, this revokes all
+// sessions — including the one making this request — since the password is
+// the credential that proves account ownership. Unlike ResetPasswordConfirm,
+// this doesn't touch email_verified or any token columns: those are
+// reset-flow-specific side effects that don't apply to an authenticated
+// change.
+func (s *Service) UpdatePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
+	currentPassword, err := validatePassword(currentPassword)
+	if err != nil {
+		return err
+	}
+
+	u, err := s.UserRepo.GetById(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if !passwordMatchesHash(ctx, currentPassword, u.Password) {
+		return ErrInvalidCredentials
+	}
+
+	emailLocalPart := strings.SplitN(u.Email, "@", 2)[0]
+	newPassword, err = validatePassword(newPassword, u.Username, u.DisplayName, emailLocalPart)
+	if err != nil {
+		return err
+	}
+
+	newPasswordHash, err := passwordHash(ctx, newPassword)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	if _, err := s.UserRepo.UpdatePassword(ctx, userID, newPasswordHash); err != nil {
+		return err
+	}
+
+	bodyHtml, err := emails.RenderTemplateHtml(emails.PasswordChangeNotifyTemplateHtml, emails.PasswordChangeNotifyParams{})
+	if err != nil {
+		return fmt.Errorf("failed to render html email template: %w", err)
+	}
+	bodyText, err := emails.RenderTemplateTxt(emails.PasswordChangeNotifyTemplateTxt, emails.PasswordChangeNotifyParams{})
+	if err != nil {
+		return fmt.Errorf("failed to render text email template: %w", err)
+	}
+
+	// Decision (future me): fire-and-forget for both session cleanup and the
+	// notification email, same rationale as ResetPasswordConfirm/
+	// ConfirmEmailChange — the password change already succeeded and the
+	// caller can't usefully retry either side effect. WithoutCancel preserves
+	// trace context across the detached call. Recover protects the process
+	// from a panic in a detached goroutine.
+	detached := context.WithoutCancel(ctx)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.ErrorContext(detached, "session deletion panicked", slog.Any("recover", r))
+			}
+		}()
+		if err := s.SessionRepo.DeleteAllByUserID(detached, u.ID); err != nil {
+			slog.ErrorContext(detached, "failed to delete sessions after password change", slog.String("error", err.Error()), slog.String("user_id", u.ID.String()))
+		}
+	}()
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.ErrorContext(detached, "password change notification panicked", slog.Any("recover", r))
+			}
+		}()
+		if err := s.EmailSender.Send(detached, emails.EmailSendParams{
+			To:      []string{u.Email},
+			Text:    bodyText,
+			Html:    bodyHtml,
+			Subject: "Your url.space password was changed",
+		}); err != nil {
+			slog.ErrorContext(detached, "failed to send email", slog.String("error", err.Error()))
+		}
+	}()
+
+	return nil
 }
 
 // generateEmailChangeCode returns a random 6-digit numeric code

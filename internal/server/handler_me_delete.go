@@ -7,20 +7,20 @@ import (
 	"github.com/urlspace/api/internal/user"
 )
 
-type authDeleteBody struct {
+type meDeleteBody struct {
 	Password string `json:"password"`
 }
 
-type authDeleteResponse struct {
+type meDeleteResponse struct {
 	Status string `json:"status"`
 	Data   string `json:"data"`
 }
 
-func handleAuthDelete(svc *user.Service) http.HandlerFunc {
+func handleMeDelete(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := userIDFromContext(r.Context())
 
-		var body authDeleteBody
+		var body meDeleteBody
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
@@ -36,7 +36,7 @@ func handleAuthDelete(svc *user.Service) http.HandlerFunc {
 
 		clearSessionCookie(w, r)
 
-		writeJSONSuccess(w, http.StatusOK, authDeleteResponse{
+		writeJSONSuccess(w, http.StatusOK, meDeleteResponse{
 			Status: "ok",
 			Data:   "ok",
 		})

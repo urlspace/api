@@ -32,7 +32,6 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	mux.HandleFunc("POST /auth/reset-password-request", handleAuthResetPasswordRequest(userSvc))
 	mux.HandleFunc("POST /auth/reset-password-confirm", handleAuthResetPasswordConfirm(userSvc))
 	mux.Handle("POST /auth/signout", sessionOnly(handleAuthSignout(userSvc)))
-	mux.Handle("DELETE /auth", sessionOnly(handleAuthDelete(userSvc)))
 
 	// me (authenticated)
 	mux.Handle("GET /me", sessionOrToken(handleMeGet(userSvc)))
@@ -41,6 +40,7 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	mux.Handle("POST /me/update-email", sessionOnly(handleMeUpdateEmail(userSvc)))
 	mux.Handle("POST /me/update-email-confirm", sessionOnly(handleMeUpdateEmailConfirm(userSvc)))
 	mux.Handle("POST /me/update-password", sessionOnly(handleMeUpdatePassword(userSvc)))
+	mux.Handle("DELETE /me", sessionOnly(handleMeDelete(userSvc)))
 
 	// links (protected)
 	mux.Handle("GET /links", sessionOrToken(handleLinksList(uowSvc)))

@@ -81,4 +81,7 @@ type User struct {
 	IsPro                           bool
 	CreatedAt                       time.Time
 	UpdatedAt                       time.Time
+	EmailNew                        *string
+	EmailNewCodeHash                *string
+	EmailNewCodeHashExpiresAt       *time.Time
 }

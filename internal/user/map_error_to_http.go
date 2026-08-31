@@ -38,6 +38,8 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		errors.Is(err, ErrValidationDisplayNameTooLong) ||
 		errors.Is(err, ErrValidationTokenRequired) ||
 		errors.Is(err, ErrValidationTokenFormat) ||
+		errors.Is(err, ErrValidationEmailChangeCodeRequired) ||
+		errors.Is(err, ErrValidationEmailChangeCodeFormat) ||
 		errors.Is(err, ErrValidationIsAdminRequired) ||
 		errors.Is(err, ErrValidationIsProRequired) ||
 		errors.Is(err, ErrValidationTokenDescriptionRequired) ||
@@ -59,6 +61,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	}
 	if errors.Is(err, ErrTokenExpired) {
 		return http.StatusUnauthorized, err.Error()
+	}
+	if errors.Is(err, ErrEmailChangeCodeInvalid) {
+		return http.StatusBadRequest, err.Error()
 	}
 
 	slog.ErrorContext(ctx, "service error", slog.String("error", err.Error()), slog.String("domain", "user"))

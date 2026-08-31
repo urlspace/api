@@ -145,6 +145,22 @@ func validateToken(token string) (string, error) {
 	return token, nil
 }
 
+var emailChangeCodePattern = regexp.MustCompile(`^[0-9]{6}$`)
+
+func validateEmailChangeCode(c string) (string, error) {
+	c = strings.TrimSpace(c)
+
+	if len(c) == 0 {
+		return c, ErrValidationEmailChangeCodeRequired
+	}
+
+	if !emailChangeCodePattern.MatchString(c) {
+		return c, ErrValidationEmailChangeCodeFormat
+	}
+
+	return c, nil
+}
+
 var reservedUsernames = map[string]bool{
 	// brand
 	"url":       true,

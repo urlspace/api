@@ -39,6 +39,26 @@ type AuthResetPasswordRequestParams struct {
 	Url string
 }
 
+//go:embed templates/email-change-verify.html
+var EmailChangeVerifyTemplateHtml string
+
+//go:embed templates/email-change-verify.txt
+var EmailChangeVerifyTemplateTxt string
+
+type EmailChangeVerifyParams struct {
+	Code string
+}
+
+//go:embed templates/email-change-notify.html
+var EmailChangeNotifyTemplateHtml string
+
+//go:embed templates/email-change-notify.txt
+var EmailChangeNotifyTemplateTxt string
+
+type EmailChangeNotifyParams struct {
+	NewEmail string
+}
+
 //go:embed templates/admin-new-user.html
 var AdminNewUserTemplateHtml string
 

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math/big"
 	"strings"
 	"time"
 
@@ -47,12 +48,20 @@ type UpdatePasswordResetTokenParams struct {
 	PasswordResetTokenExpiresAt *time.Time
 }
 
+type SetPendingEmailParams struct {
+	ID                        uuid.UUID
+	EmailNew                  string
+	EmailNewCodeHash          *string
+	EmailNewCodeHashExpiresAt *time.Time
+}
+
 type Repository interface {
 	List(ctx context.Context) ([]User, error)
 	GetById(ctx context.Context, id uuid.UUID) (User, error)
 	GetByEmail(ctx context.Context, email string) (User, error)
 	GetByEmailVerificationTokenHash(ctx context.Context, hash string) (User, error)
 	GetByPasswordResetTokenHash(ctx context.Context, hash string) (User, error)
+	GetByIdAndEmailNewCodeHash(ctx context.Context, id uuid.UUID, codeHash string) (User, error)
 	Create(ctx context.Context, params CreateParams) (User, error)
 	Verify(ctx context.Context, id uuid.UUID) (User, error)
 	UpdateVerificationToken(ctx context.Context, params UpdateVerificationTokenParams) (User, error)
@@ -60,6 +69,8 @@ type Repository interface {
 	ResetPassword(ctx context.Context, id uuid.UUID, passwordHash string) (User, error)
 	UpdateDisplayName(ctx context.Context, id uuid.UUID, displayName string) (User, error)
 	UpdateUsername(ctx context.Context, id uuid.UUID, username string) (User, error)
+	SetPendingEmail(ctx context.Context, params SetPendingEmailParams) (User, error)
+	ConfirmEmailChange(ctx context.Context, id uuid.UUID) (User, error)
 	Delete(ctx context.Context, id uuid.UUID) (User, error)
 }
 
@@ -279,6 +290,10 @@ var (
 	ErrValidationTokenRequired = errors.New("token is required")
 	ErrValidationTokenFormat   = errors.New("token is invalid")
 
+	// Email change code validation errors.
+	ErrValidationEmailChangeCodeRequired = errors.New("email change code is required")
+	ErrValidationEmailChangeCodeFormat   = errors.New("email change code must be 6 digits")
+
 	// Admin flag validation errors.
 	ErrValidationIsAdminRequired = errors.New("isAdmin flag is required")
 
@@ -289,11 +304,12 @@ var (
 	ErrValidationTokenDescriptionRequired = errors.New("token description is required")
 	ErrValidationTokenDescriptionTooLong  = errors.New("token description must be at most 255 characters")
 
-	ErrNotFound           = errors.New("not found")
-	ErrConflict           = errors.New("conflict")
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrEmailNotVerified   = errors.New("invalid email or password")
-	ErrTokenExpired       = errors.New("token has expired")
+	ErrNotFound               = errors.New("not found")
+	ErrConflict               = errors.New("conflict")
+	ErrInvalidCredentials     = errors.New("invalid credentials")
+	ErrEmailNotVerified       = errors.New("invalid email or password")
+	ErrTokenExpired           = errors.New("token has expired")
+	ErrEmailChangeCodeInvalid = errors.New("email change code is incorrect")
 )
 
 type Service struct {
@@ -892,6 +908,161 @@ func (s *Service) UpdateUsername(ctx context.Context, userID uuid.UUID, username
 	}
 
 	return s.UserRepo.UpdateUsername(ctx, userID, username)
+}
+
+// generateEmailChangeCode returns a random 6-digit numeric code
+func generateEmailChangeCode() (string, error) {
+	n, err := rand.Int(rand.Reader, big.NewInt(1_000_000))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%06d", n), nil
+}
+
+// RequestEmailChange starts an email change: after verifying the password,
+// it stores the new address as pending and emails a confirmation code to it.
+// The live email is untouched until ConfirmEmailChange runs. Unlike Signup,
+// an honest ErrConflict is fine here — this endpoint is authenticated-only,
+// so there's no enumeration concern.
+func (s *Service) RequestEmailChange(ctx context.Context, userID uuid.UUID, newEmail, password string) error {
+	newEmail, err := validateEmail(newEmail)
+	if err != nil {
+		return err
+	}
+	password, err = validatePassword(password)
+	if err != nil {
+		return err
+	}
+
+	u, err := s.UserRepo.GetById(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if !passwordMatchesHash(ctx, password, u.Password) {
+		return ErrInvalidCredentials
+	}
+
+	if _, err := s.UserRepo.GetByEmail(ctx, newEmail); err == nil {
+		return ErrConflict
+	} else if !errors.Is(err, ErrNotFound) {
+		return err
+	}
+
+	code, err := generateEmailChangeCode()
+	if err != nil {
+		return fmt.Errorf("failed to generate email change code: %w", err)
+	}
+	codeHash := hashToken(code)
+	expiresAt := time.Now().Add(config.EmailChangeCodeExpiryDuration)
+
+	_, err = s.UserRepo.SetPendingEmail(ctx, SetPendingEmailParams{
+		ID:                        userID,
+		EmailNew:                  newEmail,
+		EmailNewCodeHash:          &codeHash,
+		EmailNewCodeHashExpiresAt: &expiresAt,
+	})
+	if err != nil {
+		return err
+	}
+
+	templateParams := emails.EmailChangeVerifyParams{Code: code}
+	bodyHtml, err := emails.RenderTemplateHtml(emails.EmailChangeVerifyTemplateHtml, templateParams)
+	if err != nil {
+		return fmt.Errorf("failed to render html email template: %w", err)
+	}
+	bodyText, err := emails.RenderTemplateTxt(emails.EmailChangeVerifyTemplateTxt, templateParams)
+	if err != nil {
+		return fmt.Errorf("failed to render text email template: %w", err)
+	}
+
+	// Decision (future me): fire-and-forget, same rationale as Signup's
+	// verification email.
+	detached := context.WithoutCancel(ctx)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.ErrorContext(detached, "email send panicked", slog.Any("recover", r))
+			}
+		}()
+		if err := s.EmailSender.Send(detached, emails.EmailSendParams{
+			To:      []string{newEmail},
+			Text:    bodyText,
+			Html:    bodyHtml,
+			Subject: "Confirm your new email for url.space",
+		}); err != nil {
+			slog.ErrorContext(detached, "failed to send email", slog.String("error", err.Error()))
+		}
+	}()
+
+	return nil
+}
+
+// ConfirmEmailChange validates the code against the authenticated user's
+// pending change and swaps the pending email into the live column. Unlike
+// ResetPasswordConfirm, this doesn't revoke sessions: this flow already
+// gated on the current password at the request step, so whoever completes
+// it already proved they know it — revocation wouldn't take anything away
+// from that actor. It still notifies the old address, which is the real
+// detection signal for anyone else.
+func (s *Service) ConfirmEmailChange(ctx context.Context, userID uuid.UUID, code string) error {
+	code, err := validateEmailChangeCode(code)
+	if err != nil {
+		return err
+	}
+
+	u, err := s.UserRepo.GetByIdAndEmailNewCodeHash(ctx, userID, hashToken(code))
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return ErrEmailChangeCodeInvalid
+		}
+		return err
+	}
+
+	if u.EmailNewCodeHashExpiresAt != nil && u.EmailNewCodeHashExpiresAt.Before(time.Now()) {
+		return ErrTokenExpired
+	}
+
+	oldEmail := u.Email
+	var newEmail string
+	if u.EmailNew != nil {
+		newEmail = *u.EmailNew
+	}
+
+	_, err = s.UserRepo.ConfirmEmailChange(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	templateParams := emails.EmailChangeNotifyParams{NewEmail: newEmail}
+	bodyHtml, err := emails.RenderTemplateHtml(emails.EmailChangeNotifyTemplateHtml, templateParams)
+	if err != nil {
+		return fmt.Errorf("failed to render html email template: %w", err)
+	}
+	bodyText, err := emails.RenderTemplateTxt(emails.EmailChangeNotifyTemplateTxt, templateParams)
+	if err != nil {
+		return fmt.Errorf("failed to render text email template: %w", err)
+	}
+
+	// Decision (future me): fire-and-forget notification. The email change
+	// itself already succeeded and the caller can't usefully retry.
+	detached := context.WithoutCancel(ctx)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.ErrorContext(detached, "email change notification panicked", slog.Any("recover", r))
+			}
+		}()
+		if err := s.EmailSender.Send(detached, emails.EmailSendParams{
+			To:      []string{oldEmail},
+			Text:    bodyText,
+			Html:    bodyHtml,
+			Subject: "Your url.space email address was changed",
+		}); err != nil {
+			slog.ErrorContext(detached, "failed to send email", slog.String("error", err.Error()))
+		}
+	}()
+
+	return nil
 }
 
 // tokenRandomBytes is the entropy budget for every server-issued bearer

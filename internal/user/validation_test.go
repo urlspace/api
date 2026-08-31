@@ -289,6 +289,85 @@ func Test_validateToken(t *testing.T) {
 	}
 }
 
+func Test_validateEmailChangeCode(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantResult string
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:       "Code is valid",
+			input:      "123456",
+			wantResult: "123456",
+			wantErr:    false,
+		},
+		{
+			name:       "Code is trimmed",
+			input:      "  123456  ",
+			wantResult: "123456",
+			wantErr:    false,
+		},
+		{
+			name:       "Missing code",
+			input:      "",
+			wantErr:    true,
+			wantErrMsg: "email change code is required",
+		},
+		{
+			name:       "Whitespace-only code is rejected",
+			input:      "      ",
+			wantErr:    true,
+			wantErrMsg: "email change code is required",
+		},
+		{
+			name:       "Code shorter than 6 digits is rejected",
+			input:      "12345",
+			wantErr:    true,
+			wantErrMsg: "email change code must be 6 digits",
+		},
+		{
+			name:       "Code longer than 6 digits is rejected",
+			input:      "1234567",
+			wantErr:    true,
+			wantErrMsg: "email change code must be 6 digits",
+		},
+		{
+			name:       "Code with non-digit characters is rejected",
+			input:      "12345a",
+			wantErr:    true,
+			wantErrMsg: "email change code must be 6 digits",
+		},
+		{
+			name:       "Code with internal whitespace is rejected",
+			input:      "123 456",
+			wantErr:    true,
+			wantErrMsg: "email change code must be 6 digits",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult, gotErr := validateEmailChangeCode(tt.input)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("EmailChangeCode() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("EmailChangeCode() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("EmailChangeCode() succeeded unexpectedly")
+			}
+			if tt.wantResult != "" && gotResult != tt.wantResult {
+				t.Errorf("EmailChangeCode() result = %v, want %v", gotResult, tt.wantResult)
+			}
+		})
+	}
+}
+
 func Test_validateUsername(t *testing.T) {
 	tests := []struct {
 		name       string

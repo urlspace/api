@@ -37,6 +37,9 @@ func toUser(u db.User) user.User {
 		EmailVerified:                   u.EmailVerified,
 		EmailVerificationTokenHash:      u.EmailVerificationTokenHash,
 		EmailVerificationTokenExpiresAt: u.EmailVerificationTokenExpiresAt,
+		EmailNew:                        u.EmailNew,
+		EmailNewCodeHash:                u.EmailNewCodeHash,
+		EmailNewCodeHashExpiresAt:       u.EmailNewCodeHashExpiresAt,
 		Password:                        u.Password,
 		PasswordResetTokenHash:          u.PasswordResetTokenHash,
 		PasswordResetTokenExpiresAt:     u.PasswordResetTokenExpiresAt,
@@ -166,6 +169,40 @@ func (r *UserRepository) UpdateUsername(ctx context.Context, id uuid.UUID, usern
 		Username: username,
 	}
 	row, err := r.queries.UpdateUserUsername(ctx, args)
+	if err != nil {
+		return user.User{}, translateUserError(err)
+	}
+	return toUser(row), nil
+}
+
+func (r *UserRepository) SetPendingEmail(ctx context.Context, params user.SetPendingEmailParams) (user.User, error) {
+	args := db.SetPendingEmailParams{
+		ID:                        params.ID,
+		EmailNew:                  &params.EmailNew,
+		EmailNewCodeHash:          params.EmailNewCodeHash,
+		EmailNewCodeHashExpiresAt: params.EmailNewCodeHashExpiresAt,
+	}
+	row, err := r.queries.SetPendingEmail(ctx, args)
+	if err != nil {
+		return user.User{}, translateUserError(err)
+	}
+	return toUser(row), nil
+}
+
+func (r *UserRepository) GetByIdAndEmailNewCodeHash(ctx context.Context, id uuid.UUID, codeHash string) (user.User, error) {
+	args := db.GetUserByIdAndEmailNewCodeHashParams{
+		ID:               id,
+		EmailNewCodeHash: &codeHash,
+	}
+	row, err := r.queries.GetUserByIdAndEmailNewCodeHash(ctx, args)
+	if err != nil {
+		return user.User{}, translateUserError(err)
+	}
+	return toUser(row), nil
+}
+
+func (r *UserRepository) ConfirmEmailChange(ctx context.Context, id uuid.UUID) (user.User, error) {
+	row, err := r.queries.ConfirmEmailChange(ctx, id)
 	if err != nil {
 		return user.User{}, translateUserError(err)
 	}

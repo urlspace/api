@@ -12,6 +12,43 @@ import (
 	"uuid"
 )
 
+const confirmEmailChange = `-- name: ConfirmEmailChange :one
+UPDATE users
+SET
+    email = email_new,
+    email_verified = TRUE,
+    email_new = NULL,
+    email_new_code_hash = NULL,
+    email_new_code_hash_expires_at = NULL
+WHERE id = $1
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
+`
+
+func (q *Queries) ConfirmEmailChange(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRow(ctx, confirmEmailChange, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.EmailVerified,
+		&i.EmailVerificationTokenHash,
+		&i.EmailVerificationTokenExpiresAt,
+		&i.Password,
+		&i.PasswordResetTokenHash,
+		&i.PasswordResetTokenExpiresAt,
+		&i.Username,
+		&i.DisplayName,
+		&i.IsAdmin,
+		&i.IsPro,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     email,
@@ -26,7 +63,7 @@ INSERT INTO users (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
-RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
 `
 
 type CreateUserParams struct {
@@ -69,6 +106,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
@@ -76,7 +116,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 const deleteUser = `-- name: DeleteUser :one
 DELETE FROM users
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (User, error) {
@@ -97,12 +137,15 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at FROM users
 WHERE
     email
     =
@@ -128,12 +171,15 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
 
 const getUserByEmailVerificationTokenHash = `-- name: GetUserByEmailVerificationTokenHash :one
-SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at FROM users
 WHERE
     email_verification_token_hash
     =
@@ -159,12 +205,15 @@ func (q *Queries) GetUserByEmailVerificationTokenHash(ctx context.Context, email
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at FROM users
 WHERE
     id
     =
@@ -190,12 +239,51 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
+	)
+	return i, err
+}
+
+const getUserByIdAndEmailNewCodeHash = `-- name: GetUserByIdAndEmailNewCodeHash :one
+SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at FROM users
+WHERE id = $1 AND email_new_code_hash = $2
+LIMIT 1
+`
+
+type GetUserByIdAndEmailNewCodeHashParams struct {
+	ID               uuid.UUID
+	EmailNewCodeHash *string
+}
+
+func (q *Queries) GetUserByIdAndEmailNewCodeHash(ctx context.Context, arg GetUserByIdAndEmailNewCodeHashParams) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByIdAndEmailNewCodeHash, arg.ID, arg.EmailNewCodeHash)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.EmailVerified,
+		&i.EmailVerificationTokenHash,
+		&i.EmailVerificationTokenExpiresAt,
+		&i.Password,
+		&i.PasswordResetTokenHash,
+		&i.PasswordResetTokenExpiresAt,
+		&i.Username,
+		&i.DisplayName,
+		&i.IsAdmin,
+		&i.IsPro,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
 
 const getUserByPasswordResetTokenHash = `-- name: GetUserByPasswordResetTokenHash :one
-SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at FROM users
 WHERE password_reset_token_hash = $1
 LIMIT 1
 `
@@ -218,12 +306,15 @@ func (q *Queries) GetUserByPasswordResetTokenHash(ctx context.Context, passwordR
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at FROM users
+SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at FROM users
 ORDER BY created_at
 `
 
@@ -251,6 +342,9 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.IsPro,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.EmailNew,
+			&i.EmailNewCodeHash,
+			&i.EmailNewCodeHashExpiresAt,
 		); err != nil {
 			return nil, err
 		}
@@ -272,7 +366,7 @@ SET
     email_verification_token_hash = NULL,
     email_verification_token_expires_at = NULL
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
 `
 
 type ResetUserPasswordParams struct {
@@ -298,6 +392,56 @@ func (q *Queries) ResetUserPassword(ctx context.Context, arg ResetUserPasswordPa
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
+	)
+	return i, err
+}
+
+const setPendingEmail = `-- name: SetPendingEmail :one
+UPDATE users
+SET
+    email_new = $2,
+    email_new_code_hash = $3,
+    email_new_code_hash_expires_at = $4
+WHERE id = $1
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
+`
+
+type SetPendingEmailParams struct {
+	ID                        uuid.UUID
+	EmailNew                  *string
+	EmailNewCodeHash          *string
+	EmailNewCodeHashExpiresAt *time.Time
+}
+
+func (q *Queries) SetPendingEmail(ctx context.Context, arg SetPendingEmailParams) (User, error) {
+	row := q.db.QueryRow(ctx, setPendingEmail,
+		arg.ID,
+		arg.EmailNew,
+		arg.EmailNewCodeHash,
+		arg.EmailNewCodeHashExpiresAt,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.EmailVerified,
+		&i.EmailVerificationTokenHash,
+		&i.EmailVerificationTokenExpiresAt,
+		&i.Password,
+		&i.PasswordResetTokenHash,
+		&i.PasswordResetTokenExpiresAt,
+		&i.Username,
+		&i.DisplayName,
+		&i.IsAdmin,
+		&i.IsPro,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
@@ -308,7 +452,7 @@ SET
     password_reset_token_hash = $2,
     password_reset_token_expires_at = $3
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
 `
 
 type UpdatePasswordResetTokenParams struct {
@@ -335,6 +479,9 @@ func (q *Queries) UpdatePasswordResetToken(ctx context.Context, arg UpdatePasswo
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
@@ -344,7 +491,7 @@ UPDATE users
 SET
     display_name = $2
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
 `
 
 type UpdateUserDisplayNameParams struct {
@@ -370,6 +517,9 @@ func (q *Queries) UpdateUserDisplayName(ctx context.Context, arg UpdateUserDispl
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
@@ -379,7 +529,7 @@ UPDATE users
 SET
     username = $2
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
 `
 
 type UpdateUserUsernameParams struct {
@@ -405,6 +555,9 @@ func (q *Queries) UpdateUserUsername(ctx context.Context, arg UpdateUserUsername
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
@@ -415,7 +568,7 @@ SET
     email_verification_token_hash = $2,
     email_verification_token_expires_at = $3
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
 `
 
 type UpdateVerificationTokenParams struct {
@@ -442,6 +595,9 @@ func (q *Queries) UpdateVerificationToken(ctx context.Context, arg UpdateVerific
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }
@@ -453,7 +609,7 @@ SET
     email_verification_token_hash = NULL,
     email_verification_token_expires_at = NULL
 WHERE id = $1
-RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at
 `
 
 func (q *Queries) VerifyUser(ctx context.Context, id uuid.UUID) (User, error) {
@@ -474,6 +630,9 @@ func (q *Queries) VerifyUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.IsPro,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
 	)
 	return i, err
 }

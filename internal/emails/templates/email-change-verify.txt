@@ -1,0 +1,7 @@
+You requested to change the email address on your url.space account to this one.
+
+Enter this code to confirm the change:
+
+{{.Code}}
+
+This code will expire in 15 minutes. If you didn't request this, you can safely ignore this email.

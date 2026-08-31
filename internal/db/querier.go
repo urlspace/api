@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	ConfirmEmailChange(ctx context.Context, id uuid.UUID) (User, error)
 	CountLinks(ctx context.Context, arg CountLinksParams) (int64, error)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error)
 	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
@@ -39,6 +40,7 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByEmailVerificationTokenHash(ctx context.Context, emailVerificationTokenHash *string) (User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserByIdAndEmailNewCodeHash(ctx context.Context, arg GetUserByIdAndEmailNewCodeHashParams) (User, error)
 	GetUserByPasswordResetTokenHash(ctx context.Context, passwordResetTokenHash *string) (User, error)
 	ListCollections(ctx context.Context, userID uuid.UUID) ([]ListCollectionsRow, error)
 	ListLinks(ctx context.Context, arg ListLinksParams) ([]ListLinksRow, error)
@@ -46,6 +48,7 @@ type Querier interface {
 	ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]Token, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	ResetUserPassword(ctx context.Context, arg ResetUserPasswordParams) (User, error)
+	SetPendingEmail(ctx context.Context, arg SetPendingEmailParams) (User, error)
 	UpdateCollection(ctx context.Context, arg UpdateCollectionParams) (Collection, error)
 	UpdateLink(ctx context.Context, arg UpdateLinkParams) (Link, error)
 	UpdatePasswordResetToken(ctx context.Context, arg UpdatePasswordResetTokenParams) (User, error)

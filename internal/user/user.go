@@ -12,6 +12,9 @@ type User struct {
 	EmailVerified                   bool
 	EmailVerificationTokenHash      *string
 	EmailVerificationTokenExpiresAt *time.Time
+	EmailNew                        *string
+	EmailNewCodeHash                *string
+	EmailNewCodeHashExpiresAt       *time.Time
 	Password                        string
 	PasswordResetTokenHash          *string
 	PasswordResetTokenExpiresAt     *time.Time

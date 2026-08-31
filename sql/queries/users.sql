@@ -86,6 +86,31 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: SetPendingEmail :one
+UPDATE users
+SET
+    email_new = $2,
+    email_new_code_hash = $3,
+    email_new_code_hash_expires_at = $4
+WHERE id = $1
+RETURNING *;
+
+-- name: GetUserByIdAndEmailNewCodeHash :one
+SELECT * FROM users
+WHERE id = $1 AND email_new_code_hash = $2
+LIMIT 1;
+
+-- name: ConfirmEmailChange :one
+UPDATE users
+SET
+    email = email_new,
+    email_verified = TRUE,
+    email_new = NULL,
+    email_new_code_hash = NULL,
+    email_new_code_hash_expires_at = NULL
+WHERE id = $1
+RETURNING *;
+
 -- name: ResetUserPassword :one
 UPDATE users
 SET

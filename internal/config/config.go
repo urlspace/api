@@ -9,6 +9,7 @@ import (
 
 const EmailVerificationTokenExpiryDuration = 24 * time.Hour
 const PasswordResetTokenExpiryDuration = 1 * time.Hour
+const EmailChangeCodeExpiryDuration = 15 * time.Minute
 
 const SessionExpiryDuration = 30 * 24 * time.Hour
 const SessionRenewalThreshold = 15 * 24 * time.Hour

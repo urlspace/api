@@ -1,6 +1,6 @@
 -- name: CreateToken :one
-INSERT INTO tokens (user_id, description, token_hash)
-VALUES ($1, $2, $3)
+INSERT INTO tokens (user_id, description, token_hash, token_suffix)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetTokenById :one

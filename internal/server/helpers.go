@@ -150,6 +150,7 @@ func newResponseUserAdmin(u user.User) responseUserAdmin {
 type responseToken struct {
 	ID          uuid.UUID `json:"id"`
 	Description string    `json:"description"`
+	TokenSuffix string    `json:"tokenSuffix"`
 	LastUsedAt  time.Time `json:"lastUsedAt"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
@@ -159,6 +160,7 @@ func newResponseToken(t user.Token) responseToken {
 	return responseToken{
 		ID:          t.ID,
 		Description: t.Description,
+		TokenSuffix: t.TokenSuffix,
 		LastUsedAt:  t.LastUsedAt,
 		CreatedAt:   t.CreatedAt,
 		UpdatedAt:   t.UpdatedAt,

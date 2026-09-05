@@ -31,6 +31,7 @@ func toToken(t db.Token) user.Token {
 		UserID:      t.UserID,
 		Description: t.Description,
 		TokenHash:   t.TokenHash,
+		TokenSuffix: t.TokenSuffix,
 		LastUsedAt:  t.LastUsedAt,
 		CreatedAt:   t.CreatedAt,
 		UpdatedAt:   t.UpdatedAt,
@@ -42,6 +43,7 @@ func (r *TokenRepository) Create(ctx context.Context, params user.TokenCreatePar
 		UserID:      params.UserID,
 		Description: params.Description,
 		TokenHash:   params.TokenHash,
+		TokenSuffix: params.TokenSuffix,
 	}
 	row, err := r.queries.CreateToken(ctx, args)
 	if err != nil {

@@ -1,0 +1,5 @@
+ALTER TABLE tokens
+ADD COLUMN token_suffix TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE tokens
+ALTER COLUMN token_suffix DROP DEFAULT;

@@ -12,19 +12,25 @@ import (
 )
 
 const createToken = `-- name: CreateToken :one
-INSERT INTO tokens (user_id, description, token_hash)
-VALUES ($1, $2, $3)
-RETURNING id, user_id, description, token_hash, last_used_at, created_at, updated_at
+INSERT INTO tokens (user_id, description, token_hash, token_suffix)
+VALUES ($1, $2, $3, $4)
+RETURNING id, user_id, description, token_hash, last_used_at, created_at, updated_at, token_suffix
 `
 
 type CreateTokenParams struct {
 	UserID      uuid.UUID
 	Description string
 	TokenHash   string
+	TokenSuffix string
 }
 
 func (q *Queries) CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error) {
-	row := q.db.QueryRow(ctx, createToken, arg.UserID, arg.Description, arg.TokenHash)
+	row := q.db.QueryRow(ctx, createToken,
+		arg.UserID,
+		arg.Description,
+		arg.TokenHash,
+		arg.TokenSuffix,
+	)
 	var i Token
 	err := row.Scan(
 		&i.ID,
@@ -34,6 +40,7 @@ func (q *Queries) CreateToken(ctx context.Context, arg CreateTokenParams) (Token
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TokenSuffix,
 	)
 	return i, err
 }
@@ -64,7 +71,7 @@ func (q *Queries) DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) er
 }
 
 const getTokenByHash = `-- name: GetTokenByHash :one
-SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at FROM tokens
+SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at, token_suffix FROM tokens
 WHERE token_hash = $1
 LIMIT 1
 `
@@ -80,12 +87,13 @@ func (q *Queries) GetTokenByHash(ctx context.Context, tokenHash string) (Token, 
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TokenSuffix,
 	)
 	return i, err
 }
 
 const getTokenById = `-- name: GetTokenById :one
-SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at FROM tokens
+SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at, token_suffix FROM tokens
 WHERE id = $1 AND user_id = $2
 LIMIT 1
 `
@@ -106,12 +114,13 @@ func (q *Queries) GetTokenById(ctx context.Context, arg GetTokenByIdParams) (Tok
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TokenSuffix,
 	)
 	return i, err
 }
 
 const listTokensByUserID = `-- name: ListTokensByUserID :many
-SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at FROM tokens
+SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at, token_suffix FROM tokens
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -133,6 +142,7 @@ func (q *Queries) ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]T
 			&i.LastUsedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TokenSuffix,
 		); err != nil {
 			return nil, err
 		}

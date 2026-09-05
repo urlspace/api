@@ -64,6 +64,7 @@ type Token struct {
 	LastUsedAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	TokenSuffix string
 }
 
 type User struct {

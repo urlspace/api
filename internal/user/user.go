@@ -41,6 +41,7 @@ type Token struct {
 	UserID      uuid.UUID
 	Description string
 	TokenHash   string
+	TokenSuffix string
 	LastUsedAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

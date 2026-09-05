@@ -101,6 +101,7 @@ type TokenCreateParams struct {
 	UserID      uuid.UUID
 	Description string
 	TokenHash   string
+	TokenSuffix string
 }
 
 type TokenRepository interface {
@@ -1181,6 +1182,8 @@ const tokenRandomBytes = 32
 // is ever pasted into a repository, so neither needs the marker.
 const tokenPrefix = "urlspace_"
 
+const tokenSuffixLength = 6
+
 // generateToken returns a fresh, high-entropy random string suitable for any
 // server-issued opaque bearer credential — a session cookie value, an API
 // token (after the caller prepends tokenPrefix), or a verification/reset URL
@@ -1259,6 +1262,7 @@ func (s *Service) TokenCreate(ctx context.Context, userID uuid.UUID, password, d
 		UserID:      userID,
 		Description: description,
 		TokenHash:   hashToken(token),
+		TokenSuffix: token[len(token)-tokenSuffixLength:],
 	})
 	if err != nil {
 		return TokenCreateResult{}, err

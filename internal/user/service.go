@@ -78,7 +78,7 @@ type Repository interface {
 type SessionCreateParams struct {
 	UserID      uuid.UUID
 	SessionHash string
-	Description *string
+	UserAgent   *string
 	ExpiresAt   time.Time
 }
 
@@ -444,7 +444,7 @@ type SigninResult struct {
 }
 
 // Signin validates credentials and creates a session.
-func (s *Service) Signin(ctx context.Context, email, password string, description *string) (SigninResult, error) {
+func (s *Service) Signin(ctx context.Context, email, password string, userAgent *string) (SigninResult, error) {
 	email, err := validateEmail(email)
 	if err != nil {
 		return SigninResult{}, err
@@ -486,7 +486,7 @@ func (s *Service) Signin(ctx context.Context, email, password string, descriptio
 	_, err = s.SessionRepo.Create(ctx, SessionCreateParams{
 		UserID:      u.ID,
 		SessionHash: hashToken(session),
-		Description: description,
+		UserAgent:   userAgent,
 		ExpiresAt:   expiresAt,
 	})
 	if err != nil {

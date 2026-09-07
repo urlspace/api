@@ -13,15 +13,15 @@ import (
 )
 
 const createSession = `-- name: CreateSession :one
-INSERT INTO sessions (user_id, session_hash, description, expires_at)
+INSERT INTO sessions (user_id, session_hash, user_agent, expires_at)
 VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, session_hash, description, expires_at, created_at, updated_at
+RETURNING id, user_id, session_hash, user_agent, expires_at, created_at, updated_at
 `
 
 type CreateSessionParams struct {
 	UserID      uuid.UUID
 	SessionHash string
-	Description *string
+	UserAgent   *string
 	ExpiresAt   time.Time
 }
 
@@ -29,7 +29,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 	row := q.db.QueryRow(ctx, createSession,
 		arg.UserID,
 		arg.SessionHash,
-		arg.Description,
+		arg.UserAgent,
 		arg.ExpiresAt,
 	)
 	var i Session
@@ -37,7 +37,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 		&i.ID,
 		&i.UserID,
 		&i.SessionHash,
-		&i.Description,
+		&i.UserAgent,
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -81,7 +81,7 @@ func (q *Queries) DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) 
 }
 
 const getSessionByHash = `-- name: GetSessionByHash :one
-SELECT id, user_id, session_hash, description, expires_at, created_at, updated_at FROM sessions
+SELECT id, user_id, session_hash, user_agent, expires_at, created_at, updated_at FROM sessions
 WHERE session_hash = $1
 LIMIT 1
 `
@@ -93,7 +93,7 @@ func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (Ses
 		&i.ID,
 		&i.UserID,
 		&i.SessionHash,
-		&i.Description,
+		&i.UserAgent,
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -102,7 +102,7 @@ func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (Ses
 }
 
 const listSessionsByUserID = `-- name: ListSessionsByUserID :many
-SELECT id, user_id, session_hash, description, expires_at, created_at, updated_at FROM sessions
+SELECT id, user_id, session_hash, user_agent, expires_at, created_at, updated_at FROM sessions
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -120,7 +120,7 @@ func (q *Queries) ListSessionsByUserID(ctx context.Context, userID uuid.UUID) ([
 			&i.ID,
 			&i.UserID,
 			&i.SessionHash,
-			&i.Description,
+			&i.UserAgent,
 			&i.ExpiresAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -139,7 +139,7 @@ const updateSessionExpiresAt = `-- name: UpdateSessionExpiresAt :one
 UPDATE sessions
 SET expires_at = $2
 WHERE id = $1
-RETURNING id, user_id, session_hash, description, expires_at, created_at, updated_at
+RETURNING id, user_id, session_hash, user_agent, expires_at, created_at, updated_at
 `
 
 type UpdateSessionExpiresAtParams struct {
@@ -154,7 +154,7 @@ func (q *Queries) UpdateSessionExpiresAt(ctx context.Context, arg UpdateSessionE
 		&i.ID,
 		&i.UserID,
 		&i.SessionHash,
-		&i.Description,
+		&i.UserAgent,
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

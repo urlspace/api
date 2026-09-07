@@ -168,22 +168,22 @@ func newResponseToken(t user.Token) responseToken {
 }
 
 type responseSession struct {
-	ID          uuid.UUID `json:"id"`
-	Description *string   `json:"description"`
-	Current     bool      `json:"current"`
-	ExpiresAt   time.Time `json:"expiresAt"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID        uuid.UUID `json:"id"`
+	UserAgent *string   `json:"userAgent"`
+	Current   bool      `json:"current"`
+	ExpiresAt time.Time `json:"expiresAt"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func newResponseSession(s user.Session, currentSessionID uuid.UUID) responseSession {
 	return responseSession{
-		ID:          s.ID,
-		Description: s.Description,
-		Current:     s.ID == currentSessionID,
-		ExpiresAt:   s.ExpiresAt,
-		CreatedAt:   s.CreatedAt,
-		UpdatedAt:   s.UpdatedAt,
+		ID:        s.ID,
+		UserAgent: s.UserAgent,
+		Current:   s.ID == currentSessionID,
+		ExpiresAt: s.ExpiresAt,
+		CreatedAt: s.CreatedAt,
+		UpdatedAt: s.UpdatedAt,
 	}
 }
 

@@ -27,17 +27,19 @@ func handleAuthSignin(svc *user.Service) http.HandlerFunc {
 			return
 		}
 
-		const maxUaLength = 255
+		// No good reason for 1024 other than I like it.
+		// Observe registered UA lengths before revisiting this limit.
+		const maxUserAgentBytes = 1024
 		ua := r.Header.Get("User-Agent")
-		if len(ua) > maxUaLength {
-			ua = ua[:maxUaLength]
+		if len(ua) > maxUserAgentBytes {
+			ua = ua[:maxUserAgentBytes]
 		}
-		var description *string
+		var userAgent *string
 		if ua != "" {
-			description = &ua
+			userAgent = &ua
 		}
 
-		result, err := svc.Signin(r.Context(), body.Email, body.Password, description)
+		result, err := svc.Signin(r.Context(), body.Email, body.Password, userAgent)
 		if err != nil {
 			statusCode, errorMessage := user.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)

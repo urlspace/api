@@ -42,7 +42,7 @@ type Session struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	SessionHash string
-	Description *string
+	UserAgent   *string
 	ExpiresAt   time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

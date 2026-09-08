@@ -13,6 +13,11 @@ type usersListResponse struct {
 
 func handleUsersList(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !isAdminFromContext(r.Context()) {
+			writeJSONError(w, http.StatusForbidden, "forbidden")
+			return
+		}
+
 		list, err := svc.List(r.Context())
 		if err != nil {
 			statusCode, errorMessage := user.MapErrorToHTTP(r.Context(), err)

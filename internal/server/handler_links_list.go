@@ -35,7 +35,7 @@ type linksListResponse struct {
 
 func handleLinksList(uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 		q := r.URL.Query()
 
 		page := 1

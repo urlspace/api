@@ -18,7 +18,7 @@ type tagsListResponse struct {
 
 func handleTagsList(svc *tag.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		list, err := svc.List(r.Context(), userID)
 		if err != nil {

@@ -18,7 +18,7 @@ type meDeleteResponse struct {
 
 func handleMeDelete(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		var body meDeleteBody
 		decoder := json.NewDecoder(r.Body)

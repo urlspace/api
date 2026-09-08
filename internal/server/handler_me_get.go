@@ -13,7 +13,7 @@ type meGetResponse struct {
 
 func handleMeGet(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, ok := userIDFromContext(r.Context())
+		userID, ok := getUserIDFromContext(r.Context())
 		if !ok {
 			writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 			return

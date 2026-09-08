@@ -21,7 +21,7 @@ type collectionUpdateResponse struct {
 
 func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
@@ -35,6 +35,11 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
 			handleClientError(r.Context(), w, err, "invalid request body")
+			return
+		}
+
+		if body.Public && !isProFromContext(r.Context()) && !isAdminFromContext(r.Context()) {
+			writeJSONError(w, http.StatusForbidden, "forbidden")
 			return
 		}
 

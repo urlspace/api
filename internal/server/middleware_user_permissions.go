@@ -1,13 +1,15 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
+	"github.com/urlspace/api/internal/config"
 	"github.com/urlspace/api/internal/user"
 )
 
-func adminMiddleware(svc *user.Service) middleware {
+func userPermissionsMiddleware(svc *user.Service) middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userID, ok := getUserIDFromContext(r.Context())
@@ -26,12 +28,9 @@ func adminMiddleware(svc *user.Service) middleware {
 				return
 			}
 
-			if !u.IsAdmin {
-				writeJSONError(w, http.StatusForbidden, "forbidden")
-				return
-			}
-
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), config.IsProContextKey, u.IsPro)
+			ctx = context.WithValue(ctx, config.IsAdminContextKey, u.IsAdmin)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

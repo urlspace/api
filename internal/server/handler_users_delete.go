@@ -14,6 +14,11 @@ type usersDeleteResponse struct {
 
 func handleUsersDelete(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if !isAdminFromContext(r.Context()) {
+			writeJSONError(w, http.StatusForbidden, "forbidden")
+			return
+		}
+
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)
 		if err != nil {

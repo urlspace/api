@@ -25,7 +25,7 @@ type linkUpdateResponse struct {
 
 func handleLinksUpdate(uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		id := r.PathValue("id")
 		idUuid, err := uuid.Parse(id)

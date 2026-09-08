@@ -7,13 +7,13 @@ import (
 )
 
 type sessionsListResponse struct {
-	Status string             `json:"status"`
+	Status string            `json:"status"`
 	Data   []responseSession `json:"data"`
 }
 
 func handleSessionsList(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		list, err := svc.SessionList(r.Context(), userID)
 		if err != nil {
@@ -22,7 +22,7 @@ func handleSessionsList(svc *user.Service) http.HandlerFunc {
 			return
 		}
 
-		currentSessionID, _ := sessionIDFromContext(r.Context())
+		currentSessionID, _ := getSessionIDFromContext(r.Context())
 
 		items := make([]responseSession, len(list))
 		for i, item := range list {

@@ -20,13 +20,18 @@ type collectionCreateResponse struct {
 
 func handleCollectionsCreate(collectionSvc *collection.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		var body collectionCreateBody
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil {
 			handleClientError(r.Context(), w, err, "invalid request body")
+			return
+		}
+
+		if body.Public && !isProFromContext(r.Context()) && !isAdminFromContext(r.Context()) {
+			writeJSONError(w, http.StatusForbidden, "forbidden")
 			return
 		}
 

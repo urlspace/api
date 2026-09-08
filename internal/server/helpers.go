@@ -213,14 +213,24 @@ func resolveBearerToken(r *http.Request) (string, bool) {
 	return token, true
 }
 
-func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+func getUserIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 	id, ok := ctx.Value(config.UserIDContextKey).(uuid.UUID)
 	return id, ok
 }
 
-func sessionIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+func getSessionIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 	id, ok := ctx.Value(config.SessionIDContextKey).(uuid.UUID)
 	return id, ok
+}
+
+func isProFromContext(ctx context.Context) bool {
+	isPro, _ := ctx.Value(config.IsProContextKey).(bool)
+	return isPro
+}
+
+func isAdminFromContext(ctx context.Context) bool {
+	isAdmin, _ := ctx.Value(config.IsAdminContextKey).(bool)
+	return isAdmin
 }
 
 // Decision (future me): cookie Domain is derived from r.Host so the same code

@@ -18,6 +18,8 @@ type contextKey string
 
 const UserIDContextKey contextKey = "userID"
 const SessionIDContextKey contextKey = "sessionID"
+const IsProContextKey contextKey = "isPro"
+const IsAdminContextKey contextKey = "isAdmin"
 
 // Decision (future me): __Host- prefix dropped because SSR on url.space can't
 // read a cookie host-scoped to api.url.space. Domain set in setSessionCookie.

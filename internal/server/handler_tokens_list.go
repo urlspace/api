@@ -13,7 +13,7 @@ type tokensListResponse struct {
 
 func handleTokensList(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		list, err := svc.TokenList(r.Context(), userID)
 		if err != nil {

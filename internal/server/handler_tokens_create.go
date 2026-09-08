@@ -19,7 +19,7 @@ type tokenCreateResponse struct {
 
 func handleTokensCreate(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		var body tokenCreateBody
 		decoder := json.NewDecoder(r.Body)

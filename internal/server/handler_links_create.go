@@ -25,7 +25,7 @@ type linkCreateResponse struct {
 
 func handleLinksCreate(uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		var body linkCreateBody
 		decoder := json.NewDecoder(r.Body)

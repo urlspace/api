@@ -14,7 +14,7 @@ type tagDeleteResponse struct {
 
 func handleTagsDelete(svc *tag.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, _ := userIDFromContext(r.Context())
+		userID, _ := getUserIDFromContext(r.Context())
 
 		id := r.PathValue("id")
 		tagID, err := uuid.Parse(id)

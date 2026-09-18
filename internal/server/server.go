@@ -25,6 +25,7 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	mux.HandleFunc("GET /status", handleStatus)
 
 	mux.HandleFunc("GET /public/collection/{id}", handlePublicCollectionGet(collectionSvc))
+	mux.HandleFunc("GET /public/user/{username}", handlePublicUserGet(userSvc))
 
 	// auth
 	mux.HandleFunc("POST /auth/signup", handleAuthSignup(userSvc))

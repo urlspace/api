@@ -6,6 +6,19 @@ import (
 	"uuid"
 )
 
+type PublicUser struct {
+	DisplayName string
+	Collections []PublicCollection
+}
+
+type PublicCollection struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
 type User struct {
 	ID                              uuid.UUID
 	Email                           string

@@ -52,6 +52,34 @@ func toUser(u db.User) user.User {
 	}
 }
 
+func (r *UserRepository) GetPublic(ctx context.Context, username string) (user.PublicUser, error) {
+	rows, err := r.queries.GetPublicUser(ctx, username)
+	if err != nil {
+		return user.PublicUser{}, translateUserError(err)
+	}
+	if len(rows) == 0 {
+		return user.PublicUser{}, user.ErrNotFound
+	}
+
+	result := user.PublicUser{
+		DisplayName: rows[0].DisplayName,
+		Collections: make([]user.PublicCollection, 0, len(rows)),
+	}
+	for _, row := range rows {
+		if row.CollectionID == nil {
+			continue
+		}
+		result.Collections = append(result.Collections, user.PublicCollection{
+			ID:          *row.CollectionID,
+			Name:        *row.CollectionName,
+			Description: *row.CollectionDescription,
+			CreatedAt:   *row.CollectionCreatedAt,
+			UpdatedAt:   *row.CollectionUpdatedAt,
+		})
+	}
+	return result, nil
+}
+
 func (r *UserRepository) List(ctx context.Context) ([]user.User, error) {
 	rows, err := r.queries.ListUsers(ctx)
 	if err != nil {

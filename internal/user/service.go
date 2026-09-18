@@ -56,6 +56,7 @@ type SetPendingEmailParams struct {
 }
 
 type Repository interface {
+	GetPublic(ctx context.Context, username string) (PublicUser, error)
 	List(ctx context.Context) ([]User, error)
 	GetById(ctx context.Context, id uuid.UUID) (User, error)
 	GetByEmail(ctx context.Context, email string) (User, error)
@@ -818,6 +819,14 @@ func (s *Service) GetSession(ctx context.Context, session string) (Session, erro
 // UpdateSessionExpiresAt updates the expiry of a session (used by auth middleware for sliding expiry).
 func (s *Service) UpdateSessionExpiresAt(ctx context.Context, params SessionUpdateExpiresAtParams) (Session, error) {
 	return s.SessionRepo.UpdateExpiresAt(ctx, params)
+}
+
+func (s *Service) GetPublic(ctx context.Context, username string) (PublicUser, error) {
+	username, err := validateUsername(username)
+	if err != nil {
+		return PublicUser{}, ErrNotFound
+	}
+	return s.UserRepo.GetPublic(ctx, username)
 }
 
 // GetById retrieves a user by ID.

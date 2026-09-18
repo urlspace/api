@@ -1,3 +1,16 @@
+-- name: GetPublicUser :many
+SELECT u.display_name,
+    c.id AS collection_id,
+    c.name AS collection_name,
+    c.description AS collection_description,
+    c.created_at AS collection_created_at,
+    c.updated_at AS collection_updated_at
+FROM users u
+LEFT JOIN collections c ON c.user_id = u.id AND c.public = TRUE
+WHERE u.username = $1
+    AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+ORDER BY c.name, c.id;
+
 -- name: GetUserById :one
 SELECT * FROM users
 WHERE

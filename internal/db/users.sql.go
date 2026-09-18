@@ -144,6 +144,56 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (User, error) {
 	return i, err
 }
 
+const getPublicUser = `-- name: GetPublicUser :many
+SELECT u.display_name,
+    c.id AS collection_id,
+    c.name AS collection_name,
+    c.description AS collection_description,
+    c.created_at AS collection_created_at,
+    c.updated_at AS collection_updated_at
+FROM users u
+LEFT JOIN collections c ON c.user_id = u.id AND c.public = TRUE
+WHERE u.username = $1
+    AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+ORDER BY c.name, c.id
+`
+
+type GetPublicUserRow struct {
+	DisplayName           string
+	CollectionID          *uuid.UUID
+	CollectionName        *string
+	CollectionDescription *string
+	CollectionCreatedAt   *time.Time
+	CollectionUpdatedAt   *time.Time
+}
+
+func (q *Queries) GetPublicUser(ctx context.Context, username string) ([]GetPublicUserRow, error) {
+	rows, err := q.db.Query(ctx, getPublicUser, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetPublicUserRow{}
+	for rows.Next() {
+		var i GetPublicUserRow
+		if err := rows.Scan(
+			&i.DisplayName,
+			&i.CollectionID,
+			&i.CollectionName,
+			&i.CollectionDescription,
+			&i.CollectionCreatedAt,
+			&i.CollectionUpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at FROM users
 WHERE

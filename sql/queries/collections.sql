@@ -26,3 +26,19 @@ RETURNING *;
 DELETE FROM collections
 WHERE id = $1 AND user_id = $2
 RETURNING *;
+
+-- name: GetPublicCollection :many
+SELECT c.name, c.description, c.created_at, c.updated_at,
+    u.display_name, u.username,
+    l.id AS link_id,
+    l.title AS link_title,
+    l.description AS link_description,
+    l.url AS link_url,
+    l.created_at AS link_created_at
+FROM collections c
+JOIN users u ON u.id = c.user_id
+LEFT JOIN links l ON l.collection_id = c.id AND l.user_id = c.user_id
+WHERE c.id = $1
+    AND c.public = TRUE
+    AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+ORDER BY l.created_at DESC, l.id DESC;

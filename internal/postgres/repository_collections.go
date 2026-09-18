@@ -77,6 +77,42 @@ func (r *CollectionRepository) Get(ctx context.Context, id uuid.UUID, userID uui
 	return toCollection(row), nil
 }
 
+func (r *CollectionRepository) GetPublic(ctx context.Context, id uuid.UUID) (collection.PublicCollection, error) {
+	rows, err := r.queries.GetPublicCollection(ctx, id)
+	if err != nil {
+		return collection.PublicCollection{}, translateCollectionError(err)
+	}
+	if len(rows) == 0 {
+		return collection.PublicCollection{}, collection.ErrNotFound
+	}
+
+	first := rows[0]
+	result := collection.PublicCollection{
+		Name:        first.Name,
+		Description: first.Description,
+		CreatedAt:   first.CreatedAt,
+		UpdatedAt:   first.UpdatedAt,
+		Author: collection.PublicAuthor{
+			DisplayName: first.DisplayName,
+			Username:    first.Username,
+		},
+		Links: make([]collection.PublicLink, 0, len(rows)),
+	}
+	for _, row := range rows {
+		if row.LinkID == nil {
+			continue
+		}
+		result.Links = append(result.Links, collection.PublicLink{
+			ID:          *row.LinkID,
+			Title:       *row.LinkTitle,
+			Description: *row.LinkDescription,
+			CreatedAt:   *row.LinkCreatedAt,
+			URL:         *row.LinkUrl,
+		})
+	}
+	return result, nil
+}
+
 func (r *CollectionRepository) Create(ctx context.Context, params collection.CreateParams) (collection.Collection, error) {
 	row, err := r.queries.CreateCollection(ctx, db.CreateCollectionParams{
 		UserID:      params.UserID,

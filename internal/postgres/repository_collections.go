@@ -19,6 +19,37 @@ func NewCollectionRepository(queries db.Querier) collection.Repository {
 	return &CollectionRepository{queries: queries}
 }
 
+// ClonePublic checks eligibility and copies the collection and links in one SQL
+// statement, using one snapshot and an implicit transaction for atomicity.
+// The query returns the new collection with cloned=true on success, or the
+// source with cloned=false for an owned collection, without inserting anything.
+// An unavailable source returns no row; a duplicate destination name fails the
+// statement. These outcomes map to ErrCloneOwnCollection, ErrNotFound and
+// ErrConflict respectively.
+func (r *CollectionRepository) ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (collection.Collection, error) {
+	row, err := r.queries.ClonePublicCollection(ctx, db.ClonePublicCollectionParams{
+		SourceID: sourceID,
+		UserID:   userID,
+	})
+	if err != nil {
+		return collection.Collection{}, translateCollectionError(err)
+	}
+
+	if !row.Cloned {
+		return collection.Collection{}, collection.ErrCloneOwnCollection
+	}
+
+	return collection.Collection{
+		ID:          row.ID,
+		UserID:      row.UserID,
+		Name:        row.Name,
+		Description: row.Description,
+		Public:      row.Public,
+		CreatedAt:   row.CreatedAt,
+		UpdatedAt:   row.UpdatedAt,
+	}, nil
+}
+
 func translateCollectionError(err error) error {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return collection.ErrNotFound

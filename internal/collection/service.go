@@ -16,8 +16,9 @@ var (
 	ErrValidationDescriptionLength            = errors.New("description must be less than 512 characters")
 	ErrValidationDescriptionInvalidCharacters = errors.New("description must not contain control characters")
 
-	ErrNotFound = errors.New("not found")
-	ErrConflict = errors.New("conflict")
+	ErrNotFound           = errors.New("not found")
+	ErrConflict           = errors.New("conflict")
+	ErrCloneOwnCollection = errors.New("you cannot clone your own collection")
 )
 
 type CreateParams struct {
@@ -36,6 +37,7 @@ type UpdateParams struct {
 }
 
 type Repository interface {
+	ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (Collection, error)
 	List(ctx context.Context, userID uuid.UUID) ([]CollectionWithLinkCount, error)
 	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Collection, error)
 	GetPublic(ctx context.Context, id uuid.UUID) (PublicCollection, error)
@@ -62,6 +64,10 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Coll
 
 func (s *Service) GetPublic(ctx context.Context, id uuid.UUID) (PublicCollection, error) {
 	return s.repo.GetPublic(ctx, id)
+}
+
+func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (Collection, error) {
+	return s.repo.ClonePublic(ctx, sourceID, userID)
 }
 
 func (s *Service) Create(ctx context.Context, params CreateParams) (Collection, error) {

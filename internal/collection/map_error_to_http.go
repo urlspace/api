@@ -27,6 +27,10 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		return http.StatusBadRequest, err.Error()
 	}
 
+	if errors.Is(err, ErrCloneOwnCollection) {
+		return http.StatusForbidden, err.Error()
+	}
+
 	if errors.Is(err, ErrNotFound) {
 		return http.StatusNotFound, "not found"
 	}

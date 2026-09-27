@@ -61,6 +61,7 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	mux.Handle("GET /collections", sessionOrTokenAuth(handleCollectionsList(collectionSvc)))
 	mux.Handle("GET /collections/{id}", sessionOrTokenAuth(handleCollectionsGet(collectionSvc)))
 	mux.Handle("POST /collections", sessionOrTokenAuthWithPermissions(handleCollectionsCreate(collectionSvc)))
+	mux.Handle("POST /collections/{id}/clone", sessionAuth(handleCollectionsClone(collectionSvc)))
 	mux.Handle("PUT /collections/{id}", sessionOrTokenAuthWithPermissions(handleCollectionsUpdate(collectionSvc)))
 	mux.Handle("DELETE /collections/{id}", sessionOrTokenAuth(handleCollectionsDelete(collectionSvc)))
 

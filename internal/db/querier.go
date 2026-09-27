@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	ClonePublicCollection(ctx context.Context, arg ClonePublicCollectionParams) (ClonePublicCollectionRow, error)
 	ConfirmEmailChange(ctx context.Context, id uuid.UUID) (User, error)
 	CountLinks(ctx context.Context, arg CountLinksParams) (int64, error)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error)

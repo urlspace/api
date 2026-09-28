@@ -90,7 +90,7 @@ type SessionUpdateExpiresAtParams struct {
 
 type SessionRepository interface {
 	Create(ctx context.Context, params SessionCreateParams) (Session, error)
-	GetByHash(ctx context.Context, sessionHash string) (Session, error)
+	GetByHash(ctx context.Context, sessionHash string) (AuthSession, error)
 	List(ctx context.Context, userID uuid.UUID) ([]Session, error)
 	UpdateExpiresAt(ctx context.Context, params SessionUpdateExpiresAtParams) (Session, error)
 	DeleteByHash(ctx context.Context, sessionHash string) error
@@ -108,7 +108,7 @@ type TokenCreateParams struct {
 type TokenRepository interface {
 	Create(ctx context.Context, params TokenCreateParams) (Token, error)
 	GetByID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Token, error)
-	GetByHash(ctx context.Context, hash string) (Token, error)
+	GetByHash(ctx context.Context, hash string) (AuthToken, error)
 	List(ctx context.Context, userID uuid.UUID) ([]Token, error)
 	UpdateLastUsedAt(ctx context.Context, id uuid.UUID) error
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
@@ -312,6 +312,7 @@ var (
 	ErrNotFound               = errors.New("not found")
 	ErrConflict               = errors.New("conflict")
 	ErrInvalidCredentials     = errors.New("invalid credentials")
+	ErrBlocked                = errors.New("account blocked")
 	ErrEmailNotVerified       = errors.New("invalid email or password")
 	ErrTokenExpired           = errors.New("token has expired")
 	ErrEmailChangeCodeInvalid = errors.New("email change code is incorrect")
@@ -473,6 +474,9 @@ func (s *Service) Signin(ctx context.Context, email, password string, userAgent 
 	}
 	if !userExists {
 		return SigninResult{}, ErrInvalidCredentials
+	}
+	if u.IsBlocked {
+		return SigninResult{}, ErrBlocked
 	}
 	if !u.EmailVerified {
 		return SigninResult{}, ErrEmailNotVerified
@@ -812,7 +816,7 @@ func (s *Service) SessionDeleteAll(ctx context.Context, userID uuid.UUID) error 
 // GetSession retrieves a session record by the raw cookie value (used by auth
 // middleware). The cookie value is hashed before lookup; the DB never sees the
 // secret, so a read-only DB compromise does not yield usable session tokens.
-func (s *Service) GetSession(ctx context.Context, session string) (Session, error) {
+func (s *Service) GetSession(ctx context.Context, session string) (AuthSession, error) {
 	return s.SessionRepo.GetByHash(ctx, hashToken(session))
 }
 
@@ -1300,8 +1304,8 @@ func (s *Service) TokenDeleteAll(ctx context.Context, userID uuid.UUID) error {
 	return s.TokenRepo.DeleteAllByUserID(ctx, userID)
 }
 
-// GetTokenByHash retrieves a token by its hash (used by auth middleware).
-func (s *Service) GetTokenByHash(ctx context.Context, token string) (Token, error) {
+// GetToken hashes the raw API token and retrieves its authentication data.
+func (s *Service) GetToken(ctx context.Context, token string) (AuthToken, error) {
 	return s.TokenRepo.GetByHash(ctx, hashToken(token))
 }
 

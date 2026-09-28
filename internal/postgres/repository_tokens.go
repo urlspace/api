@@ -63,12 +63,26 @@ func (r *TokenRepository) GetByID(ctx context.Context, id uuid.UUID, userID uuid
 	return toToken(row), nil
 }
 
-func (r *TokenRepository) GetByHash(ctx context.Context, hash string) (user.Token, error) {
+func (r *TokenRepository) GetByHash(ctx context.Context, hash string) (user.AuthToken, error) {
 	row, err := r.queries.GetTokenByHash(ctx, hash)
 	if err != nil {
-		return user.Token{}, translateTokenError(err)
+		return user.AuthToken{}, translateTokenError(err)
 	}
-	return toToken(row), nil
+	return user.AuthToken{
+		Token: user.Token{
+			ID:          row.ID,
+			UserID:      row.UserID,
+			Description: row.Description,
+			TokenHash:   row.TokenHash,
+			TokenSuffix: row.TokenSuffix,
+			LastUsedAt:  row.LastUsedAt,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+		},
+		IsPro:     row.IsPro,
+		IsAdmin:   row.IsAdmin,
+		IsBlocked: row.IsBlocked,
+	}, nil
 }
 
 func (r *TokenRepository) List(ctx context.Context, userID uuid.UUID) ([]user.Token, error) {

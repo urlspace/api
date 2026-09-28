@@ -16,7 +16,6 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 
 	sessionAuth := authMiddleware(userSvc, AuthConfig{UseSession: true, UseToken: false})
 	sessionOrTokenAuth := authMiddleware(userSvc, AuthConfig{UseSession: true, UseToken: true})
-	sessionOrTokenAuthWithPermissions := middlewareStack(sessionOrTokenAuth, userPermissionsMiddleware(userSvc))
 
 	// not found
 	mux.HandleFunc("/", handleNotFound)
@@ -60,9 +59,9 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	// collections (protected)
 	mux.Handle("GET /collections", sessionOrTokenAuth(handleCollectionsList(collectionSvc)))
 	mux.Handle("GET /collections/{id}", sessionOrTokenAuth(handleCollectionsGet(collectionSvc)))
-	mux.Handle("POST /collections", sessionOrTokenAuthWithPermissions(handleCollectionsCreate(collectionSvc)))
+	mux.Handle("POST /collections", sessionOrTokenAuth(handleCollectionsCreate(collectionSvc)))
 	mux.Handle("POST /collections/{id}/clone", sessionAuth(handleCollectionsClone(collectionSvc)))
-	mux.Handle("PUT /collections/{id}", sessionOrTokenAuthWithPermissions(handleCollectionsUpdate(collectionSvc)))
+	mux.Handle("PUT /collections/{id}", sessionOrTokenAuth(handleCollectionsUpdate(collectionSvc)))
 	mux.Handle("DELETE /collections/{id}", sessionOrTokenAuth(handleCollectionsDelete(collectionSvc)))
 
 	// sessions (session-only — session management requires an active session)
@@ -78,10 +77,10 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	mux.Handle("DELETE /tokens", sessionAuth(handleTokensDeleteAll(userSvc)))
 
 	// users (admin only)
-	mux.Handle("GET /admin/users", sessionOrTokenAuthWithPermissions(handleUsersList(userSvc)))
-	mux.Handle("GET /admin/users/{id}", sessionOrTokenAuthWithPermissions(handleUsersGet(userSvc)))
-	mux.Handle("POST /admin/users", sessionOrTokenAuthWithPermissions(handleUsersCreate(userSvc)))
-	mux.Handle("DELETE /admin/users/{id}", sessionOrTokenAuthWithPermissions(handleUsersDelete(userSvc)))
+	mux.Handle("GET /admin/users", sessionOrTokenAuth(handleUsersList(userSvc)))
+	mux.Handle("GET /admin/users/{id}", sessionOrTokenAuth(handleUsersGet(userSvc)))
+	mux.Handle("POST /admin/users", sessionOrTokenAuth(handleUsersCreate(userSvc)))
+	mux.Handle("DELETE /admin/users/{id}", sessionOrTokenAuth(handleUsersDelete(userSvc)))
 
 	// version api
 	v1 := http.NewServeMux()

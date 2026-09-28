@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"uuid"
 )
@@ -71,14 +72,30 @@ func (q *Queries) DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) er
 }
 
 const getTokenByHash = `-- name: GetTokenByHash :one
-SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at, token_suffix FROM tokens
-WHERE token_hash = $1
+SELECT t.id, t.user_id, t.description, t.token_hash, t.last_used_at, t.created_at, t.updated_at, t.token_suffix, u.is_pro, u.is_admin, u.is_blocked
+FROM tokens t
+JOIN users u ON u.id = t.user_id
+WHERE t.token_hash = $1
 LIMIT 1
 `
 
-func (q *Queries) GetTokenByHash(ctx context.Context, tokenHash string) (Token, error) {
+type GetTokenByHashRow struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Description string
+	TokenHash   string
+	LastUsedAt  time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	TokenSuffix string
+	IsPro       bool
+	IsAdmin     bool
+	IsBlocked   bool
+}
+
+func (q *Queries) GetTokenByHash(ctx context.Context, tokenHash string) (GetTokenByHashRow, error) {
 	row := q.db.QueryRow(ctx, getTokenByHash, tokenHash)
-	var i Token
+	var i GetTokenByHashRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -88,6 +105,9 @@ func (q *Queries) GetTokenByHash(ctx context.Context, tokenHash string) (Token, 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.TokenSuffix,
+		&i.IsPro,
+		&i.IsAdmin,
+		&i.IsBlocked,
 	)
 	return i, err
 }

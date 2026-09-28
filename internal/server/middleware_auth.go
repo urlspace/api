@@ -75,6 +75,11 @@ func authenticateSession(w http.ResponseWriter, r *http.Request, svc *user.Servi
 		return
 	}
 
+	if sess.IsBlocked {
+		writeJSONError(w, http.StatusForbidden, user.ErrBlocked.Error())
+		return
+	}
+
 	// Decision (future me): sliding expiry — refresh both the cookie and the
 	// DB row when the session is approaching expiry, so an actively-used
 	// session never dies. The cookie value itself stays the same; we're
@@ -106,17 +111,24 @@ func authenticateSession(w http.ResponseWriter, r *http.Request, svc *user.Servi
 
 	ctx := context.WithValue(r.Context(), config.UserIDContextKey, sess.UserID)
 	ctx = context.WithValue(ctx, config.SessionIDContextKey, sess.ID)
+	ctx = context.WithValue(ctx, config.IsProContextKey, sess.IsPro)
+	ctx = context.WithValue(ctx, config.IsAdminContextKey, sess.IsAdmin)
 	next.ServeHTTP(w, r.WithContext(ctx))
 }
 
 func authenticateToken(w http.ResponseWriter, r *http.Request, svc *user.Service, rawToken string, next http.Handler) {
-	token, err := svc.GetTokenByHash(r.Context(), rawToken)
+	token, err := svc.GetToken(r.Context(), rawToken)
 	if err != nil {
 		if errors.Is(err, user.ErrNotFound) {
 			writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 		handleServerError(r.Context(), w, err, "failed to look up token")
+		return
+	}
+
+	if token.IsBlocked {
+		writeJSONError(w, http.StatusForbidden, user.ErrBlocked.Error())
 		return
 	}
 
@@ -140,5 +152,7 @@ func authenticateToken(w http.ResponseWriter, r *http.Request, svc *user.Service
 	trace.SpanFromContext(r.Context()).SetAttributes(attribute.String("user.id", token.UserID.String()))
 
 	ctx := context.WithValue(r.Context(), config.UserIDContextKey, token.UserID)
+	ctx = context.WithValue(ctx, config.IsProContextKey, token.IsPro)
+	ctx = context.WithValue(ctx, config.IsAdminContextKey, token.IsAdmin)
 	next.ServeHTTP(w, r.WithContext(ctx))
 }

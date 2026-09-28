@@ -9,8 +9,10 @@ WHERE id = $1 AND user_id = $2
 LIMIT 1;
 
 -- name: GetTokenByHash :one
-SELECT * FROM tokens
-WHERE token_hash = $1
+SELECT t.*, u.is_pro, u.is_admin, u.is_blocked
+FROM tokens t
+JOIN users u ON u.id = t.user_id
+WHERE t.token_hash = $1
 LIMIT 1;
 
 -- name: ListTokensByUserID :many

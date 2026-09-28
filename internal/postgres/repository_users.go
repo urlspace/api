@@ -47,6 +47,7 @@ func toUser(u db.User) user.User {
 		DisplayName:                     u.DisplayName,
 		IsAdmin:                         u.IsAdmin,
 		IsPro:                           u.IsPro,
+		IsBlocked:                       u.IsBlocked,
 		CreatedAt:                       u.CreatedAt,
 		UpdatedAt:                       u.UpdatedAt,
 	}

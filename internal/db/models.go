@@ -85,4 +85,5 @@ type User struct {
 	EmailNew                        *string
 	EmailNewCodeHash                *string
 	EmailNewCodeHashExpiresAt       *time.Time
+	IsBlocked                       bool
 }

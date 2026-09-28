@@ -35,6 +35,7 @@ type User struct {
 	DisplayName                     string
 	IsAdmin                         bool
 	IsPro                           bool
+	IsBlocked                       bool
 	CreatedAt                       time.Time
 	UpdatedAt                       time.Time
 }
@@ -49,6 +50,13 @@ type Session struct {
 	UpdatedAt   time.Time
 }
 
+type AuthSession struct {
+	Session
+	IsPro     bool
+	IsAdmin   bool
+	IsBlocked bool
+}
+
 type Token struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
@@ -58,4 +66,11 @@ type Token struct {
 	LastUsedAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+type AuthToken struct {
+	Token
+	IsPro     bool
+	IsAdmin   bool
+	IsBlocked bool
 }

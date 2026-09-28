@@ -51,12 +51,25 @@ func (r *SessionRepository) Create(ctx context.Context, params user.SessionCreat
 	return toSession(row), nil
 }
 
-func (r *SessionRepository) GetByHash(ctx context.Context, sessionHash string) (user.Session, error) {
+func (r *SessionRepository) GetByHash(ctx context.Context, sessionHash string) (user.AuthSession, error) {
 	row, err := r.queries.GetSessionByHash(ctx, sessionHash)
 	if err != nil {
-		return user.Session{}, translateSessionError(err)
+		return user.AuthSession{}, translateSessionError(err)
 	}
-	return toSession(row), nil
+	return user.AuthSession{
+		Session: user.Session{
+			ID:          row.ID,
+			UserID:      row.UserID,
+			SessionHash: row.SessionHash,
+			UserAgent:   row.UserAgent,
+			ExpiresAt:   row.ExpiresAt,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+		},
+		IsPro:     row.IsPro,
+		IsAdmin:   row.IsAdmin,
+		IsBlocked: row.IsBlocked,
+	}, nil
 }
 
 func (r *SessionRepository) List(ctx context.Context, userID uuid.UUID) ([]user.Session, error) {

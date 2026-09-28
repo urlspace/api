@@ -81,14 +81,29 @@ func (q *Queries) DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) 
 }
 
 const getSessionByHash = `-- name: GetSessionByHash :one
-SELECT id, user_id, session_hash, user_agent, expires_at, created_at, updated_at FROM sessions
-WHERE session_hash = $1
+SELECT s.id, s.user_id, s.session_hash, s.user_agent, s.expires_at, s.created_at, s.updated_at, u.is_pro, u.is_admin, u.is_blocked
+FROM sessions s
+JOIN users u ON u.id = s.user_id
+WHERE s.session_hash = $1
 LIMIT 1
 `
 
-func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (Session, error) {
+type GetSessionByHashRow struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	SessionHash string
+	UserAgent   *string
+	ExpiresAt   time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	IsPro       bool
+	IsAdmin     bool
+	IsBlocked   bool
+}
+
+func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (GetSessionByHashRow, error) {
 	row := q.db.QueryRow(ctx, getSessionByHash, sessionHash)
-	var i Session
+	var i GetSessionByHashRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -97,6 +112,9 @@ func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (Ses
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsPro,
+		&i.IsAdmin,
+		&i.IsBlocked,
 	)
 	return i, err
 }

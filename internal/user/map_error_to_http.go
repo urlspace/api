@@ -56,6 +56,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	if errors.Is(err, ErrInvalidCredentials) {
 		return http.StatusUnauthorized, err.Error()
 	}
+	if errors.Is(err, ErrBlocked) {
+		return http.StatusForbidden, err.Error()
+	}
 	if errors.Is(err, ErrEmailNotVerified) {
 		return http.StatusForbidden, "invalid email or password"
 	}

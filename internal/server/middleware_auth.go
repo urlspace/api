@@ -76,7 +76,7 @@ func authenticateSession(w http.ResponseWriter, r *http.Request, svc *user.Servi
 	}
 
 	if sess.IsBlocked {
-		writeJSONError(w, http.StatusForbidden, user.ErrBlocked.Error())
+		writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -128,7 +128,7 @@ func authenticateToken(w http.ResponseWriter, r *http.Request, svc *user.Service
 	}
 
 	if token.IsBlocked {
-		writeJSONError(w, http.StatusForbidden, user.ErrBlocked.Error())
+		writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 

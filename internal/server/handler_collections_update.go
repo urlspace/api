@@ -1,7 +1,7 @@
 package server
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"net/http"
 
 	"github.com/urlspace/api/internal/collection"
@@ -31,9 +31,7 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 		}
 
 		var body collectionUpdateBody
-		decoder := json.NewDecoder(r.Body)
-		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&body); err != nil {
+		if err := json.UnmarshalRead(r.Body, &body, json.RejectUnknownMembers(true)); err != nil {
 			handleClientError(r.Context(), w, err, "invalid request body")
 			return
 		}

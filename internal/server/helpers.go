@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -283,12 +283,12 @@ type errorResponse struct {
 
 func writeJSONSuccess(w http.ResponseWriter, statusCode int, res any) {
 	w.WriteHeader(statusCode)
-	_ = json.NewEncoder(w).Encode(res)
+	_ = json.MarshalWrite(w, res)
 }
 
 func writeJSONError(w http.ResponseWriter, statusCode int, message string) {
 	w.WriteHeader(statusCode)
-	_ = json.NewEncoder(w).Encode(&errorResponse{
+	_ = json.MarshalWrite(w, &errorResponse{
 		Status: "error",
 		Data:   message,
 	})

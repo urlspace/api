@@ -32,7 +32,7 @@ func handleCollectionsDelete(collectionSvc *collection.Service) http.HandlerFunc
 
 		writeJSONSuccess(w, http.StatusOK, collectionDeleteResponse{
 			Status: "ok",
-			Data:   newResponseCollection(result),
+			Data:   newResponseCollection(result, canPublishFromContext(r.Context())),
 		})
 	}
 }

@@ -28,7 +28,7 @@ func handleCollectionsCreate(collectionSvc *collection.Service) http.HandlerFunc
 			return
 		}
 
-		if body.Public && !isProFromContext(r.Context()) && !isAdminFromContext(r.Context()) {
+		if body.Public && !canPublishFromContext(r.Context()) {
 			writeJSONError(w, http.StatusForbidden, "forbidden")
 			return
 		}
@@ -47,7 +47,7 @@ func handleCollectionsCreate(collectionSvc *collection.Service) http.HandlerFunc
 
 		writeJSONSuccess(w, http.StatusCreated, collectionCreateResponse{
 			Status: "ok",
-			Data:   newResponseCollection(result),
+			Data:   newResponseCollection(result, canPublishFromContext(r.Context())),
 		})
 	}
 }

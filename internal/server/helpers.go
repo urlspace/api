@@ -70,12 +70,12 @@ func newResponseLink(r uow.EnrichedLink) responseLink {
 	}
 }
 
-func newResponseCollection(c collection.Collection) responseCollection {
+func newResponseCollection(c collection.Collection, canPublish bool) responseCollection {
 	return responseCollection{
 		ID:          c.ID,
 		Name:        c.Name,
 		Description: c.Description,
-		Public:      c.Public,
+		Public:      c.Public && canPublish,
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
 	}
@@ -231,6 +231,10 @@ func isProFromContext(ctx context.Context) bool {
 func isAdminFromContext(ctx context.Context) bool {
 	isAdmin, _ := ctx.Value(config.IsAdminContextKey).(bool)
 	return isAdmin
+}
+
+func canPublishFromContext(ctx context.Context) bool {
+	return isProFromContext(ctx) || isAdminFromContext(ctx)
 }
 
 // Decision (future me): cookie Domain is derived from r.Host so the same code

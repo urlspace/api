@@ -30,7 +30,7 @@ func handleCollectionsList(collectionSvc *collection.Service) http.HandlerFunc {
 		items := make([]responseCollectionListItem, len(list))
 		for i, item := range list {
 			items[i] = responseCollectionListItem{
-				responseCollection: newResponseCollection(item.Collection),
+				responseCollection: newResponseCollection(item.Collection, canPublishFromContext(r.Context())),
 				Count:              item.LinkCount,
 			}
 		}

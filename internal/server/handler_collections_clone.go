@@ -26,7 +26,7 @@ func handleCollectionsClone(svc *collection.Service) http.HandlerFunc {
 
 		writeJSONSuccess(w, http.StatusCreated, collectionCreateResponse{
 			Status: "ok",
-			Data:   newResponseCollection(result),
+			Data:   newResponseCollection(result, canPublishFromContext(r.Context())),
 		})
 	}
 }

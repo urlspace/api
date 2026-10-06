@@ -36,9 +36,23 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 			return
 		}
 
-		if body.Public && !isProFromContext(r.Context()) && !isAdminFromContext(r.Context()) {
+		canPublish := canPublishFromContext(r.Context())
+		if body.Public && !canPublish {
 			writeJSONError(w, http.StatusForbidden, "forbidden")
 			return
+		}
+
+		// Non-pro users can't change the flag, so keep the stored value instead
+		// of the false the client sends. Upgrading again restores public pages.
+		public := body.Public
+		if !canPublish {
+			current, err := collectionSvc.Get(r.Context(), idUuid, userID)
+			if err != nil {
+				statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)
+				writeJSONError(w, statusCode, errorMessage)
+				return
+			}
+			public = current.Public
 		}
 
 		result, err := collectionSvc.Update(r.Context(), collection.UpdateParams{
@@ -46,7 +60,7 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 			UserID:      userID,
 			Name:        body.Name,
 			Description: body.Description,
-			Public:      body.Public,
+			Public:      public,
 		})
 		if err != nil {
 			statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)
@@ -56,7 +70,7 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 
 		writeJSONSuccess(w, http.StatusOK, collectionUpdateResponse{
 			Status: "ok",
-			Data:   newResponseCollection(result),
+			Data:   newResponseCollection(result, canPublish),
 		})
 	}
 }

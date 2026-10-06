@@ -32,7 +32,7 @@ func handleCollectionsGet(collectionSvc *collection.Service) http.HandlerFunc {
 
 		writeJSONSuccess(w, http.StatusOK, collectionsGetResponse{
 			Status: "ok",
-			Data:   newResponseCollection(result),
+			Data:   newResponseCollection(result, canPublishFromContext(r.Context())),
 		})
 	}
 }

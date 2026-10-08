@@ -40,9 +40,14 @@ CREATE TABLE collections (
     description TEXT NOT NULL DEFAULT '',
     public BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (user_id, name)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Same as UNIQUE (user_id, name) in the table, which is only a shortcut that
+-- creates a unique index implicitly. The shortcut accepts plain columns only,
+-- not functions like lower(), so the index is written out here instead.
+CREATE UNIQUE INDEX collections_user_id_lower_name_key
+ON collections (user_id, lower(name));
 
 CREATE TRIGGER update_collections_updated_at
 BEFORE UPDATE ON collections

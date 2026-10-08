@@ -32,16 +32,34 @@ func Test_ValidateName(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			name:       "Internal whitespace is collapsed",
+			input:      "Reading   list",
+			wantResult: "Reading list",
+			wantErr:    false,
+		},
+		{
+			name:       "Non-breaking spaces are collapsed",
+			input:      "Reading\u00a0\u00a0list",
+			wantResult: "Reading list",
+			wantErr:    false,
+		},
+		{
+			name:       "Name is normalized to NFC",
+			input:      "Cafe\u0301",
+			wantResult: "Caf\u00e9",
+			wantErr:    false,
+		},
+		{
 			name:       "Name is too short",
 			input:      "a",
 			wantErr:    true,
-			wantErrMsg: "name must be between 2 and 255 characters",
+			wantErrMsg: "name must be between 2 and 128 characters",
 		},
 		{
 			name:       "Name is too long",
-			input:      strings.Repeat("a", 256),
+			input:      strings.Repeat("a", 129),
 			wantErr:    true,
-			wantErrMsg: "name must be between 2 and 255 characters",
+			wantErrMsg: "name must be between 2 and 128 characters",
 		},
 		{
 			name:       "Name with null byte is rejected",
@@ -111,9 +129,9 @@ func Test_ValidateDescription(t *testing.T) {
 		},
 		{
 			name:       "Description is too long",
-			input:      strings.Repeat("a", 513),
+			input:      strings.Repeat("a", 1025),
 			wantErr:    true,
-			wantErrMsg: "description must be less than 512 characters",
+			wantErrMsg: "description must be at most 1024 characters",
 		},
 		{
 			name:       "Description with null byte is rejected",
@@ -129,8 +147,8 @@ func Test_ValidateDescription(t *testing.T) {
 		},
 		{
 			name:       "Multi-byte characters are counted as characters not bytes",
-			input:      strings.Repeat("ą", 257),
-			wantResult: strings.Repeat("ą", 257),
+			input:      strings.Repeat("ą", 513),
+			wantResult: strings.Repeat("ą", 513),
 			wantErr:    false,
 		},
 	}

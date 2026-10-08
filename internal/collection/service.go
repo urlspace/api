@@ -9,11 +9,11 @@ import (
 
 var (
 	// Name validation errors.
-	ErrValidationNameLength            = errors.New("name must be between 2 and 255 characters")
+	ErrValidationNameLength            = errors.New("name must be between 2 and 128 characters")
 	ErrValidationNameInvalidCharacters = errors.New("name must not contain control characters")
 
 	// Description validation errors.
-	ErrValidationDescriptionLength            = errors.New("description must be less than 512 characters")
+	ErrValidationDescriptionLength            = errors.New("description must be at most 1024 characters")
 	ErrValidationDescriptionInvalidCharacters = errors.New("description must not contain control characters")
 
 	ErrNotFound           = errors.New("not found")

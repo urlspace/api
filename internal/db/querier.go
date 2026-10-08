@@ -32,7 +32,7 @@ type Querier interface {
 	DeleteUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetCollection(ctx context.Context, arg GetCollectionParams) (Collection, error)
 	GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, error)
-	GetPublicCollection(ctx context.Context, id uuid.UUID) ([]GetPublicCollectionRow, error)
+	GetPublicCollection(ctx context.Context, arg GetPublicCollectionParams) ([]GetPublicCollectionRow, error)
 	GetPublicUser(ctx context.Context, username string) ([]GetPublicUserRow, error)
 	GetSessionByHash(ctx context.Context, sessionHash string) (GetSessionByHashRow, error)
 	GetTag(ctx context.Context, arg GetTagParams) (Tag, error)

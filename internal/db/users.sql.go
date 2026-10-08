@@ -151,6 +151,7 @@ const getPublicUser = `-- name: GetPublicUser :many
 SELECT u.display_name,
     c.id AS collection_id,
     c.name AS collection_name,
+    c.slug AS collection_slug,
     c.description AS collection_description,
     c.created_at AS collection_created_at,
     c.updated_at AS collection_updated_at
@@ -165,6 +166,7 @@ type GetPublicUserRow struct {
 	DisplayName           string
 	CollectionID          *uuid.UUID
 	CollectionName        *string
+	CollectionSlug        *string
 	CollectionDescription *string
 	CollectionCreatedAt   *time.Time
 	CollectionUpdatedAt   *time.Time
@@ -183,6 +185,7 @@ func (q *Queries) GetPublicUser(ctx context.Context, username string) ([]GetPubl
 			&i.DisplayName,
 			&i.CollectionID,
 			&i.CollectionName,
+			&i.CollectionSlug,
 			&i.CollectionDescription,
 			&i.CollectionCreatedAt,
 			&i.CollectionUpdatedAt,

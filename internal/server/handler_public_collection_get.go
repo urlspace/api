@@ -23,7 +23,9 @@ type responsePublicLink struct {
 }
 
 type responsePublicCollection struct {
+	ID          uuid.UUID            `json:"id"`
 	Name        string               `json:"name"`
+	Slug        string               `json:"slug"`
 	Description string               `json:"description"`
 	CreatedAt   time.Time            `json:"createdAt"`
 	UpdatedAt   time.Time            `json:"updatedAt"`
@@ -40,13 +42,7 @@ func handlePublicCollectionGet(collectionSvc *collection.Service) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 
-		id, err := uuid.Parse(r.PathValue("id"))
-		if err != nil {
-			handleNotFound(w, r)
-			return
-		}
-
-		result, err := collectionSvc.GetPublic(r.Context(), id)
+		result, err := collectionSvc.GetPublic(r.Context(), r.PathValue("username"), r.PathValue("slug"))
 		if errors.Is(err, collection.ErrNotFound) {
 			handleNotFound(w, r)
 			return
@@ -70,7 +66,9 @@ func handlePublicCollectionGet(collectionSvc *collection.Service) http.HandlerFu
 		writeJSONSuccess(w, http.StatusOK, publicCollectionGetResponse{
 			Status: "ok",
 			Data: responsePublicCollection{
+				ID:          result.ID,
 				Name:        result.Name,
+				Slug:        result.Slug,
 				Description: result.Description,
 				CreatedAt:   result.CreatedAt,
 				UpdatedAt:   result.UpdatedAt,

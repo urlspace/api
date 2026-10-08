@@ -10,6 +10,7 @@ import (
 
 type collectionUpdateBody struct {
 	Name        string `json:"name"`
+	Slug        string `json:"slug"`
 	Description string `json:"description"`
 	Public      bool   `json:"public"`
 }
@@ -59,6 +60,7 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 			ID:          idUuid,
 			UserID:      userID,
 			Name:        body.Name,
+			Slug:        body.Slug,
 			Description: body.Description,
 			Public:      public,
 		})

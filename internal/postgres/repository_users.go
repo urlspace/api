@@ -73,6 +73,7 @@ func (r *UserRepository) GetPublic(ctx context.Context, username string) (user.P
 		result.Collections = append(result.Collections, user.PublicCollection{
 			ID:          *row.CollectionID,
 			Name:        *row.CollectionName,
+			Slug:        *row.CollectionSlug,
 			Description: *row.CollectionDescription,
 			CreatedAt:   *row.CollectionCreatedAt,
 			UpdatedAt:   *row.CollectionUpdatedAt,

@@ -10,6 +10,7 @@ type Collection struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Name        string
+	Slug        string
 	Description string
 	Public      bool
 	CreatedAt   time.Time
@@ -22,7 +23,9 @@ type CollectionWithLinkCount struct {
 }
 
 type PublicCollection struct {
+	ID          uuid.UUID
 	Name        string
+	Slug        string
 	Description string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

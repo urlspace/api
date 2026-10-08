@@ -41,6 +41,7 @@ type responseLink struct {
 type responseCollection struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
+	Slug        string    `json:"slug"`
 	Description string    `json:"description"`
 	Public      bool      `json:"public"`
 	CreatedAt   time.Time `json:"createdAt"`
@@ -74,6 +75,7 @@ func newResponseCollection(c collection.Collection, canPublish bool) responseCol
 	return responseCollection{
 		ID:          c.ID,
 		Name:        c.Name,
+		Slug:        c.Slug,
 		Description: c.Description,
 		Public:      c.Public && canPublish,
 		CreatedAt:   c.CreatedAt,

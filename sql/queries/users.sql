@@ -2,6 +2,7 @@
 SELECT u.display_name,
     c.id AS collection_id,
     c.name AS collection_name,
+    c.slug AS collection_slug,
     c.description AS collection_description,
     c.created_at AS collection_created_at,
     c.updated_at AS collection_updated_at

@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"regexp"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -42,6 +43,28 @@ func ValidateName(n string) (string, error) {
 	}
 
 	return n, nil
+}
+
+const (
+	collectionSlugLengthMin = 2
+	collectionSlugLengthMax = 128
+)
+
+var slugPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+
+func ValidateSlug(s string) (string, error) {
+	s = strings.ToLower(strings.TrimSpace(s))
+
+	// Slugs are ASCII-only, so byte length equals character length.
+	if len(s) < collectionSlugLengthMin || len(s) > collectionSlugLengthMax {
+		return s, ErrValidationSlugLength
+	}
+
+	if !slugPattern.MatchString(s) {
+		return s, ErrValidationSlugInvalidCharacters
+	}
+
+	return s, nil
 }
 
 const (

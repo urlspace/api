@@ -12,6 +12,7 @@ import (
 type responsePublicUserCollection struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
+	Slug        string    `json:"slug"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
@@ -44,6 +45,7 @@ func handlePublicUserGet(userSvc *user.Service) http.HandlerFunc {
 			collections[i] = responsePublicUserCollection{
 				ID:          collection.ID,
 				Name:        collection.Name,
+				Slug:        collection.Slug,
 				Description: collection.Description,
 				CreatedAt:   collection.CreatedAt,
 				UpdatedAt:   collection.UpdatedAt,

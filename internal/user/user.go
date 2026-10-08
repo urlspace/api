@@ -14,6 +14,7 @@ type PublicUser struct {
 type PublicCollection struct {
 	ID          uuid.UUID
 	Name        string
+	Slug        string
 	Description string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

@@ -18,6 +18,7 @@ type Collection struct {
 	Public      bool
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Slug        string
 }
 
 type Link struct {

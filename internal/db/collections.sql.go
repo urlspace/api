@@ -14,18 +14,18 @@ import (
 
 const clonePublicCollection = `-- name: ClonePublicCollection :one
 WITH source AS (
-    SELECT c.id, c.user_id, c.name, c.description, c.public, c.created_at, c.updated_at
+    SELECT c.id, c.user_id, c.name, c.description, c.public, c.created_at, c.updated_at, c.slug
     FROM collections c
     JOIN users u ON u.id = c.user_id
     WHERE c.id = $1
         AND c.public = TRUE
         AND (u.is_pro = TRUE OR u.is_admin = TRUE)
 ), cloned AS (
-    INSERT INTO collections (user_id, name, description, public)
-    SELECT $2, name, description, FALSE
+    INSERT INTO collections (user_id, name, slug, description, public)
+    SELECT $2, name, slug, description, FALSE
     FROM source
     WHERE user_id <> $2
-    RETURNING id, user_id, name, description, public, created_at, updated_at
+    RETURNING id, user_id, name, description, public, created_at, updated_at, slug
 ), cloned_links AS (
     INSERT INTO links (
         user_id, collection_id, title, description, url,
@@ -37,10 +37,10 @@ WITH source AS (
     JOIN links l ON l.collection_id = s.id AND l.user_id = s.user_id
     CROSS JOIN cloned c
 )
-SELECT id, user_id, name, description, public, created_at, updated_at, TRUE AS cloned
+SELECT id, user_id, name, slug, description, public, created_at, updated_at, TRUE AS cloned
 FROM cloned
 UNION ALL
-SELECT id, user_id, name, description, public, created_at, updated_at, FALSE AS cloned
+SELECT id, user_id, name, slug, description, public, created_at, updated_at, FALSE AS cloned
 FROM source
 WHERE user_id = $2
 `
@@ -54,6 +54,7 @@ type ClonePublicCollectionRow struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Name        string
+	Slug        string
 	Description string
 	Public      bool
 	CreatedAt   time.Time
@@ -68,6 +69,7 @@ func (q *Queries) ClonePublicCollection(ctx context.Context, arg ClonePublicColl
 		&i.ID,
 		&i.UserID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.Public,
 		&i.CreatedAt,
@@ -78,14 +80,15 @@ func (q *Queries) ClonePublicCollection(ctx context.Context, arg ClonePublicColl
 }
 
 const createCollection = `-- name: CreateCollection :one
-INSERT INTO collections (user_id, name, description, public)
-VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, name, description, public, created_at, updated_at
+INSERT INTO collections (user_id, name, slug, description, public)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, user_id, name, description, public, created_at, updated_at, slug
 `
 
 type CreateCollectionParams struct {
 	UserID      uuid.UUID
 	Name        string
+	Slug        string
 	Description string
 	Public      bool
 }
@@ -94,6 +97,7 @@ func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionPara
 	row := q.db.QueryRow(ctx, createCollection,
 		arg.UserID,
 		arg.Name,
+		arg.Slug,
 		arg.Description,
 		arg.Public,
 	)
@@ -106,6 +110,7 @@ func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionPara
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Slug,
 	)
 	return i, err
 }
@@ -113,7 +118,7 @@ func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionPara
 const deleteCollection = `-- name: DeleteCollection :one
 DELETE FROM collections
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, name, description, public, created_at, updated_at
+RETURNING id, user_id, name, description, public, created_at, updated_at, slug
 `
 
 type DeleteCollectionParams struct {
@@ -132,12 +137,13 @@ func (q *Queries) DeleteCollection(ctx context.Context, arg DeleteCollectionPara
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Slug,
 	)
 	return i, err
 }
 
 const getCollection = `-- name: GetCollection :one
-SELECT id, user_id, name, description, public, created_at, updated_at FROM collections
+SELECT id, user_id, name, description, public, created_at, updated_at, slug FROM collections
 WHERE id = $1 AND user_id = $2
 LIMIT 1
 `
@@ -158,12 +164,13 @@ func (q *Queries) GetCollection(ctx context.Context, arg GetCollectionParams) (C
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Slug,
 	)
 	return i, err
 }
 
 const getPublicCollection = `-- name: GetPublicCollection :many
-SELECT c.name, c.description, c.created_at, c.updated_at,
+SELECT c.id, c.name, c.slug, c.description, c.created_at, c.updated_at,
     u.display_name, u.username,
     l.id AS link_id,
     l.title AS link_title,
@@ -173,14 +180,22 @@ SELECT c.name, c.description, c.created_at, c.updated_at,
 FROM collections c
 JOIN users u ON u.id = c.user_id
 LEFT JOIN links l ON l.collection_id = c.id AND l.user_id = c.user_id
-WHERE c.id = $1
+WHERE u.username = $1
+    AND c.slug = $2
     AND c.public = TRUE
     AND (u.is_pro = TRUE OR u.is_admin = TRUE)
 ORDER BY l.created_at DESC, l.id DESC
 `
 
+type GetPublicCollectionParams struct {
+	Username string
+	Slug     string
+}
+
 type GetPublicCollectionRow struct {
+	ID              uuid.UUID
 	Name            string
+	Slug            string
 	Description     string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -193,8 +208,8 @@ type GetPublicCollectionRow struct {
 	LinkCreatedAt   *time.Time
 }
 
-func (q *Queries) GetPublicCollection(ctx context.Context, id uuid.UUID) ([]GetPublicCollectionRow, error) {
-	rows, err := q.db.Query(ctx, getPublicCollection, id)
+func (q *Queries) GetPublicCollection(ctx context.Context, arg GetPublicCollectionParams) ([]GetPublicCollectionRow, error) {
+	rows, err := q.db.Query(ctx, getPublicCollection, arg.Username, arg.Slug)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +218,9 @@ func (q *Queries) GetPublicCollection(ctx context.Context, id uuid.UUID) ([]GetP
 	for rows.Next() {
 		var i GetPublicCollectionRow
 		if err := rows.Scan(
+			&i.ID,
 			&i.Name,
+			&i.Slug,
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -226,7 +243,7 @@ func (q *Queries) GetPublicCollection(ctx context.Context, id uuid.UUID) ([]GetP
 }
 
 const listCollections = `-- name: ListCollections :many
-SELECT c.id, c.user_id, c.name, c.description, c.public, c.created_at, c.updated_at, COUNT(l.id) AS link_count
+SELECT c.id, c.user_id, c.name, c.description, c.public, c.created_at, c.updated_at, c.slug, COUNT(l.id) AS link_count
 FROM collections c
     LEFT JOIN links l ON l.collection_id = c.id
 WHERE c.user_id = $1
@@ -242,6 +259,7 @@ type ListCollectionsRow struct {
 	Public      bool
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Slug        string
 	LinkCount   int64
 }
 
@@ -262,6 +280,7 @@ func (q *Queries) ListCollections(ctx context.Context, userID uuid.UUID) ([]List
 			&i.Public,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Slug,
 			&i.LinkCount,
 		); err != nil {
 			return nil, err
@@ -276,15 +295,16 @@ func (q *Queries) ListCollections(ctx context.Context, userID uuid.UUID) ([]List
 
 const updateCollection = `-- name: UpdateCollection :one
 UPDATE collections
-SET name = $3, description = $4, public = $5
+SET name = $3, slug = $4, description = $5, public = $6
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, name, description, public, created_at, updated_at
+RETURNING id, user_id, name, description, public, created_at, updated_at, slug
 `
 
 type UpdateCollectionParams struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Name        string
+	Slug        string
 	Description string
 	Public      bool
 }
@@ -294,6 +314,7 @@ func (q *Queries) UpdateCollection(ctx context.Context, arg UpdateCollectionPara
 		arg.ID,
 		arg.UserID,
 		arg.Name,
+		arg.Slug,
 		arg.Description,
 		arg.Public,
 	)
@@ -306,6 +327,7 @@ func (q *Queries) UpdateCollection(ctx context.Context, arg UpdateCollectionPara
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Slug,
 	)
 	return i, err
 }

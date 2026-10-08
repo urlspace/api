@@ -23,8 +23,10 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	// status
 	mux.HandleFunc("GET /status", handleStatus)
 
-	mux.HandleFunc("GET /public/collection/{id}", handlePublicCollectionGet(collectionSvc))
-	mux.HandleFunc("GET /public/user/{username}", handlePublicUserGet(userSvc))
+	// Usernames share the first segment after /public/ with any future public
+	// endpoint, so new names like /public/search must be reserved usernames too.
+	mux.HandleFunc("GET /public/{username}", handlePublicUserGet(userSvc))
+	mux.HandleFunc("GET /public/{username}/{slug}", handlePublicCollectionGet(collectionSvc))
 
 	// auth
 	mux.HandleFunc("POST /auth/signup", handleAuthSignup(userSvc))

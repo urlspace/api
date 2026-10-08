@@ -7,8 +7,8 @@ WITH source AS (
         AND c.public = TRUE
         AND (u.is_pro = TRUE OR u.is_admin = TRUE)
 ), cloned AS (
-    INSERT INTO collections (user_id, name, description, public)
-    SELECT sqlc.arg(user_id), name, description, FALSE
+    INSERT INTO collections (user_id, name, slug, description, public)
+    SELECT sqlc.arg(user_id), name, slug, description, FALSE
     FROM source
     WHERE user_id <> sqlc.arg(user_id)
     RETURNING *
@@ -23,16 +23,16 @@ WITH source AS (
     JOIN links l ON l.collection_id = s.id AND l.user_id = s.user_id
     CROSS JOIN cloned c
 )
-SELECT id, user_id, name, description, public, created_at, updated_at, TRUE AS cloned
+SELECT id, user_id, name, slug, description, public, created_at, updated_at, TRUE AS cloned
 FROM cloned
 UNION ALL
-SELECT id, user_id, name, description, public, created_at, updated_at, FALSE AS cloned
+SELECT id, user_id, name, slug, description, public, created_at, updated_at, FALSE AS cloned
 FROM source
 WHERE user_id = sqlc.arg(user_id);
 
 -- name: CreateCollection :one
-INSERT INTO collections (user_id, name, description, public)
-VALUES ($1, $2, $3, $4)
+INSERT INTO collections (user_id, name, slug, description, public)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: GetCollection :one
@@ -50,7 +50,7 @@ ORDER BY c.name;
 
 -- name: UpdateCollection :one
 UPDATE collections
-SET name = $3, description = $4, public = $5
+SET name = $3, slug = $4, description = $5, public = $6
 WHERE id = $1 AND user_id = $2
 RETURNING *;
 
@@ -60,7 +60,7 @@ WHERE id = $1 AND user_id = $2
 RETURNING *;
 
 -- name: GetPublicCollection :many
-SELECT c.name, c.description, c.created_at, c.updated_at,
+SELECT c.id, c.name, c.slug, c.description, c.created_at, c.updated_at,
     u.display_name, u.username,
     l.id AS link_id,
     l.title AS link_title,
@@ -70,7 +70,8 @@ SELECT c.name, c.description, c.created_at, c.updated_at,
 FROM collections c
 JOIN users u ON u.id = c.user_id
 LEFT JOIN links l ON l.collection_id = c.id AND l.user_id = c.user_id
-WHERE c.id = $1
+WHERE u.username = sqlc.arg(username)
+    AND c.slug = sqlc.arg(slug)
     AND c.public = TRUE
     AND (u.is_pro = TRUE OR u.is_admin = TRUE)
 ORDER BY l.created_at DESC, l.id DESC;

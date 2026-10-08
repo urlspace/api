@@ -23,8 +23,8 @@ func NewCollectionRepository(queries db.Querier) collection.Repository {
 // statement, using one snapshot and an implicit transaction for atomicity.
 // The query returns the new collection with cloned=true on success, or the
 // source with cloned=false for an owned collection, without inserting anything.
-// An unavailable source returns no row; a duplicate destination name fails the
-// statement. These outcomes map to ErrCloneOwnCollection, ErrNotFound and
+// An unavailable source returns no row; a duplicate destination name or slug
+// fails the statement. These outcomes map to ErrCloneOwnCollection, ErrNotFound and
 // ErrConflict respectively.
 func (r *CollectionRepository) ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (collection.Collection, error) {
 	row, err := r.queries.ClonePublicCollection(ctx, db.ClonePublicCollectionParams{
@@ -43,6 +43,7 @@ func (r *CollectionRepository) ClonePublic(ctx context.Context, sourceID uuid.UU
 		ID:          row.ID,
 		UserID:      row.UserID,
 		Name:        row.Name,
+		Slug:        row.Slug,
 		Description: row.Description,
 		Public:      row.Public,
 		CreatedAt:   row.CreatedAt,
@@ -56,6 +57,9 @@ func translateCollectionError(err error) error {
 	}
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if pgErr.ConstraintName == "collections_user_id_slug_key" {
+			return collection.ErrSlugConflict
+		}
 		return collection.ErrConflict
 	}
 	return err
@@ -66,6 +70,7 @@ func toCollection(c db.Collection) collection.Collection {
 		ID:          c.ID,
 		UserID:      c.UserID,
 		Name:        c.Name,
+		Slug:        c.Slug,
 		Description: c.Description,
 		Public:      c.Public,
 		CreatedAt:   c.CreatedAt,
@@ -86,6 +91,7 @@ func (r *CollectionRepository) List(ctx context.Context, userID uuid.UUID) ([]co
 				ID:          row.ID,
 				UserID:      row.UserID,
 				Name:        row.Name,
+				Slug:        row.Slug,
 				Description: row.Description,
 				Public:      row.Public,
 				CreatedAt:   row.CreatedAt,
@@ -108,8 +114,11 @@ func (r *CollectionRepository) Get(ctx context.Context, id uuid.UUID, userID uui
 	return toCollection(row), nil
 }
 
-func (r *CollectionRepository) GetPublic(ctx context.Context, id uuid.UUID) (collection.PublicCollection, error) {
-	rows, err := r.queries.GetPublicCollection(ctx, id)
+func (r *CollectionRepository) GetPublic(ctx context.Context, username string, slug string) (collection.PublicCollection, error) {
+	rows, err := r.queries.GetPublicCollection(ctx, db.GetPublicCollectionParams{
+		Username: username,
+		Slug:     slug,
+	})
 	if err != nil {
 		return collection.PublicCollection{}, translateCollectionError(err)
 	}
@@ -119,7 +128,9 @@ func (r *CollectionRepository) GetPublic(ctx context.Context, id uuid.UUID) (col
 
 	first := rows[0]
 	result := collection.PublicCollection{
+		ID:          first.ID,
 		Name:        first.Name,
+		Slug:        first.Slug,
 		Description: first.Description,
 		CreatedAt:   first.CreatedAt,
 		UpdatedAt:   first.UpdatedAt,
@@ -148,6 +159,7 @@ func (r *CollectionRepository) Create(ctx context.Context, params collection.Cre
 	row, err := r.queries.CreateCollection(ctx, db.CreateCollectionParams{
 		UserID:      params.UserID,
 		Name:        params.Name,
+		Slug:        params.Slug,
 		Description: params.Description,
 		Public:      params.Public,
 	})
@@ -162,6 +174,7 @@ func (r *CollectionRepository) Update(ctx context.Context, params collection.Upd
 		ID:          params.ID,
 		UserID:      params.UserID,
 		Name:        params.Name,
+		Slug:        params.Slug,
 		Description: params.Description,
 		Public:      params.Public,
 	})

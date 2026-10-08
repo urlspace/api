@@ -22,6 +22,8 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	// validation errors
 	if errors.Is(err, ErrValidationNameLength) ||
 		errors.Is(err, ErrValidationNameInvalidCharacters) ||
+		errors.Is(err, ErrValidationSlugLength) ||
+		errors.Is(err, ErrValidationSlugInvalidCharacters) ||
 		errors.Is(err, ErrValidationDescriptionLength) ||
 		errors.Is(err, ErrValidationDescriptionInvalidCharacters) {
 		return http.StatusBadRequest, err.Error()
@@ -33,6 +35,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 
 	if errors.Is(err, ErrNotFound) {
 		return http.StatusNotFound, "not found"
+	}
+	if errors.Is(err, ErrSlugConflict) {
+		return http.StatusConflict, err.Error()
 	}
 	if errors.Is(err, ErrConflict) {
 		return http.StatusConflict, "conflict"

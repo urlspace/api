@@ -443,6 +443,36 @@ func Test_validateUsername(t *testing.T) {
 			wantErrMsg: "username is reserved",
 		},
 		{
+			name:       "Site page docs is reserved",
+			input:      "docs",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page pricing is reserved",
+			input:      "pricing",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page privacy-policy is reserved",
+			input:      "privacy-policy",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page tos is reserved",
+			input:      "tos",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page auth is reserved",
+			input:      "auth",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
 			name:       "Unicode lookalike characters are rejected",
 			input:      "аdmin",
 			wantErr:    true,

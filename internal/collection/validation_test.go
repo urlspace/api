@@ -173,3 +173,82 @@ func Test_ValidateDescription(t *testing.T) {
 		})
 	}
 }
+
+func Test_ValidateSlug(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantResult string
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:       "Valid slug",
+			input:      "reading-list",
+			wantResult: "reading-list",
+			wantErr:    false,
+		},
+		{
+			name:       "Slug is trimmed and lowercased",
+			input:      "  Reading-List  ",
+			wantResult: "reading-list",
+			wantErr:    false,
+		},
+		{
+			name:       "Slug is too short",
+			input:      "a",
+			wantErr:    true,
+			wantErrMsg: "slug must be between 2 and 128 characters",
+		},
+		{
+			name:       "Slug is too long",
+			input:      strings.Repeat("a", 129),
+			wantErr:    true,
+			wantErrMsg: "slug must be between 2 and 128 characters",
+		},
+		{
+			name:       "Slug with space is rejected",
+			input:      "reading list",
+			wantErr:    true,
+			wantErrMsg: "slug must contain only lowercase letters, digits and single hyphens",
+		},
+		{
+			name:       "Slug with double hyphen is rejected",
+			input:      "reading--list",
+			wantErr:    true,
+			wantErrMsg: "slug must contain only lowercase letters, digits and single hyphens",
+		},
+		{
+			name:       "Slug with leading hyphen is rejected",
+			input:      "-reading",
+			wantErr:    true,
+			wantErrMsg: "slug must contain only lowercase letters, digits and single hyphens",
+		},
+		{
+			name:       "Slug with accented letter is rejected",
+			input:      "café",
+			wantErr:    true,
+			wantErrMsg: "slug must contain only lowercase letters, digits and single hyphens",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult, gotErr := ValidateSlug(tt.input)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("ValidateSlug() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("ValidateSlug() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("ValidateSlug() succeeded unexpectedly")
+			}
+			if gotResult != tt.wantResult {
+				t.Errorf("ValidateSlug() result = %v, want %v", gotResult, tt.wantResult)
+			}
+		})
+	}
+}

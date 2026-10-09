@@ -10,7 +10,7 @@ import (
 	"github.com/urlspace/api/internal/user"
 )
 
-func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, uowSvc *uow.Service) *http.Server {
+func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, uowSvc *uow.Service) *http.Server {
 	// routes
 	mux := http.NewServeMux()
 
@@ -91,7 +91,7 @@ func New(port string, appURL string, userSvc *user.Service, tagSvc *tag.Service,
 	// apply middlewares
 	stack := middlewareStack(
 		loggingMiddleware,
-		commonHeadersMiddleware(appURL),
+		commonHeadersMiddleware(siteURL, dashboardURL),
 		recoveryMiddleware,
 		maxBodySizeMiddleware,
 	)

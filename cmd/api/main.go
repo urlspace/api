@@ -53,7 +53,7 @@ func run(ctx context.Context) error {
 	resendClient := resend.NewClient(cfg.ResendAPIKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
 
-	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, cfg.AppURL, cfg.AdminEmail)
+	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, cfg.SiteURL, cfg.AdminEmail)
 	tagSvc := tag.NewService(tagRepo)
 	collectionSvc := collection.NewService(collectionRepo)
 	uowSvc := uow.NewService(uow.Repositories{
@@ -62,7 +62,7 @@ func run(ctx context.Context) error {
 		Collections: collectionRepo,
 	}, unitOfWork)
 
-	srv := server.New(cfg.Port, cfg.AppURL, userSvc, tagSvc, collectionSvc, uowSvc)
+	srv := server.New(cfg.Port, cfg.SiteURL, cfg.DashboardURL, userSvc, tagSvc, collectionSvc, uowSvc)
 
 	chServer := make(chan error, 1)
 

@@ -29,7 +29,8 @@ type Config struct {
 	Port         string
 	DatabaseURL  string
 	ResendAPIKey string
-	AppURL       string
+	SiteURL      string
+	DashboardURL string
 	AdminEmail   string
 }
 
@@ -38,7 +39,8 @@ func LoadConfig() (*Config, error) {
 		Port:         os.Getenv("PORT"),
 		DatabaseURL:  os.Getenv("DATABASE_URL"),
 		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
-		AppURL:       strings.TrimSuffix(os.Getenv("APP_URL"), "/"),
+		SiteURL:      strings.TrimSuffix(os.Getenv("SITE_URL"), "/"),
+		DashboardURL: strings.TrimSuffix(os.Getenv("DASHBOARD_URL"), "/"),
 		AdminEmail:   os.Getenv("ADMIN_EMAIL"),
 	}
 
@@ -53,8 +55,11 @@ func LoadConfig() (*Config, error) {
 	if cfg.ResendAPIKey == "" {
 		missing = append(missing, "RESEND_API_KEY")
 	}
-	if cfg.AppURL == "" {
-		missing = append(missing, "APP_URL")
+	if cfg.SiteURL == "" {
+		missing = append(missing, "SITE_URL")
+	}
+	if cfg.DashboardURL == "" {
+		missing = append(missing, "DASHBOARD_URL")
 	}
 	if cfg.AdminEmail == "" {
 		missing = append(missing, "ADMIN_EMAIL")

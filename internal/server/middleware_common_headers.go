@@ -11,10 +11,11 @@ import "net/http"
 //   - No CSRF Origin-check middleware. SameSite=Lax on the session cookie
 //     blocks cross-site cookie-bearing POST/PUT/DELETE at the browser level,
 //     and all JSON endpoints are non-simple under CORS so they require a
-//     preflight that the Origin check below only approves for appURL. An
+//     preflight that the Origin check below only approves for the site
+//     (siteURL) and the signed-in app (dashboardURL). An
 //     Origin-check middleware was prototyped and rejected because it broke
 //     the Bruno-based REST workflow (which can't set a custom Origin).
-func commonHeadersMiddleware(appURL string) middleware {
+func commonHeadersMiddleware(siteURL string, dashboardURL string) middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Security headers
@@ -25,7 +26,7 @@ func commonHeadersMiddleware(appURL string) middleware {
 
 			// CORS
 			origin := r.Header.Get("Origin")
-			if origin == appURL {
+			if origin == siteURL || origin == dashboardURL {
 				// browser needs these on the preflight and actual response
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Access-Control-Allow-Credentials", "true")

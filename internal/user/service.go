@@ -323,17 +323,17 @@ type Service struct {
 	SessionRepo SessionRepository
 	TokenRepo   TokenRepository
 	EmailSender emails.EmailSender
-	AppURL      string
+	SiteURL     string
 	AdminEmail  string
 }
 
-func NewService(userRepo Repository, sessionRepo SessionRepository, tokenRepo TokenRepository, emailSender emails.EmailSender, appURL string, adminEmail string) *Service {
+func NewService(userRepo Repository, sessionRepo SessionRepository, tokenRepo TokenRepository, emailSender emails.EmailSender, siteURL string, adminEmail string) *Service {
 	return &Service{
 		UserRepo:    userRepo,
 		SessionRepo: sessionRepo,
 		TokenRepo:   tokenRepo,
 		EmailSender: emailSender,
-		AppURL:      appURL,
+		SiteURL:     siteURL,
 		AdminEmail:  adminEmail,
 	}
 }
@@ -390,7 +390,7 @@ func (s *Service) Signup(ctx context.Context, username, email, password string) 
 	emailVerifyData := emails.AuthSignupParams{
 		Username: username,
 		Email:    email,
-		Url:      s.AppURL + "/auth/signup/" + token,
+		Url:      s.SiteURL + "/auth/signup/" + token,
 	}
 	bodyHtml, err := emails.RenderTemplateHtml(emails.AuthSignupTemplateHtml, emailVerifyData)
 	if err != nil {
@@ -612,7 +612,7 @@ func (s *Service) ResendVerification(ctx context.Context, email string) error {
 	}
 
 	templateParams := emails.AuthResendVerificationParams{
-		Url: s.AppURL + "/auth/signup/" + token,
+		Url: s.SiteURL + "/auth/signup/" + token,
 	}
 	bodyHtml, err := emails.RenderTemplateHtml(emails.AuthResendVerificationTemplateHtml, templateParams)
 	if err != nil {
@@ -694,7 +694,7 @@ func (s *Service) ResetPasswordRequest(ctx context.Context, email string) error 
 	}
 
 	templateParams := emails.AuthResetPasswordRequestParams{
-		Url: s.AppURL + "/auth/reset-password/" + token,
+		Url: s.SiteURL + "/auth/reset-password/" + token,
 	}
 	bodyHtml, err := emails.RenderTemplateHtml(emails.AuthResetPasswordRequestTemplateHtml, templateParams)
 	if err != nil {

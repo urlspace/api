@@ -252,3 +252,136 @@ func Test_ValidateSlug(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateUsername(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantResult string
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:       "Username is valid",
+			input:      "username",
+			wantResult: "username",
+			wantErr:    false,
+		},
+		{
+			name:       "Username is normalized to lowercase and trimmed",
+			input:      "  UserName  ",
+			wantResult: "username",
+			wantErr:    false,
+		},
+		{
+			name:       "Missing username",
+			input:      "",
+			wantErr:    true,
+			wantErrMsg: "username is required",
+		},
+		{
+			name:       "Username too short",
+			input:      "ab",
+			wantErr:    true,
+			wantErrMsg: "username must be min 3 characters",
+		},
+		{
+			name:       "Username too long",
+			input:      "thisusernameiswaytoolongtobevalid",
+			wantErr:    true,
+			wantErrMsg: "username must be max 32 characters",
+		},
+		{
+			name:       "Username contains invalid character",
+			input:      "invalid_%_user",
+			wantErr:    true,
+			wantErrMsg: "username can only contain lowercase characters, numbers, hyphens, and underscores",
+		},
+		{
+			name:       "Username starts with hyphen",
+			input:      "-invalid_user",
+			wantErr:    true,
+			wantErrMsg: "username cannot start with hyphen or underscore",
+		},
+		{
+			name:       "Username ends with hyphen",
+			input:      "invalid_user-",
+			wantErr:    true,
+			wantErrMsg: "username cannot end with hyphen or underscore",
+		},
+		{
+			name:       "Username starts with underscore",
+			input:      "_invalid_user",
+			wantErr:    true,
+			wantErrMsg: "username cannot start with hyphen or underscore",
+		},
+		{
+			name:       "Username ends with underscore",
+			input:      "invalid_user_",
+			wantErr:    true,
+			wantErrMsg: "username cannot end with hyphen or underscore",
+		},
+		{
+			name:       "Username is reserved",
+			input:      "admin",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page docs is reserved",
+			input:      "docs",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page pricing is reserved",
+			input:      "pricing",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page privacy-policy is reserved",
+			input:      "privacy-policy",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page tos is reserved",
+			input:      "tos",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Site page auth is reserved",
+			input:      "auth",
+			wantErr:    true,
+			wantErrMsg: "username is reserved",
+		},
+		{
+			name:       "Unicode lookalike characters are rejected",
+			input:      "аdmin",
+			wantErr:    true,
+			wantErrMsg: "username can only contain lowercase characters, numbers, hyphens, and underscores",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult, gotErr := validateUsername(tt.input)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("Username() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("Username() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("Username() succeeded unexpectedly")
+			}
+			if tt.wantResult != "" && gotResult != tt.wantResult {
+				t.Errorf("Username() result = %v, want %v", gotResult, tt.wantResult)
+			}
+		})
+	}
+}

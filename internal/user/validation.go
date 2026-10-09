@@ -453,6 +453,9 @@ const (
 	userUsernameLengthMax = 32
 )
 
+// validateUsername, reservedUsernames and the username errors are duplicated
+// on purpose in the user and collection packages, so neither domain depends on
+// the other. Keep both copies identical when changing either one.
 func validateUsername(u string) (string, error) {
 	u = strings.ToLower(strings.TrimSpace(u))
 

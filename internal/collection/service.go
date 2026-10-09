@@ -3,7 +3,6 @@ package collection
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"uuid"
 )
@@ -12,6 +11,16 @@ var (
 	// Name validation errors.
 	ErrValidationNameLength            = errors.New("name must be between 2 and 128 characters")
 	ErrValidationNameInvalidCharacters = errors.New("name must not contain control characters")
+
+	// Username validation errors, copied from the user package (see
+	// validateUsername).
+	ErrValidationUsernameRequired   = errors.New("username is required")
+	ErrValidationUsernameTooShort   = errors.New("username must be min 3 characters")
+	ErrValidationUsernameTooLong    = errors.New("username must be max 32 characters")
+	ErrValidationUsernameCharacters = errors.New("username can only contain lowercase characters, numbers, hyphens, and underscores")
+	ErrValidationUsernamePrefix     = errors.New("username cannot start with hyphen or underscore")
+	ErrValidationUsernameSuffix     = errors.New("username cannot end with hyphen or underscore")
+	ErrValidationUsernameReserved   = errors.New("username is reserved")
 
 	// Slug validation errors.
 	ErrValidationSlugLength            = errors.New("slug must be between 2 and 128 characters")
@@ -70,8 +79,18 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Coll
 	return s.repo.Get(ctx, id, userID)
 }
 
+// Malformed usernames and slugs can't match any collection, so they are
+// reported as not found without querying the database.
 func (s *Service) GetPublic(ctx context.Context, username string, slug string) (PublicCollection, error) {
-	return s.repo.GetPublic(ctx, strings.ToLower(username), strings.ToLower(slug))
+	username, err := validateUsername(username)
+	if err != nil {
+		return PublicCollection{}, ErrNotFound
+	}
+	slug, err = ValidateSlug(slug)
+	if err != nil {
+		return PublicCollection{}, ErrNotFound
+	}
+	return s.repo.GetPublic(ctx, username, slug)
 }
 
 func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (Collection, error) {

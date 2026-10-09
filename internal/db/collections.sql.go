@@ -21,10 +21,29 @@ WITH source AS (
         AND c.public = TRUE
         AND (u.is_pro = TRUE OR u.is_admin = TRUE)
 ), cloned AS (
+    -- If the user already has a collection with the same name or slug, the
+    -- clone gets " (copy)" or "-copy" appended, shortened to stay within the
+    -- 128-character limits. If that is taken too, the insert fails.
     INSERT INTO collections (user_id, name, slug, description, public)
-    SELECT $2, name, slug, description, FALSE
-    FROM source
-    WHERE user_id <> $2
+    SELECT $2,
+        CASE
+            WHEN EXISTS (
+                SELECT 1 FROM collections
+                WHERE user_id = $2 AND lower(name) = lower(s.name)
+            ) THEN left(s.name, 121) || ' (copy)'
+            ELSE s.name
+        END,
+        CASE
+            WHEN EXISTS (
+                SELECT 1 FROM collections
+                WHERE user_id = $2 AND slug = s.slug
+            ) THEN rtrim(left(s.slug, 123), '-') || '-copy'
+            ELSE s.slug
+        END,
+        s.description,
+        FALSE
+    FROM source s
+    WHERE s.user_id <> $2
     RETURNING id, user_id, name, description, public, created_at, updated_at, slug
 ), cloned_links AS (
     INSERT INTO links (

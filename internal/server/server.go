@@ -79,10 +79,10 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.Handle("DELETE /tokens", sessionAuth(handleTokensDeleteAll(userSvc)))
 
 	// users (admin only)
-	mux.Handle("GET /admin/users", sessionOrTokenAuth(handleUsersList(userSvc)))
-	mux.Handle("GET /admin/users/{id}", sessionOrTokenAuth(handleUsersGet(userSvc)))
-	mux.Handle("POST /admin/users", sessionOrTokenAuth(handleUsersCreate(userSvc)))
-	mux.Handle("DELETE /admin/users/{id}", sessionOrTokenAuth(handleUsersDelete(userSvc)))
+	mux.Handle("GET /admin/users", sessionAuth(handleUsersList(userSvc)))
+	mux.Handle("GET /admin/users/{id}", sessionAuth(handleUsersGet(userSvc)))
+	mux.Handle("POST /admin/users", sessionAuth(handleUsersCreate(userSvc)))
+	mux.Handle("DELETE /admin/users/{id}", sessionAuth(handleUsersDelete(userSvc)))
 
 	// version api
 	v1 := http.NewServeMux()

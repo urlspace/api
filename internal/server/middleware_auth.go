@@ -21,16 +21,16 @@ type AuthConfig struct {
 func authMiddleware(svc *user.Service, cfg AuthConfig) middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if cfg.UseSession {
-				if session, ok := resolveSession(r); ok {
-					authenticateSession(w, r, svc, session, next)
+			if cfg.UseToken {
+				if rawToken, ok := resolveBearerToken(r); ok {
+					authenticateToken(w, r, svc, rawToken, next)
 					return
 				}
 			}
 
-			if cfg.UseToken {
-				if rawToken, ok := resolveBearerToken(r); ok {
-					authenticateToken(w, r, svc, rawToken, next)
+			if cfg.UseSession {
+				if session, ok := resolveSession(r); ok {
+					authenticateSession(w, r, svc, session, next)
 					return
 				}
 			}

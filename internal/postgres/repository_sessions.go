@@ -30,7 +30,7 @@ func toSession(s db.Session) user.Session {
 		ID:          s.ID,
 		UserID:      s.UserID,
 		SessionHash: s.SessionHash,
-		UserAgent:   s.UserAgent,
+		Description: s.Description,
 		ExpiresAt:   s.ExpiresAt,
 		CreatedAt:   s.CreatedAt,
 		UpdatedAt:   s.UpdatedAt,
@@ -41,7 +41,7 @@ func (r *SessionRepository) Create(ctx context.Context, params user.SessionCreat
 	args := db.CreateSessionParams{
 		UserID:      params.UserID,
 		SessionHash: params.SessionHash,
-		UserAgent:   params.UserAgent,
+		Description: params.Description,
 		ExpiresAt:   params.ExpiresAt,
 	}
 	row, err := r.queries.CreateSession(ctx, args)
@@ -61,7 +61,7 @@ func (r *SessionRepository) GetByHash(ctx context.Context, sessionHash string) (
 			ID:          row.ID,
 			UserID:      row.UserID,
 			SessionHash: row.SessionHash,
-			UserAgent:   row.UserAgent,
+			Description: row.Description,
 			ExpiresAt:   row.ExpiresAt,
 			CreatedAt:   row.CreatedAt,
 			UpdatedAt:   row.UpdatedAt,

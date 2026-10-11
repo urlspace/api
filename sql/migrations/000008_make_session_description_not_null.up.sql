@@ -1,0 +1,2 @@
+ALTER TABLE sessions
+ALTER COLUMN description SET NOT NULL;

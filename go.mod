@@ -4,6 +4,7 @@ go 1.27.0
 
 require (
 	github.com/jackc/pgx/v5 v5.10.0
+	github.com/mileusna/useragent v1.3.5
 	github.com/resend/resend-go/v3 v3.16.0
 	go.opentelemetry.io/contrib/bridges/otelslog v0.20.0
 	go.opentelemetry.io/otel v1.45.0

@@ -13,15 +13,15 @@ import (
 )
 
 const createSession = `-- name: CreateSession :one
-INSERT INTO sessions (user_id, session_hash, user_agent, expires_at)
+INSERT INTO sessions (user_id, session_hash, description, expires_at)
 VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, session_hash, user_agent, expires_at, created_at, updated_at
+RETURNING id, user_id, session_hash, description, expires_at, created_at, updated_at
 `
 
 type CreateSessionParams struct {
 	UserID      uuid.UUID
 	SessionHash string
-	UserAgent   *string
+	Description string
 	ExpiresAt   time.Time
 }
 
@@ -29,7 +29,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 	row := q.db.QueryRow(ctx, createSession,
 		arg.UserID,
 		arg.SessionHash,
-		arg.UserAgent,
+		arg.Description,
 		arg.ExpiresAt,
 	)
 	var i Session
@@ -37,7 +37,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 		&i.ID,
 		&i.UserID,
 		&i.SessionHash,
-		&i.UserAgent,
+		&i.Description,
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -81,7 +81,7 @@ func (q *Queries) DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) 
 }
 
 const getSessionByHash = `-- name: GetSessionByHash :one
-SELECT s.id, s.user_id, s.session_hash, s.user_agent, s.expires_at, s.created_at, s.updated_at, u.is_pro, u.is_admin, u.is_blocked
+SELECT s.id, s.user_id, s.session_hash, s.description, s.expires_at, s.created_at, s.updated_at, u.is_pro, u.is_admin, u.is_blocked
 FROM sessions s
 JOIN users u ON u.id = s.user_id
 WHERE s.session_hash = $1
@@ -92,7 +92,7 @@ type GetSessionByHashRow struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	SessionHash string
-	UserAgent   *string
+	Description string
 	ExpiresAt   time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -108,7 +108,7 @@ func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (Get
 		&i.ID,
 		&i.UserID,
 		&i.SessionHash,
-		&i.UserAgent,
+		&i.Description,
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -120,7 +120,7 @@ func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (Get
 }
 
 const listSessionsByUserID = `-- name: ListSessionsByUserID :many
-SELECT id, user_id, session_hash, user_agent, expires_at, created_at, updated_at FROM sessions
+SELECT id, user_id, session_hash, description, expires_at, created_at, updated_at FROM sessions
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -138,7 +138,7 @@ func (q *Queries) ListSessionsByUserID(ctx context.Context, userID uuid.UUID) ([
 			&i.ID,
 			&i.UserID,
 			&i.SessionHash,
-			&i.UserAgent,
+			&i.Description,
 			&i.ExpiresAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -157,7 +157,7 @@ const updateSessionExpiresAt = `-- name: UpdateSessionExpiresAt :one
 UPDATE sessions
 SET expires_at = $2
 WHERE id = $1
-RETURNING id, user_id, session_hash, user_agent, expires_at, created_at, updated_at
+RETURNING id, user_id, session_hash, description, expires_at, created_at, updated_at
 `
 
 type UpdateSessionExpiresAtParams struct {
@@ -172,7 +172,7 @@ func (q *Queries) UpdateSessionExpiresAt(ctx context.Context, arg UpdateSessionE
 		&i.ID,
 		&i.UserID,
 		&i.SessionHash,
-		&i.UserAgent,
+		&i.Description,
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

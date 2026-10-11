@@ -3,7 +3,9 @@ package server
 import (
 	"encoding/json/v2"
 	"net/http"
+	"strconv"
 
+	"github.com/mileusna/useragent"
 	"github.com/urlspace/api/internal/user"
 )
 
@@ -32,12 +34,8 @@ func handleAuthSignin(svc *user.Service) http.HandlerFunc {
 		if len(ua) > maxUserAgentBytes {
 			ua = ua[:maxUserAgentBytes]
 		}
-		var userAgent *string
-		if ua != "" {
-			userAgent = &ua
-		}
-
-		result, err := svc.Signin(r.Context(), body.Email, body.Password, userAgent)
+		description := sessionDescription(ua)
+		result, err := svc.Signin(r.Context(), body.Email, body.Password, description)
 		if err != nil {
 			statusCode, errorMessage := user.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)
@@ -50,5 +48,25 @@ func handleAuthSignin(svc *user.Service) http.HandlerFunc {
 			Status: "ok",
 			Data:   "ok",
 		})
+	}
+}
+
+func sessionDescription(ua string) string {
+	parsed := useragent.Parse(ua)
+
+	browser := parsed.Name
+	if browser != "" && parsed.VersionNo.Major > 0 {
+		browser += " " + strconv.Itoa(parsed.VersionNo.Major)
+	}
+
+	switch {
+	case browser != "" && parsed.OS != "":
+		return browser + " on " + parsed.OS
+	case browser != "":
+		return browser
+	case parsed.OS != "":
+		return parsed.OS
+	default:
+		return "Unknown device"
 	}
 }

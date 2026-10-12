@@ -98,6 +98,18 @@ func (q *Queries) ClonePublicCollection(ctx context.Context, arg ClonePublicColl
 	return i, err
 }
 
+const countCollections = `-- name: CountCollections :one
+SELECT count(*) FROM collections
+WHERE user_id = $1
+`
+
+func (q *Queries) CountCollections(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countCollections, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createCollection = `-- name: CreateCollection :one
 INSERT INTO collections (user_id, name, slug, description, public)
 VALUES ($1, $2, $3, $4, $5)
@@ -158,6 +170,39 @@ func (q *Queries) DeleteCollection(ctx context.Context, arg DeleteCollectionPara
 		&i.UpdatedAt,
 		&i.Slug,
 	)
+	return i, err
+}
+
+const getCloneCounts = `-- name: GetCloneCounts :one
+SELECT
+    (SELECT count(*) FROM collections WHERE collections.user_id = $1) AS collections_count,
+    (SELECT count(*) FROM links WHERE links.user_id = $1) AS links_count,
+    (
+        SELECT count(*)
+        FROM collections c
+        JOIN users u ON u.id = c.user_id
+        JOIN links l ON l.collection_id = c.id AND l.user_id = c.user_id
+        WHERE c.id = $2
+            AND c.public = TRUE
+            AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+    ) AS source_links_count
+`
+
+type GetCloneCountsParams struct {
+	UserID   uuid.UUID
+	SourceID uuid.UUID
+}
+
+type GetCloneCountsRow struct {
+	CollectionsCount int64
+	LinksCount       int64
+	SourceLinksCount int64
+}
+
+func (q *Queries) GetCloneCounts(ctx context.Context, arg GetCloneCountsParams) (GetCloneCountsRow, error) {
+	row := q.db.QueryRow(ctx, getCloneCounts, arg.UserID, arg.SourceID)
+	var i GetCloneCountsRow
+	err := row.Scan(&i.CollectionsCount, &i.LinksCount, &i.SourceLinksCount)
 	return i, err
 }
 

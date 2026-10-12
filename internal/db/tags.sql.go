@@ -12,6 +12,18 @@ import (
 	"uuid"
 )
 
+const countTags = `-- name: CountTags :one
+SELECT count(*) FROM tags
+WHERE user_id = $1
+`
+
+func (q *Queries) CountTags(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countTags, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createLinkTag = `-- name: CreateLinkTag :exec
 INSERT INTO link_tags (link_id, tag_id)
 VALUES ($1, $2)

@@ -13,7 +13,9 @@ import (
 type Querier interface {
 	ClonePublicCollection(ctx context.Context, arg ClonePublicCollectionParams) (ClonePublicCollectionRow, error)
 	ConfirmEmailChange(ctx context.Context, id uuid.UUID) (User, error)
+	CountCollections(ctx context.Context, userID uuid.UUID) (int64, error)
 	CountLinks(ctx context.Context, arg CountLinksParams) (int64, error)
+	CountTags(ctx context.Context, userID uuid.UUID) (int64, error)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error)
 	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
 	CreateLinkTag(ctx context.Context, arg CreateLinkTagParams) error
@@ -30,6 +32,7 @@ type Querier interface {
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) (User, error)
+	GetCloneCounts(ctx context.Context, arg GetCloneCountsParams) (GetCloneCountsRow, error)
 	GetCollection(ctx context.Context, arg GetCollectionParams) (Collection, error)
 	GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, error)
 	GetPublicCollection(ctx context.Context, arg GetPublicCollectionParams) ([]GetPublicCollectionRow, error)

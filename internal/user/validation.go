@@ -44,21 +44,8 @@ func validateEmail(e string) (string, error) {
 		return e, ErrValidationEmailFormat
 	}
 
-	// Strip plus-addressing (subaddressing) from the local part to prevent
-	// users from creating multiple accounts with the same mailbox.
-	// e.g. "user+tag@gmail.com" becomes "user@gmail.com".
-	local := strings.SplitN(parts[0], "+", 2)
-	e = local[0] + "@" + parts[1]
-
-	// An email like "+tag@gmail.com" is valid per RFC 5322, but after stripping
-	// the plus-addressing above the local part becomes empty, producing "@gmail.com".
-	// Reject this to avoid storing an invalid email address.
-	if len(local[0]) == 0 {
-		return e, ErrValidationEmailFormat
-	}
-
 	// RFC 5321 §4.5.3.1 limits the local part (before @) to 64 characters.
-	if len(local[0]) > 64 {
+	if len(parts[0]) > 64 {
 		return e, ErrValidationEmailFormat
 	}
 

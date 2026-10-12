@@ -26,9 +26,9 @@ func Test_validateEmail(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:       "Plus-addressing tag is stripped",
-			input:      "user+tag@gmail.com",
-			wantResult: "user@gmail.com",
+			name:       "Plus-addressing tag is kept",
+			input:      "User+Tag@gmail.com",
+			wantResult: "user+tag@gmail.com",
 			wantErr:    false,
 		},
 		{
@@ -40,12 +40,6 @@ func Test_validateEmail(t *testing.T) {
 		{
 			name:       "Email is invalid",
 			input:      "invalidemail.com",
-			wantErr:    true,
-			wantErrMsg: "email format is invalid",
-		},
-		{
-			name:       "Email with empty local part after plus-stripping is rejected",
-			input:      "+tag@gmail.com",
 			wantErr:    true,
 			wantErrMsg: "email format is invalid",
 		},

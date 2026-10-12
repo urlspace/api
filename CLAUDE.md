@@ -10,8 +10,6 @@ Go HTTP API server (`github.com/urlspace/api`) using Go 1.27.0, the standard lib
 
 **Prefer standard library**: Always use Go's standard library over third-party dependencies unless explicitly stated otherwise.
 
-**Learning project - no command execution**: NEVER execute commands (using Bash tool) on behalf of the user. Always provide instructions and let the user type commands themselves. Only provide guidance, code suggestions, and explanations.
-
 ## Development Commands
 
 ```bash

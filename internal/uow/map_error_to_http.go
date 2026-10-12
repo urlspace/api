@@ -43,6 +43,10 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		return http.StatusBadRequest, err.Error()
 	}
 
+	if errors.Is(err, link.ErrLimitReached) || errors.Is(err, tag.ErrLimitReached) {
+		return http.StatusForbidden, err.Error()
+	}
+
 	if errors.Is(err, link.ErrNotFound) || errors.Is(err, tag.ErrNotFound) || errors.Is(err, collection.ErrNotFound) {
 		return http.StatusNotFound, "not found"
 	}

@@ -374,6 +374,26 @@ func (q *Queries) GetUserByPasswordResetTokenHash(ctx context.Context, passwordR
 	return i, err
 }
 
+const getUserStats = `-- name: GetUserStats :one
+SELECT
+    (SELECT count(*) FROM links WHERE links.user_id = $1) AS links_count,
+    (SELECT count(*) FROM collections WHERE collections.user_id = $1) AS collections_count,
+    (SELECT count(*) FROM tags WHERE tags.user_id = $1) AS tags_count
+`
+
+type GetUserStatsRow struct {
+	LinksCount       int64
+	CollectionsCount int64
+	TagsCount        int64
+}
+
+func (q *Queries) GetUserStats(ctx context.Context, userID uuid.UUID) (GetUserStatsRow, error) {
+	row := q.db.QueryRow(ctx, getUserStats, userID)
+	var i GetUserStatsRow
+	err := row.Scan(&i.LinksCount, &i.CollectionsCount, &i.TagsCount)
+	return i, err
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at, is_blocked FROM users
 ORDER BY created_at

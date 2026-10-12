@@ -14,6 +14,10 @@ const EmailChangeCodeExpiryDuration = 15 * time.Minute
 const SessionExpiryDuration = 30 * 24 * time.Hour
 const SessionRenewalThreshold = 15 * 24 * time.Hour
 
+const FreeLinksLimit = 1000
+const FreeCollectionsLimit = 100
+const FreeTagsLimit = 100
+
 type contextKey string
 
 const UserIDContextKey contextKey = "userID"

@@ -20,6 +20,12 @@ WHERE
     $1
 LIMIT 1;
 
+-- name: GetUserStats :one
+SELECT
+    (SELECT count(*) FROM links WHERE links.user_id = $1) AS links_count,
+    (SELECT count(*) FROM collections WHERE collections.user_id = $1) AS collections_count,
+    (SELECT count(*) FROM tags WHERE tags.user_id = $1) AS tags_count;
+
 -- name: GetUserByEmailVerificationTokenHash :one
 SELECT * FROM users
 WHERE

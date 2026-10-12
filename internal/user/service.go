@@ -59,6 +59,7 @@ type Repository interface {
 	GetPublic(ctx context.Context, username string) (PublicUser, error)
 	List(ctx context.Context) ([]User, error)
 	GetById(ctx context.Context, id uuid.UUID) (User, error)
+	GetStats(ctx context.Context, id uuid.UUID) (Stats, error)
 	GetByEmail(ctx context.Context, email string) (User, error)
 	GetByEmailVerificationTokenHash(ctx context.Context, hash string) (User, error)
 	GetByPasswordResetTokenHash(ctx context.Context, hash string) (User, error)
@@ -836,6 +837,20 @@ func (s *Service) GetPublic(ctx context.Context, username string) (PublicUser, e
 // GetById retrieves a user by ID.
 func (s *Service) GetById(ctx context.Context, id uuid.UUID) (User, error) {
 	return s.UserRepo.GetById(ctx, id)
+}
+
+func (s *Service) GetStats(ctx context.Context, u User) (Stats, error) {
+	stats, err := s.UserRepo.GetStats(ctx, u.ID)
+	if err != nil {
+		return Stats{}, err
+	}
+	if u.IsPro || u.IsAdmin {
+		return stats, nil
+	}
+	stats.LinksLimit = new(config.FreeLinksLimit)
+	stats.CollectionsLimit = new(config.FreeCollectionsLimit)
+	stats.TagsLimit = new(config.FreeTagsLimit)
+	return stats, nil
 }
 
 // List returns all users.

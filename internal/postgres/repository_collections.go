@@ -78,6 +78,29 @@ func toCollection(c db.Collection) collection.Collection {
 	}
 }
 
+func (r *CollectionRepository) Count(ctx context.Context, userID uuid.UUID) (int, error) {
+	count, err := r.queries.CountCollections(ctx, userID)
+	if err != nil {
+		return 0, translateCollectionError(err)
+	}
+	return int(count), nil
+}
+
+func (r *CollectionRepository) GetCloneCounts(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (collection.CloneCounts, error) {
+	row, err := r.queries.GetCloneCounts(ctx, db.GetCloneCountsParams{
+		SourceID: sourceID,
+		UserID:   userID,
+	})
+	if err != nil {
+		return collection.CloneCounts{}, translateCollectionError(err)
+	}
+	return collection.CloneCounts{
+		Collections: int(row.CollectionsCount),
+		Links:       int(row.LinksCount),
+		SourceLinks: int(row.SourceLinksCount),
+	}, nil
+}
+
 func (r *CollectionRepository) List(ctx context.Context, userID uuid.UUID) ([]collection.CollectionWithLinkCount, error) {
 	rows, err := r.queries.ListCollections(ctx, userID)
 	if err != nil {

@@ -14,12 +14,14 @@ var (
 	ErrValidationNameHyphens    = errors.New("tag name must not start, end with, or contain consecutive hyphens")
 	ErrValidationTooManyTags    = errors.New("a link can have at most 10 tags")
 
-	ErrNotFound = errors.New("not found")
-	ErrConflict = errors.New("conflict")
+	ErrNotFound     = errors.New("not found")
+	ErrConflict     = errors.New("conflict")
+	ErrLimitReached = errors.New("tag limit reached")
 )
 
 type Repository interface {
 	List(ctx context.Context, userID uuid.UUID) ([]TagWithLinkCount, error)
+	Count(ctx context.Context, userID uuid.UUID) (int, error)
 	Update(ctx context.Context, params UpdateParams) (Tag, error)
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Tag, error)
 	UpsertByName(ctx context.Context, userID uuid.UUID, name string) (Tag, error)

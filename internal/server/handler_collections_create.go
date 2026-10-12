@@ -40,7 +40,7 @@ func handleCollectionsCreate(collectionSvc *collection.Service) http.HandlerFunc
 			Slug:        body.Slug,
 			Description: body.Description,
 			Public:      body.Public,
-		})
+		}, isUnlimitedFromContext(r.Context()))
 		if err != nil {
 			statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)

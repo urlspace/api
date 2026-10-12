@@ -17,6 +17,10 @@ VALUES ($1, $2)
 ON CONFLICT (user_id, name) DO NOTHING
 RETURNING *;
 
+-- name: CountTags :one
+SELECT count(*) FROM tags
+WHERE user_id = $1;
+
 -- name: GetTagByName :one
 SELECT * FROM tags
 WHERE user_id = $1 AND name = $2

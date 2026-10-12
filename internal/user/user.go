@@ -41,6 +41,15 @@ type User struct {
 	UpdatedAt                       time.Time
 }
 
+type Stats struct {
+	LinksCount       int
+	LinksLimit       *int
+	CollectionsCount int
+	CollectionsLimit *int
+	TagsCount        int
+	TagsLimit        *int
+}
+
 type Session struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID

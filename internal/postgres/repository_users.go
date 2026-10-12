@@ -103,6 +103,18 @@ func (r *UserRepository) GetById(ctx context.Context, id uuid.UUID) (user.User, 
 	return toUser(row), nil
 }
 
+func (r *UserRepository) GetStats(ctx context.Context, id uuid.UUID) (user.Stats, error) {
+	row, err := r.queries.GetUserStats(ctx, id)
+	if err != nil {
+		return user.Stats{}, translateUserError(err)
+	}
+	return user.Stats{
+		LinksCount:       int(row.LinksCount),
+		CollectionsCount: int(row.CollectionsCount),
+		TagsCount:        int(row.TagsCount),
+	}, nil
+}
+
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (user.User, error) {
 	row, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {

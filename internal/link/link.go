@@ -36,8 +36,9 @@ var (
 	ErrValidationURLTooLong = errors.New("url must be at most 2048 characters")
 	ErrValidationURLPrivate = errors.New("url must not point to a private or local address")
 
-	ErrNotFound = errors.New("not found")
-	ErrConflict = errors.New("conflict")
+	ErrNotFound     = errors.New("not found")
+	ErrConflict     = errors.New("conflict")
+	ErrLimitReached = errors.New("link limit reached")
 )
 
 type ListFilter struct {

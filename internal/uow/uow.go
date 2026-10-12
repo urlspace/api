@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/urlspace/api/internal/collection"
+	"github.com/urlspace/api/internal/config"
 	"github.com/urlspace/api/internal/link"
 	"github.com/urlspace/api/internal/tag"
 	"go.opentelemetry.io/otel"
@@ -107,6 +108,7 @@ type CreateLinkParams struct {
 	Tags         []string
 	Favourite    bool
 	ForLater     bool
+	Unlimited    bool
 }
 
 func (s *Service) CreateLink(ctx context.Context, params CreateLinkParams) (EnrichedLink, error) {
@@ -133,6 +135,16 @@ func (s *Service) CreateLink(ctx context.Context, params CreateLinkParams) (Enri
 	var result EnrichedLink
 
 	err = s.uow.RunInTx(ctx, func(repos Repositories) error {
+		if !params.Unlimited {
+			count, err := repos.Links.Count(ctx, link.ListFilter{UserID: params.UserID})
+			if err != nil {
+				return err
+			}
+			if count >= config.FreeLinksLimit {
+				return link.ErrLimitReached
+			}
+		}
+
 		// Validate collection ownership if provided.
 		if params.CollectionID != nil {
 			c, err := repos.Collections.Get(ctx, *params.CollectionID, params.UserID)
@@ -156,6 +168,15 @@ func (s *Service) CreateLink(ctx context.Context, params CreateLinkParams) (Enri
 		}
 		result.Link = l
 
+		checkTagLimit := !params.Unlimited && len(tagNames) > 0
+		var tagsCountBefore int
+		if checkTagLimit {
+			tagsCountBefore, err = repos.Tags.Count(ctx, params.UserID)
+			if err != nil {
+				return err
+			}
+		}
+
 		tagIDs := make([]uuid.UUID, 0, len(tagNames))
 		for _, name := range tagNames {
 			t, err := repos.Tags.UpsertByName(ctx, params.UserID, name)
@@ -163,6 +184,16 @@ func (s *Service) CreateLink(ctx context.Context, params CreateLinkParams) (Enri
 				return err
 			}
 			tagIDs = append(tagIDs, t.ID)
+		}
+
+		if checkTagLimit {
+			tagsCountAfter, err := repos.Tags.Count(ctx, params.UserID)
+			if err != nil {
+				return err
+			}
+			if tagsCountAfter > tagsCountBefore && tagsCountAfter > config.FreeTagsLimit {
+				return tag.ErrLimitReached
+			}
 		}
 
 		if err := repos.Tags.ReplaceLinkTags(ctx, l.ID, tagIDs); err != nil {
@@ -195,6 +226,7 @@ type UpdateLinkParams struct {
 	Tags         []string
 	Favourite    bool
 	ForLater     bool
+	Unlimited    bool
 }
 
 func (s *Service) UpdateLink(ctx context.Context, params UpdateLinkParams) (EnrichedLink, error) {
@@ -245,6 +277,15 @@ func (s *Service) UpdateLink(ctx context.Context, params UpdateLinkParams) (Enri
 		}
 		result.Link = l
 
+		checkTagLimit := !params.Unlimited && len(tagNames) > 0
+		var tagsCountBefore int
+		if checkTagLimit {
+			tagsCountBefore, err = repos.Tags.Count(ctx, params.UserID)
+			if err != nil {
+				return err
+			}
+		}
+
 		tagIDs := make([]uuid.UUID, 0, len(tagNames))
 		for _, name := range tagNames {
 			t, err := repos.Tags.UpsertByName(ctx, params.UserID, name)
@@ -252,6 +293,16 @@ func (s *Service) UpdateLink(ctx context.Context, params UpdateLinkParams) (Enri
 				return err
 			}
 			tagIDs = append(tagIDs, t.ID)
+		}
+
+		if checkTagLimit {
+			tagsCountAfter, err := repos.Tags.Count(ctx, params.UserID)
+			if err != nil {
+				return err
+			}
+			if tagsCountAfter > tagsCountBefore && tagsCountAfter > config.FreeTagsLimit {
+				return tag.ErrLimitReached
+			}
 		}
 
 		if err := repos.Tags.ReplaceLinkTags(ctx, l.ID, tagIDs); err != nil {

@@ -114,6 +114,26 @@ func newResponseUser(u user.User) responseUser {
 	}
 }
 
+type responseStats struct {
+	LinksCount       int  `json:"linksCount"`
+	LinksLimit       *int `json:"linksLimit"`
+	CollectionsCount int  `json:"collectionsCount"`
+	CollectionsLimit *int `json:"collectionsLimit"`
+	TagsCount        int  `json:"tagsCount"`
+	TagsLimit        *int `json:"tagsLimit"`
+}
+
+func newResponseStats(s user.Stats) responseStats {
+	return responseStats{
+		LinksCount:       s.LinksCount,
+		LinksLimit:       s.LinksLimit,
+		CollectionsCount: s.CollectionsCount,
+		CollectionsLimit: s.CollectionsLimit,
+		TagsCount:        s.TagsCount,
+		TagsLimit:        s.TagsLimit,
+	}
+}
+
 // responseUserAdmin intentionally omits the email-verification and
 // password-reset token hashes. Even though they're stored as SHA-256 hex
 // rather than usable tokens, the hash is still a secret-shaped piece of state
@@ -236,6 +256,10 @@ func isAdminFromContext(ctx context.Context) bool {
 }
 
 func canPublishFromContext(ctx context.Context) bool {
+	return isProFromContext(ctx) || isAdminFromContext(ctx)
+}
+
+func isUnlimitedFromContext(ctx context.Context) bool {
 	return isProFromContext(ctx) || isAdminFromContext(ctx)
 }
 

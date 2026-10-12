@@ -49,6 +49,24 @@ SELECT id, user_id, name, slug, description, public, created_at, updated_at, FAL
 FROM source
 WHERE user_id = sqlc.arg(user_id);
 
+-- name: CountCollections :one
+SELECT count(*) FROM collections
+WHERE user_id = $1;
+
+-- name: GetCloneCounts :one
+SELECT
+    (SELECT count(*) FROM collections WHERE collections.user_id = sqlc.arg(user_id)) AS collections_count,
+    (SELECT count(*) FROM links WHERE links.user_id = sqlc.arg(user_id)) AS links_count,
+    (
+        SELECT count(*)
+        FROM collections c
+        JOIN users u ON u.id = c.user_id
+        JOIN links l ON l.collection_id = c.id AND l.user_id = c.user_id
+        WHERE c.id = sqlc.arg(source_id)
+            AND c.public = TRUE
+            AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+    ) AS source_links_count;
+
 -- name: CreateCollection :one
 INSERT INTO collections (user_id, name, slug, description, public)
 VALUES ($1, $2, $3, $4, $5)

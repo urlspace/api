@@ -29,7 +29,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		return http.StatusBadRequest, err.Error()
 	}
 
-	if errors.Is(err, ErrCloneOwnCollection) {
+	if errors.Is(err, ErrCloneOwnCollection) ||
+		errors.Is(err, ErrLimitReached) ||
+		errors.Is(err, ErrLinkLimitReached) {
 		return http.StatusForbidden, err.Error()
 	}
 

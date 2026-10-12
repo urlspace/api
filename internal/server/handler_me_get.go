@@ -6,9 +6,14 @@ import (
 	"github.com/urlspace/api/internal/user"
 )
 
+type responseMe struct {
+	responseUser `json:",inline"`
+	Stats        responseStats `json:"stats"`
+}
+
 type meGetResponse struct {
-	Status string       `json:"status"`
-	Data   responseUser `json:"data"`
+	Status string     `json:"status"`
+	Data   responseMe `json:"data"`
 }
 
 func handleMeGet(svc *user.Service) http.HandlerFunc {
@@ -26,9 +31,19 @@ func handleMeGet(svc *user.Service) http.HandlerFunc {
 			return
 		}
 
+		stats, err := svc.GetStats(r.Context(), u)
+		if err != nil {
+			statusCode, errorMessage := user.MapErrorToHTTP(r.Context(), err)
+			writeJSONError(w, statusCode, errorMessage)
+			return
+		}
+
 		writeJSONSuccess(w, http.StatusOK, meGetResponse{
 			Status: "ok",
-			Data:   newResponseUser(u),
+			Data: responseMe{
+				responseUser: newResponseUser(u),
+				Stats:        newResponseStats(stats),
+			},
 		})
 	}
 }

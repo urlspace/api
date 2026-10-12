@@ -40,6 +40,14 @@ func toTag(t db.Tag) tag.Tag {
 	}
 }
 
+func (r *TagRepository) Count(ctx context.Context, userID uuid.UUID) (int, error) {
+	count, err := r.queries.CountTags(ctx, userID)
+	if err != nil {
+		return 0, translateTagError(err)
+	}
+	return int(count), nil
+}
+
 func (r *TagRepository) List(ctx context.Context, userID uuid.UUID) ([]tag.TagWithLinkCount, error) {
 	rows, err := r.queries.ListTags(ctx, userID)
 	if err != nil {

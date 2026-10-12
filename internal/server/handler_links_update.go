@@ -60,6 +60,7 @@ func handleLinksUpdate(uowSvc *uow.Service) http.HandlerFunc {
 			Tags:         body.Tags,
 			Favourite:    body.Favourite,
 			ForLater:     body.ForLater,
+			Unlimited:    isUnlimitedFromContext(r.Context()),
 		})
 		if err != nil {
 			statusCode, errorMessage := uow.MapErrorToHTTP(r.Context(), err)

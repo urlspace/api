@@ -17,7 +17,7 @@ func handleCollectionsClone(svc *collection.Service) http.HandlerFunc {
 			return
 		}
 
-		result, err := svc.Clone(r.Context(), sourceID, userID)
+		result, err := svc.Clone(r.Context(), sourceID, userID, isUnlimitedFromContext(r.Context()))
 		if err != nil {
 			statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)

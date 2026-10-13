@@ -82,11 +82,20 @@ func (r *TagRepository) Update(ctx context.Context, params tag.UpdateParams) (ta
 	return toTag(row), nil
 }
 
-func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (tag.Tag, error) {
-	row, err := r.queries.DeleteTag(ctx, db.DeleteTagParams{
-		ID:     id,
-		UserID: userID,
-	})
+func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID, cascade bool) (tag.Tag, error) {
+	var row db.Tag
+	var err error
+	if cascade {
+		row, err = r.queries.DeleteTagCascade(ctx, db.DeleteTagCascadeParams{
+			ID:     id,
+			UserID: userID,
+		})
+	} else {
+		row, err = r.queries.DeleteTag(ctx, db.DeleteTagParams{
+			ID:     id,
+			UserID: userID,
+		})
+	}
 	if err != nil {
 		return tag.Tag{}, translateTagError(err)
 	}

@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/urlspace/api/internal/collection"
 	"uuid"
@@ -23,7 +24,17 @@ func handleCollectionsDelete(collectionSvc *collection.Service) http.HandlerFunc
 			return
 		}
 
-		result, err := collectionSvc.Delete(r.Context(), idUuid, userID)
+		cascade := false
+		if v := r.URL.Query().Get("cascade"); v != "" {
+			b, err := strconv.ParseBool(v)
+			if err != nil {
+				writeJSONError(w, http.StatusBadRequest, "cascade must be true or false")
+				return
+			}
+			cascade = b
+		}
+
+		result, err := collectionSvc.Delete(r.Context(), idUuid, userID, cascade)
 		if err != nil {
 			statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)

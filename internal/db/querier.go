@@ -23,12 +23,14 @@ type Querier interface {
 	CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteCollection(ctx context.Context, arg DeleteCollectionParams) (Collection, error)
+	DeleteCollectionCascade(ctx context.Context, arg DeleteCollectionCascadeParams) (Collection, error)
 	DeleteLink(ctx context.Context, arg DeleteLinkParams) (Link, error)
 	DeleteLinkTags(ctx context.Context, linkID uuid.UUID) error
 	DeleteSessionByHash(ctx context.Context, sessionHash string) error
 	DeleteSessionByID(ctx context.Context, arg DeleteSessionByIDParams) error
 	DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteTag(ctx context.Context, arg DeleteTagParams) (Tag, error)
+	DeleteTagCascade(ctx context.Context, arg DeleteTagCascadeParams) (Tag, error)
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) (User, error)

@@ -37,6 +37,16 @@ DELETE FROM tags
 WHERE id = $1 AND user_id = $2
 RETURNING *;
 
+-- name: DeleteTagCascade :one
+WITH deleted_links AS (
+    DELETE FROM links
+    WHERE links.user_id = $2
+        AND links.id IN (SELECT link_tags.link_id FROM link_tags WHERE link_tags.tag_id = $1)
+)
+DELETE FROM tags
+WHERE tags.id = $1 AND tags.user_id = $2
+RETURNING *;
+
 -- name: GetTagsForLink :many
 SELECT t.*
 FROM tags t

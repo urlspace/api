@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/urlspace/api/internal/tag"
 	"uuid"
@@ -23,7 +24,17 @@ func handleTagsDelete(svc *tag.Service) http.HandlerFunc {
 			return
 		}
 
-		t, err := svc.Delete(r.Context(), tagID, userID)
+		cascade := false
+		if v := r.URL.Query().Get("cascade"); v != "" {
+			b, err := strconv.ParseBool(v)
+			if err != nil {
+				writeJSONError(w, http.StatusBadRequest, "cascade must be true or false")
+				return
+			}
+			cascade = b
+		}
+
+		t, err := svc.Delete(r.Context(), tagID, userID, cascade)
 		if err != nil {
 			statusCode, errorMessage := tag.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)

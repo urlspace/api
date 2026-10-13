@@ -207,11 +207,20 @@ func (r *CollectionRepository) Update(ctx context.Context, params collection.Upd
 	return toCollection(row), nil
 }
 
-func (r *CollectionRepository) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (collection.Collection, error) {
-	row, err := r.queries.DeleteCollection(ctx, db.DeleteCollectionParams{
-		ID:     id,
-		UserID: userID,
-	})
+func (r *CollectionRepository) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID, cascade bool) (collection.Collection, error) {
+	var row db.Collection
+	var err error
+	if cascade {
+		row, err = r.queries.DeleteCollectionCascade(ctx, db.DeleteCollectionCascadeParams{
+			ID:     id,
+			UserID: userID,
+		})
+	} else {
+		row, err = r.queries.DeleteCollection(ctx, db.DeleteCollectionParams{
+			ID:     id,
+			UserID: userID,
+		})
+	}
 	if err != nil {
 		return collection.Collection{}, translateCollectionError(err)
 	}

@@ -96,6 +96,15 @@ DELETE FROM collections
 WHERE id = $1 AND user_id = $2
 RETURNING *;
 
+-- name: DeleteCollectionCascade :one
+WITH deleted_links AS (
+    DELETE FROM links
+    WHERE links.collection_id = $1 AND links.user_id = $2
+)
+DELETE FROM collections
+WHERE collections.id = $1 AND collections.user_id = $2
+RETURNING *;
+
 -- name: GetPublicCollection :many
 SELECT c.id, c.name, c.slug, c.description, c.created_at, c.updated_at,
     u.display_name, u.username,

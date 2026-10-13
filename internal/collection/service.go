@@ -71,7 +71,7 @@ type Repository interface {
 	GetPublic(ctx context.Context, username string, slug string) (PublicCollection, error)
 	Create(ctx context.Context, params CreateParams) (Collection, error)
 	Update(ctx context.Context, params UpdateParams) (Collection, error)
-	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Collection, error)
+	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID, cascade bool) (Collection, error)
 }
 
 type Service struct {
@@ -177,6 +177,6 @@ func (s *Service) Update(ctx context.Context, params UpdateParams) (Collection, 
 	})
 }
 
-func (s *Service) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Collection, error) {
-	return s.repo.Delete(ctx, id, userID)
+func (s *Service) Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID, cascade bool) (Collection, error) {
+	return s.repo.Delete(ctx, id, userID, cascade)
 }

@@ -173,6 +173,37 @@ func (q *Queries) DeleteCollection(ctx context.Context, arg DeleteCollectionPara
 	return i, err
 }
 
+const deleteCollectionCascade = `-- name: DeleteCollectionCascade :one
+WITH deleted_links AS (
+    DELETE FROM links
+    WHERE links.collection_id = $1 AND links.user_id = $2
+)
+DELETE FROM collections
+WHERE collections.id = $1 AND collections.user_id = $2
+RETURNING id, user_id, name, description, public, created_at, updated_at, slug
+`
+
+type DeleteCollectionCascadeParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteCollectionCascade(ctx context.Context, arg DeleteCollectionCascadeParams) (Collection, error) {
+	row := q.db.QueryRow(ctx, deleteCollectionCascade, arg.ID, arg.UserID)
+	var i Collection
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Description,
+		&i.Public,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Slug,
+	)
+	return i, err
+}
+
 const getCloneCounts = `-- name: GetCloneCounts :one
 SELECT
     (SELECT count(*) FROM collections WHERE collections.user_id = $1) AS collections_count,

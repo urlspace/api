@@ -74,6 +74,35 @@ func (q *Queries) DeleteTag(ctx context.Context, arg DeleteTagParams) (Tag, erro
 	return i, err
 }
 
+const deleteTagCascade = `-- name: DeleteTagCascade :one
+WITH deleted_links AS (
+    DELETE FROM links
+    WHERE links.user_id = $2
+        AND links.id IN (SELECT link_tags.link_id FROM link_tags WHERE link_tags.tag_id = $1)
+)
+DELETE FROM tags
+WHERE tags.id = $1 AND tags.user_id = $2
+RETURNING id, user_id, name, created_at, updated_at
+`
+
+type DeleteTagCascadeParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteTagCascade(ctx context.Context, arg DeleteTagCascadeParams) (Tag, error) {
+	row := q.db.QueryRow(ctx, deleteTagCascade, arg.ID, arg.UserID)
+	var i Tag
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getTag = `-- name: GetTag :one
 SELECT id, user_id, name, created_at, updated_at FROM tags
 WHERE id = $1 AND user_id = $2

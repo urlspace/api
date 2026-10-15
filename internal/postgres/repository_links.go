@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -158,6 +160,36 @@ func (r *LinkRepository) Create(ctx context.Context, params link.CreateParams) (
 		return link.Link{}, translateLinkError(err)
 	}
 	return toLink(row), nil
+}
+
+func (r *LinkRepository) CreateMany(ctx context.Context, userID uuid.UUID, params []link.CreateManyParams) error {
+	args := db.ImportLinksParams{
+		UserID:        userID,
+		Titles:        make([]string, len(params)),
+		Descriptions:  make([]string, len(params)),
+		Urls:          make([]string, len(params)),
+		CollectionIds: make([]string, len(params)),
+		Favourites:    make([]bool, len(params)),
+		ForLaters:     make([]bool, len(params)),
+		CreatedAts:    make([]time.Time, len(params)),
+		Tags:          make([]string, len(params)),
+	}
+	for i, p := range params {
+		args.Titles[i] = p.Title
+		args.Descriptions[i] = p.Description
+		args.Urls[i] = p.URL
+		if p.CollectionID != nil {
+			args.CollectionIds[i] = p.CollectionID.String()
+		}
+		args.Favourites[i] = p.Favourite
+		args.ForLaters[i] = p.ForLater
+		args.CreatedAts[i] = p.CreatedAt
+		args.Tags[i] = strings.Join(p.Tags, ",")
+	}
+	if err := r.queries.ImportLinks(ctx, args); err != nil {
+		return translateLinkError(err)
+	}
+	return nil
 }
 
 func (r *LinkRepository) Update(ctx context.Context, params link.UpdateParams) (link.Link, error) {

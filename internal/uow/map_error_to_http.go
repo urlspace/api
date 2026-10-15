@@ -43,12 +43,30 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		return http.StatusBadRequest, err.Error()
 	}
 
-	if errors.Is(err, link.ErrLimitReached) || errors.Is(err, tag.ErrLimitReached) {
+	// collection validation errors
+	if errors.Is(err, collection.ErrValidationNameLength) ||
+		errors.Is(err, collection.ErrValidationNameInvalidCharacters) ||
+		errors.Is(err, collection.ErrValidationSlugLength) ||
+		errors.Is(err, collection.ErrValidationSlugInvalidCharacters) ||
+		errors.Is(err, collection.ErrValidationDescriptionLength) ||
+		errors.Is(err, collection.ErrValidationDescriptionInvalidCharacters) {
+		return http.StatusBadRequest, err.Error()
+	}
+
+	// import errors
+	if errors.Is(err, ErrImportEmpty) || errors.Is(err, ErrImportUnknownCollection) {
+		return http.StatusBadRequest, err.Error()
+	}
+
+	if errors.Is(err, link.ErrLimitReached) || errors.Is(err, tag.ErrLimitReached) || errors.Is(err, collection.ErrLimitReached) {
 		return http.StatusForbidden, err.Error()
 	}
 
 	if errors.Is(err, link.ErrNotFound) || errors.Is(err, tag.ErrNotFound) || errors.Is(err, collection.ErrNotFound) {
 		return http.StatusNotFound, "not found"
+	}
+	if errors.Is(err, collection.ErrSlugConflict) {
+		return http.StatusConflict, err.Error()
 	}
 	if errors.Is(err, link.ErrConflict) || errors.Is(err, tag.ErrConflict) || errors.Is(err, collection.ErrConflict) {
 		return http.StatusConflict, "conflict"

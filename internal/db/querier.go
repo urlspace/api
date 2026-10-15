@@ -52,6 +52,7 @@ type Querier interface {
 	GetUserByIdAndEmailNewCodeHash(ctx context.Context, arg GetUserByIdAndEmailNewCodeHashParams) (User, error)
 	GetUserByPasswordResetTokenHash(ctx context.Context, passwordResetTokenHash *string) (User, error)
 	GetUserStats(ctx context.Context, userID uuid.UUID) (GetUserStatsRow, error)
+	ImportLinks(ctx context.Context, arg ImportLinksParams) error
 	ListCollections(ctx context.Context, userID uuid.UUID) ([]ListCollectionsRow, error)
 	ListLinks(ctx context.Context, arg ListLinksParams) ([]ListLinksRow, error)
 	ListSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]Session, error)

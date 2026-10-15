@@ -66,6 +66,9 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.Handle("PUT /collections/{id}", sessionOrTokenAuth(handleCollectionsUpdate(collectionSvc)))
 	mux.Handle("DELETE /collections/{id}", sessionOrTokenAuth(handleCollectionsDelete(collectionSvc)))
 
+	// tools (protected)
+	mux.Handle("POST /tools/import", sessionOrTokenAuth(handleToolsImport(uowSvc)))
+
 	// sessions (session-only — session management requires an active session)
 	mux.Handle("GET /sessions", sessionAuth(handleSessionsList(userSvc)))
 	mux.Handle("DELETE /sessions/{id}", sessionAuth(handleSessionsDelete(userSvc)))

@@ -170,6 +170,70 @@ func (q *Queries) GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, e
 	return i, err
 }
 
+const importLinks = `-- name: ImportLinks :exec
+WITH input AS (
+    SELECT
+        uuidv7() AS id,
+        i.title,
+        i.description,
+        i.url,
+        NULLIF(i.collection_id, '')::uuid AS collection_id,
+        i.favourite,
+        i.for_later,
+        i.created_at,
+        i.tags
+    FROM ROWS FROM (
+        unnest($2::text []),
+        unnest($3::text []),
+        unnest($4::text []),
+        unnest($5::text []),
+        unnest($6::bool []),
+        unnest($7::bool []),
+        unnest($8::timestamptz []),
+        unnest($9::text [])
+    ) AS i (title, description, url, collection_id, favourite, for_later, created_at, tags)
+), inserted_links AS (
+    INSERT INTO links (
+        id, user_id, title, description, url, collection_id, favourite, for_later, created_at
+    )
+    SELECT input.id, $1, input.title, input.description, input.url,
+        input.collection_id, input.favourite, input.for_later, input.created_at
+    FROM input
+)
+INSERT INTO link_tags (link_id, tag_id)
+SELECT input.id, tags.id
+FROM input
+    CROSS JOIN LATERAL unnest(string_to_array(input.tags, ',')) AS tag_name
+    JOIN tags ON tags.user_id = $1 AND tags.name = tag_name
+`
+
+type ImportLinksParams struct {
+	UserID        uuid.UUID
+	Titles        []string
+	Descriptions  []string
+	Urls          []string
+	CollectionIds []string
+	Favourites    []bool
+	ForLaters     []bool
+	CreatedAts    []time.Time
+	Tags          []string
+}
+
+func (q *Queries) ImportLinks(ctx context.Context, arg ImportLinksParams) error {
+	_, err := q.db.Exec(ctx, importLinks,
+		arg.UserID,
+		arg.Titles,
+		arg.Descriptions,
+		arg.Urls,
+		arg.CollectionIds,
+		arg.Favourites,
+		arg.ForLaters,
+		arg.CreatedAts,
+		arg.Tags,
+	)
+	return err
+}
+
 const listLinks = `-- name: ListLinks :many
 SELECT l.id, l.user_id, l.title, l.description, l.url, l.collection_id, l.favourite, l.for_later, l.created_at, l.updated_at, c.name AS collection_name
 FROM links l
@@ -185,7 +249,7 @@ WHERE l.user_id = $1
   ))
   AND ($5::bool IS NULL OR l.favourite = $5)
   AND ($6::bool IS NULL OR l.for_later = $6)
-ORDER BY l.created_at DESC
+ORDER BY l.created_at DESC, l.id DESC
 LIMIT $8 OFFSET $7
 `
 

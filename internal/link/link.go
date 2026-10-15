@@ -60,6 +60,17 @@ type CreateParams struct {
 	ForLater     bool
 }
 
+type CreateManyParams struct {
+	Title        string
+	Description  string
+	URL          string
+	CollectionID *uuid.UUID
+	Tags         []string
+	Favourite    bool
+	ForLater     bool
+	CreatedAt    time.Time
+}
+
 type UpdateParams struct {
 	ID           uuid.UUID
 	UserID       uuid.UUID
@@ -76,6 +87,7 @@ type Repository interface {
 	Count(ctx context.Context, filter ListFilter) (int, error)
 	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Link, error)
 	Create(ctx context.Context, params CreateParams) (Link, error)
+	CreateMany(ctx context.Context, userID uuid.UUID, params []CreateManyParams) error
 	Update(ctx context.Context, params UpdateParams) (Link, error)
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Link, error)
 }

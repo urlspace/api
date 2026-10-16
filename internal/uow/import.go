@@ -69,10 +69,12 @@ type importLink struct {
 }
 
 func (s *Service) Import(ctx context.Context, params ImportParams) (ImportResult, error) {
+	// no links? early return
 	if len(params.Links) == 0 {
 		return ImportResult{}, ErrImportEmpty
 	}
 
+	// validate collections data and collect unique collections
 	collections := make([]importCollection, 0, len(params.Collections))
 	collectionKeys := make(map[string]struct{}, len(params.Collections))
 	for i, c := range params.Collections {
@@ -97,6 +99,7 @@ func (s *Service) Import(ctx context.Context, params ImportParams) (ImportResult
 		collections = append(collections, importCollection{key: key, name: name, slug: slug, description: description})
 	}
 
+	// validate links data and collect unique tags
 	now := time.Now()
 	links := make([]importLink, len(params.Links))
 	tagNames := []string{}
@@ -161,6 +164,7 @@ func (s *Service) Import(ctx context.Context, params ImportParams) (ImportResult
 	var result ImportResult
 
 	err := s.uow.RunInTx(ctx, func(repos Repositories) error {
+		// early return if import exceeds links limit
 		if !params.Unlimited {
 			count, err := repos.Links.Count(ctx, link.ListFilter{UserID: params.UserID})
 			if err != nil {
@@ -187,10 +191,12 @@ func (s *Service) Import(ctx context.Context, params ImportParams) (ImportResult
 			}
 		}
 
+		// early return if import exceeds collections limit
 		if !params.Unlimited && len(newCollections) > 0 && len(existingCollections)+len(newCollections) > config.FreeCollectionsLimit {
 			return collection.ErrLimitReached
 		}
 
+		// create new collections and store their IDs
 		for _, c := range newCollections {
 			created, err := repos.Collections.Create(ctx, collection.CreateParams{
 				UserID:      params.UserID,
@@ -222,11 +228,13 @@ func (s *Service) Import(ctx context.Context, params ImportParams) (ImportResult
 				return err
 			}
 
+			// early return if import exceeds tags limit
 			if !params.Unlimited && tagsCountAfter > tagsCountBefore && tagsCountAfter > config.FreeTagsLimit {
 				return tag.ErrLimitReached
 			}
 		}
 
+		// prebuild link.CreateManyParams slice to avoid multiple allocations
 		newLinks := make([]link.CreateManyParams, len(links))
 		for i, l := range links {
 			var collectionID *uuid.UUID

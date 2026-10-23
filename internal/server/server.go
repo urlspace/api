@@ -81,6 +81,10 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.Handle("DELETE /tokens/{id}", sessionAuth(handleTokensDelete(userSvc)))
 	mux.Handle("DELETE /tokens", sessionAuth(handleTokensDeleteAll(userSvc)))
 
+	// billing
+	mux.Handle("POST /billing/checkout", sessionAuth(handleBillingCheckout()))
+	mux.HandleFunc("POST /billing/webhook", handleBillingWebhook())
+
 	// users (admin only)
 	mux.Handle("GET /admin/users", sessionAuth(handleUsersList(userSvc)))
 	mux.Handle("GET /admin/users/{id}", sessionAuth(handleUsersGet(userSvc)))

@@ -2,18 +2,51 @@ package server
 
 import (
 	"net/http"
+
+	"github.com/urlspace/api/internal/billing"
+	"github.com/urlspace/api/internal/user"
 )
 
-type billingCheckoutResponse struct {
-	Status string `json:"status"`
-	Data   string `json:"data"`
+type responseBillingCheckout struct {
+	URL string `json:"url"`
 }
 
-func handleBillingCheckout() http.HandlerFunc {
+type billingCheckoutResponse struct {
+	Status string                  `json:"status"`
+	Data   responseBillingCheckout `json:"data"`
+}
+
+func handleBillingCheckout(userSvc *user.Service, billingSvc *billing.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID, ok := getUserIDFromContext(r.Context())
+		if !ok {
+			writeJSONError(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+
+		u, err := userSvc.GetById(r.Context(), userID)
+		if err != nil {
+			statusCode, errorMessage := user.MapErrorToHTTP(r.Context(), err)
+			writeJSONError(w, statusCode, errorMessage)
+			return
+		}
+
+		url, err := billingSvc.CreateCheckout(r.Context(), billing.CheckoutParams{
+			UserID: u.ID,
+			Email:  u.Email,
+			IsPro:  u.IsPro,
+		})
+		if err != nil {
+			statusCode, errorMessage := billing.MapErrorToHTTP(r.Context(), err)
+			writeJSONError(w, statusCode, errorMessage)
+			return
+		}
+
 		writeJSONSuccess(w, http.StatusOK, billingCheckoutResponse{
 			Status: "ok",
-			Data:   "hello world from checkout",
+			Data: responseBillingCheckout{
+				URL: url,
+			},
 		})
 	}
 }

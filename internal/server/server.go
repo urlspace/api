@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/urlspace/api/internal/billing"
 	"github.com/urlspace/api/internal/collection"
 	"github.com/urlspace/api/internal/tag"
 	"github.com/urlspace/api/internal/uow"
 	"github.com/urlspace/api/internal/user"
 )
 
-func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, uowSvc *uow.Service) *http.Server {
+func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, uowSvc *uow.Service, billingSvc *billing.Service) *http.Server {
 	// routes
 	mux := http.NewServeMux()
 
@@ -82,7 +83,7 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.Handle("DELETE /tokens", sessionAuth(handleTokensDeleteAll(userSvc)))
 
 	// billing
-	mux.Handle("POST /billing/checkout", sessionAuth(handleBillingCheckout()))
+	mux.Handle("POST /billing/checkout", sessionAuth(handleBillingCheckout(userSvc, billingSvc)))
 	mux.HandleFunc("POST /billing/webhook", handleBillingWebhook())
 
 	// users (admin only)

@@ -34,16 +34,22 @@ go test ./internal/user/ -run TestValidateUsername
 
 ## Environment Variables
 
-| Variable                      | Required | Description                                   |
-| ----------------------------- | -------- | --------------------------------------------- |
-| `PORT`                        | Yes      | Port the server listens on                    |
-| `DATABASE_URL`                | Yes      | PostgreSQL connection string                  |
-| `RESEND_API_KEY`              | Yes      | Resend API key for sending emails             |
-| `OTEL_SERVICE_NAME`           | No       | OpenTelemetry service name                    |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | No       | OTLP exporter endpoint URL                    |
-| `OTEL_EXPORTER_OTLP_PROTOCOL` | No       | OTLP protocol (e.g., `http/protobuf`)         |
-| `OTEL_RESOURCE_ATTRIBUTES`    | No       | Additional OTEL resource attributes           |
-| `OTEL_EXPORTER_OTLP_HEADERS`  | No       | Headers for OTLP exporter (e.g., auth tokens) |
+| Variable                         | Required | Description                                   |
+| -------------------------------- | -------- | --------------------------------------------- |
+| `ADMIN_EMAIL`                    | Yes      | Admin email address                           |
+| `DASHBOARD_URL`                  | Yes      | Dashboard origin (CORS)                       |
+| `DATABASE_URL`                   | Yes      | PostgreSQL connection string                  |
+| `OTEL_EXPORTER_OTLP_COMPRESSION` | No       | OTLP exporter compression (e.g., `gzip`)      |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`    | No       | OTLP exporter endpoint URL                    |
+| `OTEL_EXPORTER_OTLP_HEADERS`     | No       | Headers for OTLP exporter (e.g., auth tokens) |
+| `OTEL_RESOURCE_ATTRIBUTES`       | No       | Additional OTEL resource attributes           |
+| `OTEL_SERVICE_NAME`              | No       | OpenTelemetry service name                    |
+| `POLAR_ACCESS_TOKEN`             | Yes      | Polar organization access token               |
+| `POLAR_API_URL`                  | Yes      | Polar API base URL (sandbox or production)    |
+| `POLAR_PRODUCT_ID`               | Yes      | Polar product ID for the pro subscription     |
+| `PORT`                           | Yes      | Port the server listens on                    |
+| `RESEND_API_KEY`                 | Yes      | Resend API key for sending emails             |
+| `SITE_URL`                       | Yes      | Website origin (CORS, email links)            |
 
 ## Architecture
 

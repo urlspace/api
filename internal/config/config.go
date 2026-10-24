@@ -36,6 +36,10 @@ type Config struct {
 	SiteURL      string
 	DashboardURL string
 	AdminEmail   string
+
+	PolarAPIURL      string
+	PolarAccessToken string
+	PolarProductID   string
 }
 
 func LoadConfig() (*Config, error) {
@@ -46,6 +50,10 @@ func LoadConfig() (*Config, error) {
 		SiteURL:      strings.TrimSuffix(os.Getenv("SITE_URL"), "/"),
 		DashboardURL: strings.TrimSuffix(os.Getenv("DASHBOARD_URL"), "/"),
 		AdminEmail:   os.Getenv("ADMIN_EMAIL"),
+
+		PolarAPIURL:      strings.TrimSuffix(os.Getenv("POLAR_API_URL"), "/"),
+		PolarAccessToken: os.Getenv("POLAR_ACCESS_TOKEN"),
+		PolarProductID:   os.Getenv("POLAR_PRODUCT_ID"),
 	}
 
 	var missing []string
@@ -67,6 +75,15 @@ func LoadConfig() (*Config, error) {
 	}
 	if cfg.AdminEmail == "" {
 		missing = append(missing, "ADMIN_EMAIL")
+	}
+	if cfg.PolarAPIURL == "" {
+		missing = append(missing, "POLAR_API_URL")
+	}
+	if cfg.PolarAccessToken == "" {
+		missing = append(missing, "POLAR_ACCESS_TOKEN")
+	}
+	if cfg.PolarProductID == "" {
+		missing = append(missing, "POLAR_PRODUCT_ID")
 	}
 
 	if len(missing) > 0 {

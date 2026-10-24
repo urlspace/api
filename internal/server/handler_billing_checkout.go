@@ -32,9 +32,10 @@ func handleBillingCheckout(userSvc *user.Service, billingSvc *billing.Service) h
 		}
 
 		url, err := billingSvc.CreateCheckout(r.Context(), billing.CheckoutParams{
-			UserID: u.ID,
-			Email:  u.Email,
-			IsPro:  u.IsPro,
+			UserID:  u.ID,
+			Email:   u.Email,
+			IsPro:   u.IsPro,
+			IsAdmin: u.IsAdmin,
 		})
 		if err != nil {
 			statusCode, errorMessage := billing.MapErrorToHTTP(r.Context(), err)

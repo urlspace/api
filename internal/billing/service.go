@@ -10,6 +10,7 @@ import (
 
 var (
 	ErrAlreadyPro = errors.New("already subscribed to pro")
+	ErrAdmin      = errors.New("admins already have pro features")
 )
 
 type Service struct {
@@ -27,12 +28,16 @@ func NewService(polarClient *polar.Client, productID string, siteURL string) *Se
 }
 
 type CheckoutParams struct {
-	UserID uuid.UUID
-	Email  string
-	IsPro  bool
+	UserID  uuid.UUID
+	Email   string
+	IsPro   bool
+	IsAdmin bool
 }
 
 func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (string, error) {
+	if params.IsAdmin {
+		return "", ErrAdmin
+	}
 	if params.IsPro {
 		return "", ErrAlreadyPro
 	}

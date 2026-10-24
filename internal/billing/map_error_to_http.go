@@ -22,6 +22,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	if errors.Is(err, ErrAlreadyPro) {
 		return http.StatusConflict, err.Error()
 	}
+	if errors.Is(err, ErrAdmin) {
+		return http.StatusConflict, err.Error()
+	}
 
 	slog.ErrorContext(ctx, "service error", slog.String("error", err.Error()), slog.String("domain", "billing"))
 	span := trace.SpanFromContext(ctx)

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/urlspace/api/internal/polar"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -24,6 +25,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	}
 	if errors.Is(err, ErrAdmin) {
 		return http.StatusConflict, err.Error()
+	}
+	if errors.Is(err, polar.ErrWebhookVerification) {
+		return http.StatusForbidden, "invalid webhook signature"
 	}
 
 	slog.ErrorContext(ctx, "service error", slog.String("error", err.Error()), slog.String("domain", "billing"))

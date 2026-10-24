@@ -63,6 +63,17 @@ docker-down:
 docker-down-v:
 	docker compose down -v
 
+tunnel-start:
+	mkdir -p tmp
+	nohup cloudflared tunnel --config .cloudflared/config.yml run urlspace-dev > tmp/cloudflared.log 2>&1 &
+	echo "tunnel started, logs: tmp/cloudflared.log"
+
+tunnel-stop:
+	pkill -f "cloudflared tunnel --config .cloudflared/config.yml run urlspace-dev" && echo "tunnel stopped" || echo "tunnel not running"
+
+tunnel-info:
+	cloudflared tunnel info urlspace-dev
+
 
 # Default target (what runs when you just type 'make')
-.PHONY: build run dev clean test test-coverage install-tools gen docker-up docker-down docker-down-v migration-create migration-up migration-down
+.PHONY: build run dev clean test test-coverage install-tools gen docker-up docker-down docker-down-v tunnel-start tunnel-stop tunnel-info migration-create migration-up migration-down

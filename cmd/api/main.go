@@ -57,7 +57,7 @@ func run(ctx context.Context) error {
 	// external clients
 	resendClient := resend.NewClient(cfg.ResendAPIKey)
 	emailSender := emails.NewResendEmailSender(resendClient)
-	polarClient := polar.NewClient(cfg.PolarAPIURL, cfg.PolarAccessToken)
+	polarClient := polar.NewClient(cfg.PolarAPIURL, cfg.PolarAccessToken, cfg.PolarWebhookSecret)
 
 	// services
 	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, cfg.SiteURL, cfg.AdminEmail)

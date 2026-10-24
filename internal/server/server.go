@@ -84,7 +84,7 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 
 	// billing
 	mux.Handle("POST /billing/checkout", sessionAuth(handleBillingCheckout(userSvc, billingSvc)))
-	mux.HandleFunc("POST /billing/webhook", handleBillingWebhook())
+	mux.HandleFunc("POST /billing/webhook", handleBillingWebhook(billingSvc))
 
 	// users (admin only)
 	mux.Handle("GET /admin/users", sessionAuth(handleUsersList(userSvc)))

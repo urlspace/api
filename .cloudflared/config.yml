@@ -1,0 +1,8 @@
+tunnel: urlspace-dev
+credentials-file: /Users/pawelgrzybek/.cloudflared/a13bc74c-f555-41c0-9199-85e264d05d30.json
+
+ingress:
+  - hostname: dev-api.url.space
+    path: ^/v1/billing/webhook$
+    service: http://localhost:3000
+  - service: http_status:404

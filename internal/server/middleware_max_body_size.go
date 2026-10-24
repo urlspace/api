@@ -8,6 +8,9 @@ func maxBodySizeMiddleware(next http.Handler) http.Handler {
 		if r.Method == http.MethodPost && r.URL.Path == "/v1/tools/import" {
 			limit = 32 << 20 // 32 MB
 		}
+		if r.Method == http.MethodPost && r.URL.Path == "/v1/billing/webhook" {
+			limit = 1 << 20 // 1 MB
+		}
 		r.Body = http.MaxBytesReader(w, r.Body, limit)
 		next.ServeHTTP(w, r)
 	})

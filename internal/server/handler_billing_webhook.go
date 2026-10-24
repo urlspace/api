@@ -1,7 +1,10 @@
 package server
 
 import (
+	"io"
 	"net/http"
+
+	"github.com/urlspace/api/internal/billing"
 )
 
 type billingWebhookResponse struct {
@@ -9,11 +12,23 @@ type billingWebhookResponse struct {
 	Data   string `json:"data"`
 }
 
-func handleBillingWebhook() http.HandlerFunc {
+func handleBillingWebhook(billingSvc *billing.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		writeJSONSuccess(w, http.StatusOK, billingWebhookResponse{
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			handleClientError(r.Context(), w, err, "invalid request body")
+			return
+		}
+
+		if err := billingSvc.HandleWebhook(r.Context(), r.Header, body); err != nil {
+			statusCode, errorMessage := billing.MapErrorToHTTP(r.Context(), err)
+			writeJSONError(w, statusCode, errorMessage)
+			return
+		}
+
+		writeJSONSuccess(w, http.StatusAccepted, billingWebhookResponse{
 			Status: "ok",
-			Data:   "hello world from webhook",
+			Data:   "ok",
 		})
 	}
 }

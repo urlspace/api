@@ -3,6 +3,8 @@ package billing
 import (
 	"context"
 	"errors"
+	"log/slog"
+	"net/http"
 
 	"github.com/urlspace/api/internal/polar"
 	"uuid"
@@ -54,4 +56,15 @@ func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (st
 	}
 
 	return checkout.URL, nil
+}
+
+func (s *Service) HandleWebhook(ctx context.Context, header http.Header, body []byte) error {
+	event, err := s.polarClient.ParseWebhook(header, body)
+	if err != nil {
+		return err
+	}
+
+	slog.InfoContext(ctx, "polar webhook received", slog.String("type", event.Type), slog.String("webhook_id", header.Get("webhook-id")))
+
+	return nil
 }

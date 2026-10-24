@@ -13,16 +13,18 @@ import (
 const apiVersion = "2027-01"
 
 type Client struct {
-	httpClient  *http.Client
-	apiURL      string
-	accessToken string
+	httpClient    *http.Client
+	apiURL        string
+	accessToken   string
+	webhookSecret string
 }
 
-func NewClient(apiURL string, accessToken string) *Client {
+func NewClient(apiURL string, accessToken string, webhookSecret string) *Client {
 	return &Client{
-		httpClient:  &http.Client{Timeout: 10 * time.Second},
-		apiURL:      apiURL,
-		accessToken: accessToken,
+		httpClient:    &http.Client{Timeout: 10 * time.Second},
+		apiURL:        apiURL,
+		accessToken:   accessToken,
+		webhookSecret: webhookSecret,
 	}
 }
 

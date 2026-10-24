@@ -47,6 +47,7 @@ go test ./internal/user/ -run TestValidateUsername
 | `POLAR_ACCESS_TOKEN`             | Yes      | Polar organization access token               |
 | `POLAR_API_URL`                  | Yes      | Polar API base URL (sandbox or production)    |
 | `POLAR_PRODUCT_ID`               | Yes      | Polar product ID for the pro subscription     |
+| `POLAR_WEBHOOK_SECRET`           | Yes      | Polar webhook signing secret (`whsec_...`)    |
 | `PORT`                           | Yes      | Port the server listens on                    |
 | `RESEND_API_KEY`                 | Yes      | Resend API key for sending emails             |
 | `SITE_URL`                       | Yes      | Website origin (CORS, email links)            |

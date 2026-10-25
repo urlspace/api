@@ -49,6 +49,18 @@ type Session struct {
 	UpdatedAt   time.Time
 }
 
+type Subscription struct {
+	ID                  uuid.UUID
+	UserID              uuid.UUID
+	PolarSubscriptionID string
+	Status              string
+	CurrentPeriodEnd    time.Time
+	CancelAtPeriodEnd   bool
+	PolarModifiedAt     time.Time
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+}
+
 type Tag struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID

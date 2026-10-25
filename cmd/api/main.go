@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/resend/resend-go/v3"
-	"github.com/urlspace/api/internal/billing"
 	"github.com/urlspace/api/internal/collection"
 	"github.com/urlspace/api/internal/config"
 	"github.com/urlspace/api/internal/db"
@@ -19,6 +18,7 @@ import (
 	"github.com/urlspace/api/internal/polar"
 	"github.com/urlspace/api/internal/postgres"
 	"github.com/urlspace/api/internal/server"
+	"github.com/urlspace/api/internal/subscription"
 	"github.com/urlspace/api/internal/tag"
 	"github.com/urlspace/api/internal/telemetry"
 	"github.com/urlspace/api/internal/uow"
@@ -68,9 +68,9 @@ func run(ctx context.Context) error {
 		Tags:        tagRepo,
 		Collections: collectionRepo,
 	}, unitOfWork)
-	billingSvc := billing.NewService(polarClient, cfg.PolarProductID, cfg.SiteURL)
+	subscriptionSvc := subscription.NewService(polarClient, cfg.PolarProductID, cfg.SiteURL)
 
-	srv := server.New(cfg.Port, cfg.SiteURL, cfg.DashboardURL, userSvc, tagSvc, collectionSvc, uowSvc, billingSvc)
+	srv := server.New(cfg.Port, cfg.SiteURL, cfg.DashboardURL, userSvc, tagSvc, collectionSvc, uowSvc, subscriptionSvc)
 
 	chServer := make(chan error, 1)
 

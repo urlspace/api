@@ -1,4 +1,4 @@
-package billing
+package subscription
 
 import (
 	"context"
@@ -30,7 +30,7 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		return http.StatusForbidden, "invalid webhook signature"
 	}
 
-	slog.ErrorContext(ctx, "service error", slog.String("error", err.Error()), slog.String("domain", "billing"))
+	slog.ErrorContext(ctx, "service error", slog.String("error", err.Error()), slog.String("domain", "subscription"))
 	span := trace.SpanFromContext(ctx)
 	span.RecordError(err)
 	span.SetStatus(codes.Error, err.Error())

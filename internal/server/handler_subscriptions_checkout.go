@@ -3,20 +3,20 @@ package server
 import (
 	"net/http"
 
-	"github.com/urlspace/api/internal/billing"
+	"github.com/urlspace/api/internal/subscription"
 	"github.com/urlspace/api/internal/user"
 )
 
-type responseBillingCheckout struct {
+type responseSubscriptionsCheckout struct {
 	URL string `json:"url"`
 }
 
-type billingCheckoutResponse struct {
-	Status string                  `json:"status"`
-	Data   responseBillingCheckout `json:"data"`
+type subscriptionsCheckoutResponse struct {
+	Status string                        `json:"status"`
+	Data   responseSubscriptionsCheckout `json:"data"`
 }
 
-func handleBillingCheckout(userSvc *user.Service, billingSvc *billing.Service) http.HandlerFunc {
+func handleSubscriptionsCheckout(userSvc *user.Service, subscriptionSvc *subscription.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := getUserIDFromContext(r.Context())
 		if !ok {
@@ -31,21 +31,21 @@ func handleBillingCheckout(userSvc *user.Service, billingSvc *billing.Service) h
 			return
 		}
 
-		url, err := billingSvc.CreateCheckout(r.Context(), billing.CheckoutParams{
+		url, err := subscriptionSvc.CreateCheckout(r.Context(), subscription.CheckoutParams{
 			UserID:  u.ID,
 			Email:   u.Email,
 			IsPro:   u.IsPro,
 			IsAdmin: u.IsAdmin,
 		})
 		if err != nil {
-			statusCode, errorMessage := billing.MapErrorToHTTP(r.Context(), err)
+			statusCode, errorMessage := subscription.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)
 			return
 		}
 
-		writeJSONSuccess(w, http.StatusOK, billingCheckoutResponse{
+		writeJSONSuccess(w, http.StatusOK, subscriptionsCheckoutResponse{
 			Status: "ok",
-			Data: responseBillingCheckout{
+			Data: responseSubscriptionsCheckout{
 				URL: url,
 			},
 		})

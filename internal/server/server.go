@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/urlspace/api/internal/billing"
 	"github.com/urlspace/api/internal/collection"
+	"github.com/urlspace/api/internal/subscription"
 	"github.com/urlspace/api/internal/tag"
 	"github.com/urlspace/api/internal/uow"
 	"github.com/urlspace/api/internal/user"
 )
 
-func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, uowSvc *uow.Service, billingSvc *billing.Service) *http.Server {
+func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, uowSvc *uow.Service, subscriptionSvc *subscription.Service) *http.Server {
 	// routes
 	mux := http.NewServeMux()
 
@@ -82,9 +82,9 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.Handle("DELETE /tokens/{id}", sessionAuth(handleTokensDelete(userSvc)))
 	mux.Handle("DELETE /tokens", sessionAuth(handleTokensDeleteAll(userSvc)))
 
-	// billing
-	mux.Handle("POST /billing/checkout", sessionAuth(handleBillingCheckout(userSvc, billingSvc)))
-	mux.HandleFunc("POST /billing/webhook", handleBillingWebhook(billingSvc))
+	// subscriptions
+	mux.Handle("POST /subscriptions/checkout", sessionAuth(handleSubscriptionsCheckout(userSvc, subscriptionSvc)))
+	mux.HandleFunc("POST /subscriptions/webhook", handleSubscriptionsWebhook(subscriptionSvc))
 
 	// users (admin only)
 	mux.Handle("GET /admin/users", sessionAuth(handleUsersList(userSvc)))

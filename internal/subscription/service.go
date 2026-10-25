@@ -1,4 +1,4 @@
-package billing
+package subscription
 
 import (
 	"context"

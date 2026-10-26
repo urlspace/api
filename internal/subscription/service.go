@@ -32,13 +32,15 @@ type UpsertParams struct {
 }
 
 type Service struct {
+	repo        Repository
 	polarClient *polar.Client
 	productID   string
 	siteURL     string
 }
 
-func NewService(polarClient *polar.Client, productID string, siteURL string) *Service {
+func NewService(repo Repository, polarClient *polar.Client, productID string, siteURL string) *Service {
 	return &Service{
+		repo:        repo,
 		polarClient: polarClient,
 		productID:   productID,
 		siteURL:     siteURL,
@@ -90,6 +92,22 @@ func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (st
 	}
 
 	return checkout.URL, nil
+}
+
+func (s *Service) List(ctx context.Context, userID uuid.UUID) ([]Subscription, error) {
+	return s.repo.ListByUserID(ctx, userID)
+}
+
+func (s *Service) CreatePortal(ctx context.Context, userID uuid.UUID) (string, error) {
+	session, err := s.polarClient.CreateCustomerSession(ctx, polar.CustomerSessionCreateParams{
+		ExternalCustomerID: userID.String(),
+		ReturnURL:          s.siteURL + "/settings",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return session.CustomerPortalURL, nil
 }
 
 // ParseWebhook verifies and decodes a Polar webhook. It returns one of:

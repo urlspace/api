@@ -71,9 +71,9 @@ func run(ctx context.Context) error {
 		Users:         userRepo,
 		Subscriptions: subscriptionRepo,
 	}, unitOfWork)
-	subscriptionSvc := subscription.NewService(polarClient, cfg.PolarProductID, cfg.SiteURL)
+	subscriptionSvc := subscription.NewService(subscriptionRepo, polarClient, cfg.PolarProductID, cfg.SiteURL)
 
-	srv := server.New(cfg.Port, cfg.SiteURL, cfg.DashboardURL, userSvc, tagSvc, collectionSvc, uowSvc, subscriptionSvc)
+	srv := server.New(cfg.Port, cfg.SiteURL, cfg.DashboardURL, userSvc, tagSvc, collectionSvc, subscriptionSvc, uowSvc)
 
 	chServer := make(chan error, 1)
 

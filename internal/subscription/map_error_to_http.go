@@ -26,6 +26,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	if errors.Is(err, ErrAdmin) {
 		return http.StatusConflict, err.Error()
 	}
+	if errors.Is(err, polar.ErrCustomerNotFound) {
+		return http.StatusNotFound, "subscription not found"
+	}
 	if errors.Is(err, polar.ErrWebhookVerification) {
 		return http.StatusForbidden, "invalid webhook signature"
 	}

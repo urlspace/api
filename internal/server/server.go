@@ -11,7 +11,7 @@ import (
 	"github.com/urlspace/api/internal/user"
 )
 
-func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, uowSvc *uow.Service, subscriptionSvc *subscription.Service) *http.Server {
+func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, subscriptionSvc *subscription.Service, uowSvc *uow.Service) *http.Server {
 	// routes
 	mux := http.NewServeMux()
 
@@ -83,7 +83,9 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.Handle("DELETE /tokens", sessionAuth(handleTokensDeleteAll(userSvc)))
 
 	// subscriptions
+	mux.Handle("GET /subscriptions", sessionAuth(handleSubscriptionsList(subscriptionSvc)))
 	mux.Handle("POST /subscriptions/checkout", sessionAuth(handleSubscriptionsCheckout(userSvc, subscriptionSvc)))
+	mux.Handle("POST /subscriptions/portal", sessionAuth(handleSubscriptionsPortal(subscriptionSvc)))
 	mux.HandleFunc("POST /subscriptions/webhook", handleSubscriptionsWebhook(subscriptionSvc, uowSvc))
 
 	// users (admin only)

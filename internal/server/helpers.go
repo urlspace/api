@@ -10,6 +10,7 @@ import (
 
 	"github.com/urlspace/api/internal/collection"
 	"github.com/urlspace/api/internal/config"
+	"github.com/urlspace/api/internal/subscription"
 	"github.com/urlspace/api/internal/uow"
 	"github.com/urlspace/api/internal/user"
 	"uuid"
@@ -186,6 +187,28 @@ func newResponseToken(t user.Token) responseToken {
 		LastUsedAt:  t.LastUsedAt,
 		CreatedAt:   t.CreatedAt,
 		UpdatedAt:   t.UpdatedAt,
+	}
+}
+
+type responseSubscription struct {
+	ID                uuid.UUID `json:"id"`
+	Status            string    `json:"status"`
+	IsActive          bool      `json:"isActive"`
+	CurrentPeriodEnd  time.Time `json:"currentPeriodEnd"`
+	CancelAtPeriodEnd bool      `json:"cancelAtPeriodEnd"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
+}
+
+func newResponseSubscription(s subscription.Subscription) responseSubscription {
+	return responseSubscription{
+		ID:                s.ID,
+		Status:            s.Status,
+		IsActive:          subscription.IsProStatus(s.Status),
+		CurrentPeriodEnd:  s.CurrentPeriodEnd,
+		CancelAtPeriodEnd: s.CancelAtPeriodEnd,
+		CreatedAt:         s.CreatedAt,
+		UpdatedAt:         s.UpdatedAt,
 	}
 }
 

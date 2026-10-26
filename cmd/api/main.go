@@ -51,6 +51,7 @@ func run(ctx context.Context) error {
 	linkRepo := postgres.NewLinkRepository(queries)
 	tagRepo := postgres.NewTagRepository(queries)
 	collectionRepo := postgres.NewCollectionRepository(queries)
+	subscriptionRepo := postgres.NewSubscriptionRepository(queries)
 
 	unitOfWork := postgres.NewUnitOfWork(pool)
 
@@ -60,13 +61,15 @@ func run(ctx context.Context) error {
 	polarClient := polar.NewClient(cfg.PolarAPIURL, cfg.PolarAccessToken, cfg.PolarWebhookSecret)
 
 	// services
-	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, cfg.SiteURL, cfg.AdminEmail)
+	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, polarClient, cfg.SiteURL, cfg.AdminEmail)
 	tagSvc := tag.NewService(tagRepo)
 	collectionSvc := collection.NewService(collectionRepo)
 	uowSvc := uow.NewService(uow.Repositories{
-		Links:       linkRepo,
-		Tags:        tagRepo,
-		Collections: collectionRepo,
+		Links:         linkRepo,
+		Tags:          tagRepo,
+		Collections:   collectionRepo,
+		Users:         userRepo,
+		Subscriptions: subscriptionRepo,
 	}, unitOfWork)
 	subscriptionSvc := subscription.NewService(polarClient, cfg.PolarProductID, cfg.SiteURL)
 

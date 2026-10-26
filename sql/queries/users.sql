@@ -99,6 +99,13 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: UpdateUserIsPro :one
+UPDATE users
+SET
+    is_pro = $2
+WHERE id = $1
+RETURNING *;
+
 -- name: UpdateUserUsername :one
 UPDATE users
 SET

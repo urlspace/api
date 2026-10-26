@@ -29,11 +29,10 @@ func NewClient(apiURL string, accessToken string, webhookSecret string) *Client 
 }
 
 type CheckoutCreateParams struct {
-	Products           []string `json:"products"`
-	ExternalCustomerID string   `json:"external_customer_id"`
-	CustomerEmail      string   `json:"customer_email"`
-	SuccessURL         string   `json:"success_url"`
-	ReturnURL          string   `json:"return_url"`
+	Products   []string `json:"products"`
+	CustomerID string   `json:"customer_id"`
+	SuccessURL string   `json:"success_url"`
+	ReturnURL  string   `json:"return_url"`
 }
 
 type Checkout struct {

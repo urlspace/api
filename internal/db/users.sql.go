@@ -610,6 +610,45 @@ func (q *Queries) UpdateUserDisplayName(ctx context.Context, arg UpdateUserDispl
 	return i, err
 }
 
+const updateUserIsPro = `-- name: UpdateUserIsPro :one
+UPDATE users
+SET
+    is_pro = $2
+WHERE id = $1
+RETURNING id, email, email_verified, email_verification_token_hash, email_verification_token_expires_at, password, password_reset_token_hash, password_reset_token_expires_at, username, display_name, is_admin, is_pro, created_at, updated_at, email_new, email_new_code_hash, email_new_code_hash_expires_at, is_blocked
+`
+
+type UpdateUserIsProParams struct {
+	ID    uuid.UUID
+	IsPro bool
+}
+
+func (q *Queries) UpdateUserIsPro(ctx context.Context, arg UpdateUserIsProParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUserIsPro, arg.ID, arg.IsPro)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.EmailVerified,
+		&i.EmailVerificationTokenHash,
+		&i.EmailVerificationTokenExpiresAt,
+		&i.Password,
+		&i.PasswordResetTokenHash,
+		&i.PasswordResetTokenExpiresAt,
+		&i.Username,
+		&i.DisplayName,
+		&i.IsAdmin,
+		&i.IsPro,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.EmailNew,
+		&i.EmailNewCodeHash,
+		&i.EmailNewCodeHashExpiresAt,
+		&i.IsBlocked,
+	)
+	return i, err
+}
+
 const updateUserPassword = `-- name: UpdateUserPassword :one
 UPDATE users
 SET password = $2

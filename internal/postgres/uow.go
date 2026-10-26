@@ -25,9 +25,11 @@ func (u *unitOfWork) RunInTx(ctx context.Context, fn func(uow.Repositories) erro
 
 	txQueries := db.New(tx)
 	repos := uow.Repositories{
-		Links:       NewLinkRepository(txQueries),
-		Tags:        NewTagRepository(txQueries),
-		Collections: NewCollectionRepository(txQueries),
+		Links:         NewLinkRepository(txQueries),
+		Tags:          NewTagRepository(txQueries),
+		Collections:   NewCollectionRepository(txQueries),
+		Users:         NewUserRepository(txQueries),
+		Subscriptions: NewSubscriptionRepository(txQueries),
 	}
 
 	if err := fn(repos); err != nil {

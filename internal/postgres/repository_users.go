@@ -275,6 +275,18 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, id uuid.UUID, passw
 	return toUser(row), nil
 }
 
+func (r *UserRepository) UpdateIsPro(ctx context.Context, id uuid.UUID, isPro bool) (user.User, error) {
+	args := db.UpdateUserIsProParams{
+		ID:    id,
+		IsPro: isPro,
+	}
+	row, err := r.queries.UpdateUserIsPro(ctx, args)
+	if err != nil {
+		return user.User{}, translateUserError(err)
+	}
+	return toUser(row), nil
+}
+
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) (user.User, error) {
 	row, err := r.queries.DeleteUser(ctx, id)
 	if err != nil {

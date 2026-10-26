@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/urlspace/api/internal/subscription"
+	"github.com/urlspace/api/internal/uow"
 )
 
 type subscriptionsWebhookResponse struct {
@@ -12,7 +13,7 @@ type subscriptionsWebhookResponse struct {
 	Data   string `json:"data"`
 }
 
-func handleSubscriptionsWebhook(subscriptionSvc *subscription.Service) http.HandlerFunc {
+func handleSubscriptionsWebhook(subscriptionSvc *subscription.Service, uowSvc *uow.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -20,10 +21,19 @@ func handleSubscriptionsWebhook(subscriptionSvc *subscription.Service) http.Hand
 			return
 		}
 
-		if err := subscriptionSvc.HandleWebhook(r.Context(), r.Header, body); err != nil {
+		params, ok, err := subscriptionSvc.ParseWebhook(r.Context(), r.Header, body)
+		if err != nil {
 			statusCode, errorMessage := subscription.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)
 			return
+		}
+
+		if ok {
+			if err := uowSvc.SyncSubscription(r.Context(), params); err != nil {
+				statusCode, errorMessage := subscription.MapErrorToHTTP(r.Context(), err)
+				writeJSONError(w, statusCode, errorMessage)
+				return
+			}
 		}
 
 		writeJSONSuccess(w, http.StatusAccepted, subscriptionsWebhookResponse{

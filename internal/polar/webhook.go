@@ -26,6 +26,28 @@ type WebhookEvent struct {
 	Data      jsontext.Value `json:"data"`
 }
 
+type Subscription struct {
+	ID                string               `json:"id"`
+	Status            string               `json:"status"`
+	CurrentPeriodEnd  time.Time            `json:"current_period_end"`
+	CancelAtPeriodEnd bool                 `json:"cancel_at_period_end"`
+	CreatedAt         time.Time            `json:"created_at"`
+	ModifiedAt        *time.Time           `json:"modified_at"`
+	Customer          SubscriptionCustomer `json:"customer"`
+}
+
+type SubscriptionCustomer struct {
+	ExternalID *string `json:"external_id"`
+}
+
+func (e WebhookEvent) Subscription() (Subscription, error) {
+	var sub Subscription
+	if err := json.Unmarshal(e.Data, &sub); err != nil {
+		return Subscription{}, fmt.Errorf("polar webhook: decode subscription: %w", err)
+	}
+	return sub, nil
+}
+
 func (c *Client) ParseWebhook(header http.Header, body []byte) (WebhookEvent, error) {
 	if err := c.verifyWebhook(header, body, time.Now()); err != nil {
 		return WebhookEvent{}, err

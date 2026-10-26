@@ -16,6 +16,7 @@ import (
 
 	"github.com/urlspace/api/internal/config"
 	"github.com/urlspace/api/internal/emails"
+	"github.com/urlspace/api/internal/polar"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/crypto/argon2"
@@ -72,6 +73,7 @@ type Repository interface {
 	UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) (User, error)
 	UpdateDisplayName(ctx context.Context, id uuid.UUID, displayName string) (User, error)
 	UpdateUsername(ctx context.Context, id uuid.UUID, username string) (User, error)
+	UpdateIsPro(ctx context.Context, id uuid.UUID, isPro bool) (User, error)
 	SetPendingEmail(ctx context.Context, params SetPendingEmailParams) (User, error)
 	ConfirmEmailChange(ctx context.Context, id uuid.UUID) (User, error)
 	Delete(ctx context.Context, id uuid.UUID) (User, error)
@@ -324,16 +326,18 @@ type Service struct {
 	SessionRepo SessionRepository
 	TokenRepo   TokenRepository
 	EmailSender emails.EmailSender
+	PolarClient *polar.Client
 	SiteURL     string
 	AdminEmail  string
 }
 
-func NewService(userRepo Repository, sessionRepo SessionRepository, tokenRepo TokenRepository, emailSender emails.EmailSender, siteURL string, adminEmail string) *Service {
+func NewService(userRepo Repository, sessionRepo SessionRepository, tokenRepo TokenRepository, emailSender emails.EmailSender, polarClient *polar.Client, siteURL string, adminEmail string) *Service {
 	return &Service{
 		UserRepo:    userRepo,
 		SessionRepo: sessionRepo,
 		TokenRepo:   tokenRepo,
 		EmailSender: emailSender,
+		PolarClient: polarClient,
 		SiteURL:     siteURL,
 		AdminEmail:  adminEmail,
 	}
@@ -901,6 +905,11 @@ func (s *Service) AdminCreate(ctx context.Context, username, email, password str
 
 // Delete removes a user by ID (admin operation).
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) (User, error) {
+	err := s.PolarClient.DeleteCustomerByExternalID(ctx, id.String())
+	if err != nil && !errors.Is(err, polar.ErrCustomerNotFound) {
+		return User{}, err
+	}
+
 	return s.UserRepo.Delete(ctx, id)
 }
 
@@ -918,6 +927,11 @@ func (s *Service) DeleteSelf(ctx context.Context, userID uuid.UUID, password str
 
 	if !passwordMatchesHash(ctx, password, u.Password) {
 		return ErrInvalidCredentials
+	}
+
+	err = s.PolarClient.DeleteCustomerByExternalID(ctx, userID.String())
+	if err != nil && !errors.Is(err, polar.ErrCustomerNotFound) {
+		return err
 	}
 
 	_, err = s.UserRepo.Delete(ctx, userID)
@@ -1189,6 +1203,20 @@ func (s *Service) ConfirmEmailChange(ctx context.Context, userID uuid.UUID, code
 			Subject: "Your url.space email address was changed",
 		}); err != nil {
 			slog.ErrorContext(detached, "failed to send email", slog.String("error", err.Error()))
+		}
+	}()
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.ErrorContext(detached, "polar customer email sync panicked", slog.Any("recover", r))
+			}
+		}()
+		_, err := s.PolarClient.UpdateCustomerByExternalID(detached, userID.String(), polar.CustomerUpdateParams{
+			Email: newEmail,
+		})
+		if err != nil && !errors.Is(err, polar.ErrCustomerNotFound) {
+			slog.ErrorContext(detached, "failed to sync polar customer email", slog.String("error", err.Error()), slog.String("user_id", userID.String()))
 		}
 	}()
 

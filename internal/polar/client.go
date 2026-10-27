@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+// Polar releases a new API version every quarter and removes each one about
+// nine months later. Review the changelog quarterly, and keep the webhook
+// endpoint's version in the Polar dashboard aligned with this one.
+// https://polar.sh/docs/changelog/api
 const apiVersion = "2027-01"
 
 type Client struct {

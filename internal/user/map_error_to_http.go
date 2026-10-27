@@ -50,6 +50,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 	if errors.Is(err, ErrNotFound) {
 		return http.StatusNotFound, "not found"
 	}
+	if errors.Is(err, ErrTokenLimitReached) {
+		return http.StatusConflict, err.Error()
+	}
 	if errors.Is(err, ErrConflict) {
 		return http.StatusConflict, "conflict"
 	}

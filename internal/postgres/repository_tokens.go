@@ -52,6 +52,10 @@ func (r *TokenRepository) Create(ctx context.Context, params user.TokenCreatePar
 	return toToken(row), nil
 }
 
+func (r *TokenRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
+	return r.queries.CountTokensByUserID(ctx, userID)
+}
+
 func (r *TokenRepository) GetByID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (user.Token, error) {
 	row, err := r.queries.GetTokenById(ctx, db.GetTokenByIdParams{
 		ID:     id,

@@ -114,6 +114,7 @@ type TokenRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Token, error)
 	GetByHash(ctx context.Context, hash string) (AuthToken, error)
 	List(ctx context.Context, userID uuid.UUID) ([]Token, error)
+	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
 	UpdateLastUsedAt(ctx context.Context, id uuid.UUID) error
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 	DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error
@@ -320,6 +321,7 @@ var (
 	ErrEmailNotVerified       = errors.New("invalid email or password")
 	ErrTokenExpired           = errors.New("token has expired")
 	ErrEmailChangeCodeInvalid = errors.New("email change code is incorrect")
+	ErrTokenLimitReached      = errors.New("token limit reached, revoke an unused token first")
 )
 
 type Service struct {
@@ -1304,6 +1306,14 @@ func (s *Service) TokenCreate(ctx context.Context, userID uuid.UUID, password, d
 
 	if !passwordMatchesHash(ctx, password, u.Password) {
 		return TokenCreateResult{}, ErrInvalidCredentials
+	}
+
+	count, err := s.TokenRepo.CountByUserID(ctx, userID)
+	if err != nil {
+		return TokenCreateResult{}, err
+	}
+	if count >= config.TokensLimit {
+		return TokenCreateResult{}, ErrTokenLimitReached
 	}
 
 	token, err := generateToken()

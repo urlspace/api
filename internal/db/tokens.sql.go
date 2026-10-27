@@ -12,6 +12,18 @@ import (
 	"uuid"
 )
 
+const countTokensByUserID = `-- name: CountTokensByUserID :one
+SELECT count(*) FROM tokens
+WHERE user_id = $1
+`
+
+func (q *Queries) CountTokensByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countTokensByUserID, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createToken = `-- name: CreateToken :one
 INSERT INTO tokens (user_id, description, token_hash, token_suffix)
 VALUES ($1, $2, $3, $4)

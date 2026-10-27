@@ -20,6 +20,10 @@ SELECT * FROM tokens
 WHERE user_id = $1
 ORDER BY created_at DESC;
 
+-- name: CountTokensByUserID :one
+SELECT count(*) FROM tokens
+WHERE user_id = $1;
+
 -- name: UpdateTokenLastUsedAt :exec
 UPDATE tokens
 SET last_used_at = now()

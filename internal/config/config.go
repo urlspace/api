@@ -18,6 +18,8 @@ const FreeLinksLimit = 1000
 const FreeCollectionsLimit = 100
 const FreeTagsLimit = 100
 
+const TokensLimit = 20
+
 type contextKey string
 
 const UserIDContextKey contextKey = "userID"

@@ -63,7 +63,7 @@ SET
     current_period_end = excluded.current_period_end,
     cancel_at_period_end = excluded.cancel_at_period_end,
     polar_modified_at = excluded.polar_modified_at
-WHERE subscriptions.polar_modified_at <= excluded.polar_modified_at
+WHERE subscriptions.polar_modified_at < excluded.polar_modified_at
 `
 
 type UpsertSubscriptionParams struct {

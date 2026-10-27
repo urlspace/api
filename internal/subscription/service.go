@@ -84,7 +84,7 @@ func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (st
 	checkout, err := s.polarClient.CreateCheckout(ctx, polar.CheckoutCreateParams{
 		Products:   []string{s.productID},
 		CustomerID: customer.ID,
-		SuccessURL: s.siteURL + "/settings?checkout_id={CHECKOUT_ID}",
+		SuccessURL: s.siteURL + "/settings?payment=processing",
 		ReturnURL:  s.siteURL + "/pricing",
 	})
 	if err != nil {

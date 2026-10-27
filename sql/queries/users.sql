@@ -99,6 +99,11 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: LockUserById :one
+SELECT id FROM users
+WHERE id = $1
+FOR UPDATE;
+
 -- name: UpdateUserIsPro :one
 UPDATE users
 SET

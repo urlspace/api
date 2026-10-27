@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/urlspace/api/internal/subscription"
+	"github.com/urlspace/api/internal/user"
 	"go.opentelemetry.io/otel/codes"
 )
 
@@ -14,6 +15,16 @@ func (s *Service) SyncSubscription(ctx context.Context, params subscription.Upse
 	defer span.End()
 
 	err := s.uow.RunInTx(ctx, func(repos Repositories) error {
+		// Serialize syncs per user so concurrent webhooks for different
+		// subscriptions can't compute is_pro from each other's uncommitted rows.
+		err := repos.Users.LockById(ctx, params.UserID)
+		if errors.Is(err, user.ErrNotFound) {
+			return subscription.ErrUserNotFound
+		}
+		if err != nil {
+			return err
+		}
+
 		changed, err := repos.Subscriptions.Upsert(ctx, params)
 		if err != nil {
 			return err

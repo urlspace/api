@@ -275,6 +275,14 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, id uuid.UUID, passw
 	return toUser(row), nil
 }
 
+func (r *UserRepository) LockById(ctx context.Context, id uuid.UUID) error {
+	_, err := r.queries.LockUserById(ctx, id)
+	if err != nil {
+		return translateUserError(err)
+	}
+	return nil
+}
+
 func (r *UserRepository) UpdateIsPro(ctx context.Context, id uuid.UUID, isPro bool) (user.User, error) {
 	args := db.UpdateUserIsProParams{
 		ID:    id,

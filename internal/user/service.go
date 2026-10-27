@@ -73,6 +73,7 @@ type Repository interface {
 	UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) (User, error)
 	UpdateDisplayName(ctx context.Context, id uuid.UUID, displayName string) (User, error)
 	UpdateUsername(ctx context.Context, id uuid.UUID, username string) (User, error)
+	LockById(ctx context.Context, id uuid.UUID) error
 	UpdateIsPro(ctx context.Context, id uuid.UUID, isPro bool) (User, error)
 	SetPendingEmail(ctx context.Context, params SetPendingEmailParams) (User, error)
 	ConfirmEmailChange(ctx context.Context, id uuid.UUID) (User, error)

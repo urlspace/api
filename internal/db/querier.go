@@ -60,6 +60,7 @@ type Querier interface {
 	ListTags(ctx context.Context, userID uuid.UUID) ([]ListTagsRow, error)
 	ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]Token, error)
 	ListUsers(ctx context.Context) ([]User, error)
+	LockUserById(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	ResetUserPassword(ctx context.Context, arg ResetUserPasswordParams) (User, error)
 	SetPendingEmail(ctx context.Context, arg SetPendingEmailParams) (User, error)
 	UpdateCollection(ctx context.Context, arg UpdateCollectionParams) (Collection, error)

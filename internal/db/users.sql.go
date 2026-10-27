@@ -438,6 +438,19 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const lockUserById = `-- name: LockUserById :one
+SELECT id FROM users
+WHERE id = $1
+FOR UPDATE
+`
+
+func (q *Queries) LockUserById(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, lockUserById, id)
+	var id_2 uuid.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
 const resetUserPassword = `-- name: ResetUserPassword :one
 UPDATE users
 SET

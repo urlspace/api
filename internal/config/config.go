@@ -39,7 +39,7 @@ type Config struct {
 
 	PolarAPIURL        string
 	PolarAccessToken   string
-	PolarProductID     string
+	PolarProductIDs    []string
 	PolarWebhookSecret string
 }
 
@@ -54,7 +54,7 @@ func LoadConfig() (*Config, error) {
 
 		PolarAPIURL:        strings.TrimSuffix(os.Getenv("POLAR_API_URL"), "/"),
 		PolarAccessToken:   os.Getenv("POLAR_ACCESS_TOKEN"),
-		PolarProductID:     os.Getenv("POLAR_PRODUCT_ID"),
+		PolarProductIDs:    splitList(os.Getenv("POLAR_PRODUCT_IDS")),
 		PolarWebhookSecret: os.Getenv("POLAR_WEBHOOK_SECRET"),
 	}
 
@@ -84,8 +84,8 @@ func LoadConfig() (*Config, error) {
 	if cfg.PolarAccessToken == "" {
 		missing = append(missing, "POLAR_ACCESS_TOKEN")
 	}
-	if cfg.PolarProductID == "" {
-		missing = append(missing, "POLAR_PRODUCT_ID")
+	if len(cfg.PolarProductIDs) == 0 {
+		missing = append(missing, "POLAR_PRODUCT_IDS")
 	}
 	if cfg.PolarWebhookSecret == "" {
 		missing = append(missing, "POLAR_WEBHOOK_SECRET")
@@ -96,4 +96,15 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func splitList(value string) []string {
+	var items []string
+	for item := range strings.SplitSeq(value, ",") {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			items = append(items, item)
+		}
+	}
+	return items
 }

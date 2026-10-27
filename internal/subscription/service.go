@@ -34,15 +34,15 @@ type UpsertParams struct {
 type Service struct {
 	repo        Repository
 	polarClient *polar.Client
-	productID   string
+	productIDs  []string
 	siteURL     string
 }
 
-func NewService(repo Repository, polarClient *polar.Client, productID string, siteURL string) *Service {
+func NewService(repo Repository, polarClient *polar.Client, productIDs []string, siteURL string) *Service {
 	return &Service{
 		repo:        repo,
 		polarClient: polarClient,
-		productID:   productID,
+		productIDs:  productIDs,
 		siteURL:     siteURL,
 	}
 }
@@ -82,7 +82,7 @@ func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (st
 	}
 
 	checkout, err := s.polarClient.CreateCheckout(ctx, polar.CheckoutCreateParams{
-		Products:   []string{s.productID},
+		Products:   s.productIDs,
 		CustomerID: customer.ID,
 		SuccessURL: s.siteURL + "/settings?payment=processing",
 		ReturnURL:  s.siteURL + "/pricing",

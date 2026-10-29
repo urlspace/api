@@ -14,7 +14,7 @@ import (
 
 const clonePublicCollection = `-- name: ClonePublicCollection :one
 WITH source AS (
-    SELECT c.id, c.user_id, c.name, c.description, c.public, c.created_at, c.updated_at, c.slug
+    SELECT c.id, c.user_id, c.name, c.slug, c.description, c.public, c.created_at, c.updated_at
     FROM collections c
     JOIN users u ON u.id = c.user_id
     WHERE c.id = $1
@@ -44,7 +44,7 @@ WITH source AS (
         FALSE
     FROM source s
     WHERE s.user_id <> $2
-    RETURNING id, user_id, name, description, public, created_at, updated_at, slug
+    RETURNING id, user_id, name, slug, description, public, created_at, updated_at
 ), cloned_links AS (
     INSERT INTO links (
         user_id, collection_id, title, description, url,
@@ -113,7 +113,7 @@ func (q *Queries) CountCollections(ctx context.Context, userID uuid.UUID) (int64
 const createCollection = `-- name: CreateCollection :one
 INSERT INTO collections (user_id, name, slug, description, public)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, user_id, name, description, public, created_at, updated_at, slug
+RETURNING id, user_id, name, slug, description, public, created_at, updated_at
 `
 
 type CreateCollectionParams struct {
@@ -137,11 +137,11 @@ func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionPara
 		&i.ID,
 		&i.UserID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Slug,
 	)
 	return i, err
 }
@@ -149,7 +149,7 @@ func (q *Queries) CreateCollection(ctx context.Context, arg CreateCollectionPara
 const deleteCollection = `-- name: DeleteCollection :one
 DELETE FROM collections
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, name, description, public, created_at, updated_at, slug
+RETURNING id, user_id, name, slug, description, public, created_at, updated_at
 `
 
 type DeleteCollectionParams struct {
@@ -164,11 +164,11 @@ func (q *Queries) DeleteCollection(ctx context.Context, arg DeleteCollectionPara
 		&i.ID,
 		&i.UserID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Slug,
 	)
 	return i, err
 }
@@ -180,7 +180,7 @@ WITH deleted_links AS (
 )
 DELETE FROM collections
 WHERE collections.id = $1 AND collections.user_id = $2
-RETURNING id, user_id, name, description, public, created_at, updated_at, slug
+RETURNING id, user_id, name, slug, description, public, created_at, updated_at
 `
 
 type DeleteCollectionCascadeParams struct {
@@ -195,11 +195,11 @@ func (q *Queries) DeleteCollectionCascade(ctx context.Context, arg DeleteCollect
 		&i.ID,
 		&i.UserID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Slug,
 	)
 	return i, err
 }
@@ -238,7 +238,7 @@ func (q *Queries) GetCloneCounts(ctx context.Context, arg GetCloneCountsParams) 
 }
 
 const getCollection = `-- name: GetCollection :one
-SELECT id, user_id, name, description, public, created_at, updated_at, slug FROM collections
+SELECT id, user_id, name, slug, description, public, created_at, updated_at FROM collections
 WHERE id = $1 AND user_id = $2
 LIMIT 1
 `
@@ -255,11 +255,11 @@ func (q *Queries) GetCollection(ctx context.Context, arg GetCollectionParams) (C
 		&i.ID,
 		&i.UserID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Slug,
 	)
 	return i, err
 }
@@ -338,7 +338,7 @@ func (q *Queries) GetPublicCollection(ctx context.Context, arg GetPublicCollecti
 }
 
 const listCollections = `-- name: ListCollections :many
-SELECT c.id, c.user_id, c.name, c.description, c.public, c.created_at, c.updated_at, c.slug, COUNT(l.id) AS link_count
+SELECT c.id, c.user_id, c.name, c.slug, c.description, c.public, c.created_at, c.updated_at, COUNT(l.id) AS link_count
 FROM collections c
     LEFT JOIN links l ON l.collection_id = c.id
 WHERE c.user_id = $1
@@ -350,11 +350,11 @@ type ListCollectionsRow struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Name        string
+	Slug        string
 	Description string
 	Public      bool
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	Slug        string
 	LinkCount   int64
 }
 
@@ -371,11 +371,11 @@ func (q *Queries) ListCollections(ctx context.Context, userID uuid.UUID) ([]List
 			&i.ID,
 			&i.UserID,
 			&i.Name,
+			&i.Slug,
 			&i.Description,
 			&i.Public,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Slug,
 			&i.LinkCount,
 		); err != nil {
 			return nil, err
@@ -392,7 +392,7 @@ const updateCollection = `-- name: UpdateCollection :one
 UPDATE collections
 SET name = $3, slug = $4, description = $5, public = $6
 WHERE id = $1 AND user_id = $2
-RETURNING id, user_id, name, description, public, created_at, updated_at, slug
+RETURNING id, user_id, name, slug, description, public, created_at, updated_at
 `
 
 type UpdateCollectionParams struct {
@@ -418,11 +418,11 @@ func (q *Queries) UpdateCollection(ctx context.Context, arg UpdateCollectionPara
 		&i.ID,
 		&i.UserID,
 		&i.Name,
+		&i.Slug,
 		&i.Description,
 		&i.Public,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Slug,
 	)
 	return i, err
 }

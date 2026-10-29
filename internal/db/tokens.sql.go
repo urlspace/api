@@ -27,7 +27,7 @@ func (q *Queries) CountTokensByUserID(ctx context.Context, userID uuid.UUID) (in
 const createToken = `-- name: CreateToken :one
 INSERT INTO tokens (user_id, description, token_hash, token_suffix)
 VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, description, token_hash, last_used_at, created_at, updated_at, token_suffix
+RETURNING id, user_id, token_hash, token_suffix, description, last_used_at, created_at, updated_at
 `
 
 type CreateTokenParams struct {
@@ -48,12 +48,12 @@ func (q *Queries) CreateToken(ctx context.Context, arg CreateTokenParams) (Token
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Description,
 		&i.TokenHash,
+		&i.TokenSuffix,
+		&i.Description,
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.TokenSuffix,
 	)
 	return i, err
 }
@@ -84,7 +84,7 @@ func (q *Queries) DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) er
 }
 
 const getTokenByHash = `-- name: GetTokenByHash :one
-SELECT t.id, t.user_id, t.description, t.token_hash, t.last_used_at, t.created_at, t.updated_at, t.token_suffix, u.is_pro, u.is_admin, u.is_blocked
+SELECT t.id, t.user_id, t.token_hash, t.token_suffix, t.description, t.last_used_at, t.created_at, t.updated_at, u.is_pro, u.is_admin, u.is_blocked
 FROM tokens t
 JOIN users u ON u.id = t.user_id
 WHERE t.token_hash = $1
@@ -94,12 +94,12 @@ LIMIT 1
 type GetTokenByHashRow struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
-	Description string
 	TokenHash   string
+	TokenSuffix string
+	Description string
 	LastUsedAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	TokenSuffix string
 	IsPro       bool
 	IsAdmin     bool
 	IsBlocked   bool
@@ -111,12 +111,12 @@ func (q *Queries) GetTokenByHash(ctx context.Context, tokenHash string) (GetToke
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Description,
 		&i.TokenHash,
+		&i.TokenSuffix,
+		&i.Description,
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.TokenSuffix,
 		&i.IsPro,
 		&i.IsAdmin,
 		&i.IsBlocked,
@@ -125,7 +125,7 @@ func (q *Queries) GetTokenByHash(ctx context.Context, tokenHash string) (GetToke
 }
 
 const getTokenById = `-- name: GetTokenById :one
-SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at, token_suffix FROM tokens
+SELECT id, user_id, token_hash, token_suffix, description, last_used_at, created_at, updated_at FROM tokens
 WHERE id = $1 AND user_id = $2
 LIMIT 1
 `
@@ -141,18 +141,18 @@ func (q *Queries) GetTokenById(ctx context.Context, arg GetTokenByIdParams) (Tok
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Description,
 		&i.TokenHash,
+		&i.TokenSuffix,
+		&i.Description,
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.TokenSuffix,
 	)
 	return i, err
 }
 
 const listTokensByUserID = `-- name: ListTokensByUserID :many
-SELECT id, user_id, description, token_hash, last_used_at, created_at, updated_at, token_suffix FROM tokens
+SELECT id, user_id, token_hash, token_suffix, description, last_used_at, created_at, updated_at FROM tokens
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -169,12 +169,12 @@ func (q *Queries) ListTokensByUserID(ctx context.Context, userID uuid.UUID) ([]T
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
-			&i.Description,
 			&i.TokenHash,
+			&i.TokenSuffix,
+			&i.Description,
 			&i.LastUsedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.TokenSuffix,
 		); err != nil {
 			return nil, err
 		}

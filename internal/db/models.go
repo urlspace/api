@@ -14,19 +14,19 @@ type Collection struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Name        string
+	Slug        string
 	Description string
 	Public      bool
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	Slug        string
 }
 
 type Link struct {
 	ID           uuid.UUID
 	UserID       uuid.UUID
 	Title        string
-	Description  string
 	Url          string
+	Description  string
 	CollectionID *uuid.UUID
 	Favourite    bool
 	ForLater     bool
@@ -72,31 +72,31 @@ type Tag struct {
 type Token struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
-	Description string
 	TokenHash   string
+	TokenSuffix string
+	Description string
 	LastUsedAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	TokenSuffix string
 }
 
 type User struct {
 	ID                              uuid.UUID
+	Username                        string
+	DisplayName                     string
 	Email                           string
 	EmailVerified                   bool
 	EmailVerificationTokenHash      *string
 	EmailVerificationTokenExpiresAt *time.Time
-	Password                        string
-	PasswordResetTokenHash          *string
-	PasswordResetTokenExpiresAt     *time.Time
-	Username                        string
-	DisplayName                     string
-	IsAdmin                         bool
-	IsPro                           bool
-	CreatedAt                       time.Time
-	UpdatedAt                       time.Time
 	EmailNew                        *string
 	EmailNewCodeHash                *string
 	EmailNewCodeHashExpiresAt       *time.Time
+	Password                        string
+	PasswordResetTokenHash          *string
+	PasswordResetTokenExpiresAt     *time.Time
+	IsAdmin                         bool
+	IsPro                           bool
 	IsBlocked                       bool
+	CreatedAt                       time.Time
+	UpdatedAt                       time.Time
 }

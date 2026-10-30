@@ -1,7 +1,5 @@
-You requested a new verification link for your url.space account.
+~ https://url.space
 
-Please verify your email address by visiting the following link:
+You requested a new verification link for your url.space account. This link will expire in 24 hours.
 
-{{.Url}}
-
-This link will expire in 24 hours.
+Verify your email address {{.Url}}

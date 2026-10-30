@@ -1,3 +1,5 @@
-The email address on your url.space account was just changed to {{.NewEmail}}.
+~ https://url.space
 
-If you didn't make this change, please contact us immediately at mail@url.space.
+The email address for your url.space account was changed to {{.NewEmail}}.
+
+If you didn't make this change, contact us immediately at mail@url.space.

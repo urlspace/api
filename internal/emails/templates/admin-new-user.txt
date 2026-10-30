@@ -1,4 +1,11 @@
-A new user just verified their email on url.space.
+~ https://url.space
 
-Username: {{.Username}}
-Email: {{.Email}}
+A new user verified their email on url.space.
+
+Username
+
+{{.Username}}
+
+Email
+
+{{.Email}}

@@ -1,12 +1,15 @@
-Welcome to url.space!
+~ https://url.space
 
-Your account has been created with these details:
+Welcome to url.space! Verify your email address to get started.
 
-Username: {{.Username}}
-Email: {{.Email}}
+Username
 
-Please verify your email address by visiting the following link:
+{{.Username}}
 
-{{.Url}}
+Email
+
+{{.Email}}
+
+Verify your email address {{.Url}}
 
 This link will expire in 24 hours.

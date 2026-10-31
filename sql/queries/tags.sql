@@ -11,20 +11,18 @@ SELECT * FROM tags
 WHERE id = $1 AND user_id = $2
 LIMIT 1;
 
--- name: UpsertTag :one
+-- name: CreateTags :execrows
 INSERT INTO tags (user_id, name)
-VALUES ($1, $2)
-ON CONFLICT (user_id, name) DO NOTHING
-RETURNING *;
+SELECT $1, unnest(sqlc.arg('names')::text [])
+ON CONFLICT (user_id, name) DO NOTHING;
 
 -- name: CountTags :one
 SELECT count(*) FROM tags
 WHERE user_id = $1;
 
--- name: GetTagByName :one
+-- name: GetTagsByNames :many
 SELECT * FROM tags
-WHERE user_id = $1 AND name = $2
-LIMIT 1;
+WHERE user_id = $1 AND name = ANY(sqlc.arg('names')::text []);
 
 -- name: UpdateTag :one
 UPDATE tags
@@ -63,7 +61,6 @@ WHERE lt.link_id = ANY($1::uuid []);
 DELETE FROM link_tags
 WHERE link_id = $1;
 
--- name: CreateLinkTag :exec
+-- name: CreateLinkTags :exec
 INSERT INTO link_tags (link_id, tag_id)
-VALUES ($1, $2)
-ON CONFLICT DO NOTHING;
+SELECT $1, unnest(sqlc.arg('tag_ids')::uuid []);

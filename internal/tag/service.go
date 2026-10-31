@@ -24,7 +24,8 @@ type Repository interface {
 	Count(ctx context.Context, userID uuid.UUID) (int, error)
 	Update(ctx context.Context, params UpdateParams) (Tag, error)
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID, cascade bool) (Tag, error)
-	UpsertByName(ctx context.Context, userID uuid.UUID, name string) (Tag, error)
+	CreateMany(ctx context.Context, userID uuid.UUID, names []string) (int, error)
+	GetByNames(ctx context.Context, userID uuid.UUID, names []string) ([]Tag, error)
 	GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]Tag, error)
 	GetTagsForLinks(ctx context.Context, linkIDs []uuid.UUID) (map[uuid.UUID][]Tag, error)
 	ReplaceLinkTags(ctx context.Context, linkID uuid.UUID, tagIDs []uuid.UUID) error

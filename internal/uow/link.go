@@ -54,6 +54,62 @@ func tagInfosFromTags(tags []tag.Tag) []TagInfo {
 	return result
 }
 
+// createTags creates the missing tags from names and enforces the free tags
+// limit. It returns how many tags were created.
+func createTags(ctx context.Context, repos Repositories, userID uuid.UUID, names []string, unlimited bool) (int, error) {
+	if len(names) == 0 {
+		return 0, nil
+	}
+
+	var countBefore int
+	if !unlimited {
+		var err error
+		countBefore, err = repos.Tags.Count(ctx, userID)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	created, err := repos.Tags.CreateMany(ctx, userID, names)
+	if err != nil {
+		return 0, err
+	}
+
+	if !unlimited && created > 0 && countBefore+created > config.FreeTagsLimit {
+		return 0, tag.ErrLimitReached
+	}
+
+	return created, nil
+}
+
+// setLinkTags creates the missing tags from names and replaces the link's
+// tags with them. It returns the tags now attached to the link.
+func setLinkTags(ctx context.Context, repos Repositories, userID, linkID uuid.UUID, names []string, unlimited bool) ([]tag.Tag, error) {
+	if _, err := createTags(ctx, repos, userID, names, unlimited); err != nil {
+		return nil, err
+	}
+
+	tags := []tag.Tag{}
+	if len(names) > 0 {
+		var err error
+		tags, err = repos.Tags.GetByNames(ctx, userID, names)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	tagIDs := make([]uuid.UUID, len(tags))
+	for i, t := range tags {
+		tagIDs[i] = t.ID
+	}
+
+	if err := repos.Tags.ReplaceLinkTags(ctx, linkID, tagIDs); err != nil {
+		return nil, err
+	}
+
+	return tags, nil
+}
+
 // normalizeLikePattern trims whitespace and escapes the LIKE wildcards
 // %, _, and \ so user input is treated as literal text. Without escaping,
 // searching for "100%" matches any title containing "100", and "foo_bar"
@@ -136,39 +192,7 @@ func (s *Service) CreateLink(ctx context.Context, params CreateLinkParams) (Enri
 		}
 		result.Link = l
 
-		checkTagLimit := !params.Unlimited && len(tagNames) > 0
-		var tagsCountBefore int
-		if checkTagLimit {
-			tagsCountBefore, err = repos.Tags.Count(ctx, params.UserID)
-			if err != nil {
-				return err
-			}
-		}
-
-		tagIDs := make([]uuid.UUID, 0, len(tagNames))
-		for _, name := range tagNames {
-			t, err := repos.Tags.UpsertByName(ctx, params.UserID, name)
-			if err != nil {
-				return err
-			}
-			tagIDs = append(tagIDs, t.ID)
-		}
-
-		if checkTagLimit {
-			tagsCountAfter, err := repos.Tags.Count(ctx, params.UserID)
-			if err != nil {
-				return err
-			}
-			if tagsCountAfter > tagsCountBefore && tagsCountAfter > config.FreeTagsLimit {
-				return tag.ErrLimitReached
-			}
-		}
-
-		if err := repos.Tags.ReplaceLinkTags(ctx, l.ID, tagIDs); err != nil {
-			return err
-		}
-
-		tags, err := repos.Tags.GetTagsForLink(ctx, l.ID)
+		tags, err := setLinkTags(ctx, repos, params.UserID, l.ID, tagNames, params.Unlimited)
 		if err != nil {
 			return err
 		}
@@ -245,39 +269,7 @@ func (s *Service) UpdateLink(ctx context.Context, params UpdateLinkParams) (Enri
 		}
 		result.Link = l
 
-		checkTagLimit := !params.Unlimited && len(tagNames) > 0
-		var tagsCountBefore int
-		if checkTagLimit {
-			tagsCountBefore, err = repos.Tags.Count(ctx, params.UserID)
-			if err != nil {
-				return err
-			}
-		}
-
-		tagIDs := make([]uuid.UUID, 0, len(tagNames))
-		for _, name := range tagNames {
-			t, err := repos.Tags.UpsertByName(ctx, params.UserID, name)
-			if err != nil {
-				return err
-			}
-			tagIDs = append(tagIDs, t.ID)
-		}
-
-		if checkTagLimit {
-			tagsCountAfter, err := repos.Tags.Count(ctx, params.UserID)
-			if err != nil {
-				return err
-			}
-			if tagsCountAfter > tagsCountBefore && tagsCountAfter > config.FreeTagsLimit {
-				return tag.ErrLimitReached
-			}
-		}
-
-		if err := repos.Tags.ReplaceLinkTags(ctx, l.ID, tagIDs); err != nil {
-			return err
-		}
-
-		tags, err := repos.Tags.GetTagsForLink(ctx, l.ID)
+		tags, err := setLinkTags(ctx, repos, params.UserID, l.ID, tagNames, params.Unlimited)
 		if err != nil {
 			return err
 		}

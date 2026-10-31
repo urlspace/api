@@ -24,20 +24,38 @@ func (q *Queries) CountTags(ctx context.Context, userID uuid.UUID) (int64, error
 	return count, err
 }
 
-const createLinkTag = `-- name: CreateLinkTag :exec
+const createLinkTags = `-- name: CreateLinkTags :exec
 INSERT INTO link_tags (link_id, tag_id)
-VALUES ($1, $2)
-ON CONFLICT DO NOTHING
+SELECT $1, unnest($2::uuid [])
 `
 
-type CreateLinkTagParams struct {
+type CreateLinkTagsParams struct {
 	LinkID uuid.UUID
-	TagID  uuid.UUID
+	TagIds []uuid.UUID
 }
 
-func (q *Queries) CreateLinkTag(ctx context.Context, arg CreateLinkTagParams) error {
-	_, err := q.db.Exec(ctx, createLinkTag, arg.LinkID, arg.TagID)
+func (q *Queries) CreateLinkTags(ctx context.Context, arg CreateLinkTagsParams) error {
+	_, err := q.db.Exec(ctx, createLinkTags, arg.LinkID, arg.TagIds)
 	return err
+}
+
+const createTags = `-- name: CreateTags :execrows
+INSERT INTO tags (user_id, name)
+SELECT $1, unnest($2::text [])
+ON CONFLICT (user_id, name) DO NOTHING
+`
+
+type CreateTagsParams struct {
+	UserID uuid.UUID
+	Names  []string
+}
+
+func (q *Queries) CreateTags(ctx context.Context, arg CreateTagsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, createTags, arg.UserID, arg.Names)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const deleteLinkTags = `-- name: DeleteLinkTags :exec
@@ -127,28 +145,40 @@ func (q *Queries) GetTag(ctx context.Context, arg GetTagParams) (Tag, error) {
 	return i, err
 }
 
-const getTagByName = `-- name: GetTagByName :one
+const getTagsByNames = `-- name: GetTagsByNames :many
 SELECT id, user_id, name, created_at, updated_at FROM tags
-WHERE user_id = $1 AND name = $2
-LIMIT 1
+WHERE user_id = $1 AND name = ANY($2::text [])
 `
 
-type GetTagByNameParams struct {
+type GetTagsByNamesParams struct {
 	UserID uuid.UUID
-	Name   string
+	Names  []string
 }
 
-func (q *Queries) GetTagByName(ctx context.Context, arg GetTagByNameParams) (Tag, error) {
-	row := q.db.QueryRow(ctx, getTagByName, arg.UserID, arg.Name)
-	var i Tag
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Name,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+func (q *Queries) GetTagsByNames(ctx context.Context, arg GetTagsByNamesParams) ([]Tag, error) {
+	rows, err := q.db.Query(ctx, getTagsByNames, arg.UserID, arg.Names)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Tag{}
+	for rows.Next() {
+		var i Tag
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getTagsForLink = `-- name: GetTagsForLink :many
@@ -287,31 +317,6 @@ type UpdateTagParams struct {
 
 func (q *Queries) UpdateTag(ctx context.Context, arg UpdateTagParams) (Tag, error) {
 	row := q.db.QueryRow(ctx, updateTag, arg.ID, arg.UserID, arg.Name)
-	var i Tag
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Name,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const upsertTag = `-- name: UpsertTag :one
-INSERT INTO tags (user_id, name)
-VALUES ($1, $2)
-ON CONFLICT (user_id, name) DO NOTHING
-RETURNING id, user_id, name, created_at, updated_at
-`
-
-type UpsertTagParams struct {
-	UserID uuid.UUID
-	Name   string
-}
-
-func (q *Queries) UpsertTag(ctx context.Context, arg UpsertTagParams) (Tag, error) {
-	row := q.db.QueryRow(ctx, upsertTag, arg.UserID, arg.Name)
 	var i Tag
 	err := row.Scan(
 		&i.ID,

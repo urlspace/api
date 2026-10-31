@@ -210,28 +210,10 @@ func (s *Service) Import(ctx context.Context, params ImportParams) (ImportResult
 			collectionIDs[c.key] = created.ID
 		}
 
-		var tagsCountBefore, tagsCountAfter int
-		if len(tagNames) > 0 {
-			tagsCountBefore, err = repos.Tags.Count(ctx, params.UserID)
-			if err != nil {
-				return err
-			}
-
-			for _, name := range tagNames {
-				if _, err := repos.Tags.UpsertByName(ctx, params.UserID, name); err != nil {
-					return err
-				}
-			}
-
-			tagsCountAfter, err = repos.Tags.Count(ctx, params.UserID)
-			if err != nil {
-				return err
-			}
-
-			// early return if import exceeds tags limit
-			if !params.Unlimited && tagsCountAfter > tagsCountBefore && tagsCountAfter > config.FreeTagsLimit {
-				return tag.ErrLimitReached
-			}
+		// early return if import exceeds tags limit
+		tagsCreated, err := createTags(ctx, repos, params.UserID, tagNames, params.Unlimited)
+		if err != nil {
+			return err
 		}
 
 		// prebuild link.CreateManyParams slice to avoid multiple allocations
@@ -262,7 +244,7 @@ func (s *Service) Import(ctx context.Context, params ImportParams) (ImportResult
 		result = ImportResult{
 			Links:       len(newLinks),
 			Collections: len(newCollections),
-			Tags:        tagsCountAfter - tagsCountBefore,
+			Tags:        tagsCreated,
 		}
 
 		return nil

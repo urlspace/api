@@ -19,8 +19,9 @@ type Querier interface {
 	CountTokensByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (Collection, error)
 	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
-	CreateLinkTag(ctx context.Context, arg CreateLinkTagParams) error
+	CreateLinkTags(ctx context.Context, arg CreateLinkTagsParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
+	CreateTags(ctx context.Context, arg CreateTagsParams) (int64, error)
 	CreateToken(ctx context.Context, arg CreateTokenParams) (Token, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteCollection(ctx context.Context, arg DeleteCollectionParams) (Collection, error)
@@ -42,7 +43,7 @@ type Querier interface {
 	GetPublicUser(ctx context.Context, username string) ([]GetPublicUserRow, error)
 	GetSessionByHash(ctx context.Context, sessionHash string) (GetSessionByHashRow, error)
 	GetTag(ctx context.Context, arg GetTagParams) (Tag, error)
-	GetTagByName(ctx context.Context, arg GetTagByNameParams) (Tag, error)
+	GetTagsByNames(ctx context.Context, arg GetTagsByNamesParams) ([]Tag, error)
 	GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]Tag, error)
 	GetTagsForLinks(ctx context.Context, dollar_1 []uuid.UUID) ([]GetTagsForLinksRow, error)
 	GetTokenByHash(ctx context.Context, tokenHash string) (GetTokenByHashRow, error)
@@ -76,7 +77,6 @@ type Querier interface {
 	UpdateUserUsername(ctx context.Context, arg UpdateUserUsernameParams) (User, error)
 	UpdateVerificationToken(ctx context.Context, arg UpdateVerificationTokenParams) (User, error)
 	UpsertSubscription(ctx context.Context, arg UpsertSubscriptionParams) (int64, error)
-	UpsertTag(ctx context.Context, arg UpsertTagParams) (Tag, error)
 	VerifyUser(ctx context.Context, id uuid.UUID) (User, error)
 }
 

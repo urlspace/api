@@ -102,27 +102,33 @@ func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID, userID uuid.UU
 	return toTag(row), nil
 }
 
-func (r *TagRepository) UpsertByName(ctx context.Context, userID uuid.UUID, name string) (tag.Tag, error) {
-	// UpsertTag uses ON CONFLICT DO NOTHING, which means RETURNING returns no
-	// rows when the tag already exists. In that case, fall back to GetTagByName.
-	row, err := r.queries.UpsertTag(ctx, db.UpsertTagParams{
+// CreateMany inserts the tags that don't exist yet and skips the rest. It
+// returns how many tags were actually created.
+func (r *TagRepository) CreateMany(ctx context.Context, userID uuid.UUID, names []string) (int, error) {
+	created, err := r.queries.CreateTags(ctx, db.CreateTagsParams{
 		UserID: userID,
-		Name:   name,
+		Names:  names,
 	})
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			existing, err := r.queries.GetTagByName(ctx, db.GetTagByNameParams{
-				UserID: userID,
-				Name:   name,
-			})
-			if err != nil {
-				return tag.Tag{}, translateTagError(err)
-			}
-			return toTag(existing), nil
-		}
-		return tag.Tag{}, translateTagError(err)
+		return 0, translateTagError(err)
 	}
-	return toTag(row), nil
+	return int(created), nil
+}
+
+func (r *TagRepository) GetByNames(ctx context.Context, userID uuid.UUID, names []string) ([]tag.Tag, error) {
+	rows, err := r.queries.GetTagsByNames(ctx, db.GetTagsByNamesParams{
+		UserID: userID,
+		Names:  names,
+	})
+	if err != nil {
+		return nil, translateTagError(err)
+	}
+
+	tags := make([]tag.Tag, len(rows))
+	for i, row := range rows {
+		tags[i] = toTag(row)
+	}
+	return tags, nil
 }
 
 func (r *TagRepository) GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]tag.Tag, error) {
@@ -162,13 +168,15 @@ func (r *TagRepository) ReplaceLinkTags(ctx context.Context, linkID uuid.UUID, t
 		return translateTagError(err)
 	}
 
-	for _, tagID := range tagIDs {
-		if err := r.queries.CreateLinkTag(ctx, db.CreateLinkTagParams{
-			LinkID: linkID,
-			TagID:  tagID,
-		}); err != nil {
-			return translateTagError(err)
-		}
+	if len(tagIDs) == 0 {
+		return nil
+	}
+
+	if err := r.queries.CreateLinkTags(ctx, db.CreateLinkTagsParams{
+		LinkID: linkID,
+		TagIds: tagIDs,
+	}); err != nil {
+		return translateTagError(err)
 	}
 
 	return nil

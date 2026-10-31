@@ -45,7 +45,7 @@ type Querier interface {
 	GetTag(ctx context.Context, arg GetTagParams) (Tag, error)
 	GetTagsByNames(ctx context.Context, arg GetTagsByNamesParams) ([]Tag, error)
 	GetTagsForLink(ctx context.Context, linkID uuid.UUID) ([]Tag, error)
-	GetTagsForLinks(ctx context.Context, dollar_1 []uuid.UUID) ([]GetTagsForLinksRow, error)
+	GetTagsForLinks(ctx context.Context, linkIds []uuid.UUID) ([]GetTagsForLinksRow, error)
 	GetTokenByHash(ctx context.Context, tokenHash string) (GetTokenByHashRow, error)
 	GetTokenById(ctx context.Context, arg GetTokenByIdParams) (Token, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)

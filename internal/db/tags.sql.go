@@ -230,8 +230,8 @@ type GetTagsForLinksRow struct {
 	UpdatedAt time.Time
 }
 
-func (q *Queries) GetTagsForLinks(ctx context.Context, dollar_1 []uuid.UUID) ([]GetTagsForLinksRow, error) {
-	rows, err := q.db.Query(ctx, getTagsForLinks, dollar_1)
+func (q *Queries) GetTagsForLinks(ctx context.Context, linkIds []uuid.UUID) ([]GetTagsForLinksRow, error) {
+	rows, err := q.db.Query(ctx, getTagsForLinks, linkIds)
 	if err != nil {
 		return nil, err
 	}

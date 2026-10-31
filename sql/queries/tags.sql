@@ -55,7 +55,7 @@ WHERE lt.link_id = $1;
 SELECT lt.link_id, t.*
 FROM link_tags lt
     JOIN tags t ON t.id = lt.tag_id
-WHERE lt.link_id = ANY($1::uuid []);
+WHERE lt.link_id = ANY(sqlc.arg('link_ids')::uuid []);
 
 -- name: DeleteLinkTags :exec
 DELETE FROM link_tags

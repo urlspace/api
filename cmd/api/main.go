@@ -15,6 +15,7 @@ import (
 	"github.com/urlspace/api/internal/config"
 	"github.com/urlspace/api/internal/db"
 	"github.com/urlspace/api/internal/emails"
+	"github.com/urlspace/api/internal/link"
 	"github.com/urlspace/api/internal/polar"
 	"github.com/urlspace/api/internal/postgres"
 	"github.com/urlspace/api/internal/server"
@@ -62,6 +63,7 @@ func run(ctx context.Context) error {
 
 	// services
 	userSvc := user.NewService(userRepo, sessionRepo, tokenRepo, emailSender, polarClient, cfg.SiteURL, cfg.AdminEmail)
+	linkSvc := link.NewService()
 	tagSvc := tag.NewService(tagRepo)
 	collectionSvc := collection.NewService(collectionRepo)
 	uowSvc := uow.NewService(uow.Repositories{
@@ -73,7 +75,7 @@ func run(ctx context.Context) error {
 	}, unitOfWork)
 	subscriptionSvc := subscription.NewService(subscriptionRepo, polarClient, cfg.PolarProductIDs, cfg.SiteURL)
 
-	srv := server.New(cfg.Port, cfg.SiteURL, cfg.DashboardURL, userSvc, tagSvc, collectionSvc, subscriptionSvc, uowSvc)
+	srv := server.New(cfg.Port, cfg.SiteURL, cfg.DashboardURL, userSvc, linkSvc, tagSvc, collectionSvc, subscriptionSvc, uowSvc)
 
 	chServer := make(chan error, 1)
 

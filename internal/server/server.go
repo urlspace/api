@@ -5,13 +5,14 @@ import (
 	"time"
 
 	"github.com/urlspace/api/internal/collection"
+	"github.com/urlspace/api/internal/link"
 	"github.com/urlspace/api/internal/subscription"
 	"github.com/urlspace/api/internal/tag"
 	"github.com/urlspace/api/internal/uow"
 	"github.com/urlspace/api/internal/user"
 )
 
-func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, tagSvc *tag.Service, collectionSvc *collection.Service, subscriptionSvc *subscription.Service, uowSvc *uow.Service) *http.Server {
+func New(port string, siteURL string, dashboardURL string, userSvc *user.Service, linkSvc *link.Service, tagSvc *tag.Service, collectionSvc *collection.Service, subscriptionSvc *subscription.Service, uowSvc *uow.Service) *http.Server {
 	// routes
 	mux := http.NewServeMux()
 
@@ -69,6 +70,7 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 
 	// tools (protected)
 	mux.Handle("POST /tools/import", sessionOrTokenAuth(handleToolsImport(uowSvc)))
+	mux.Handle("POST /tools/metadata", sessionOrTokenAuth(handleToolsMetadata(linkSvc)))
 
 	// sessions (session-only — session management requires an active session)
 	mux.Handle("GET /sessions", sessionAuth(handleSessionsList(userSvc)))

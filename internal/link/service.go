@@ -2,6 +2,7 @@ package link
 
 import (
 	"context"
+	"encoding/json/v2"
 	"errors"
 	"io"
 	"log/slog"
@@ -40,9 +41,21 @@ const (
 	metadataMaxDesc      = 512
 )
 
+type oembedProvider struct {
+	host        string
+	endpoint    string
+	authorLabel string
+}
+
 // Hosts that serve our servers a generic page, so every link would get the
-// same misleading title. Subdomains are included.
-var unsupportedHosts = []string{"youtube.com", "youtu.be"}
+// same misleading title. Their oEmbed endpoint returns the real one instead.
+// Subdomains are included. The endpoint is fixed, so the user's URL only
+// reaches the provider as a query parameter, never as the address we dial.
+var oembedProviders = []oembedProvider{
+	{host: "youtube.com", endpoint: "https://www.youtube.com/oembed", authorLabel: "YouTube video by "},
+	{host: "youtu.be", endpoint: "https://www.youtube.com/oembed", authorLabel: "YouTube video by "},
+	{host: "reddit.com", endpoint: "https://www.reddit.com/oembed", authorLabel: "Reddit post by "},
+}
 
 // Ranges the metadata fetcher must never connect to, on top of the checks in
 // isBlockedAddr. Without them, a URL like http://127.0.0.1.nip.io/ (a public
@@ -139,10 +152,6 @@ func (s *Service) FetchMetadata(ctx context.Context, userID uuid.UUID, rawURL st
 	if err != nil {
 		return Metadata{}
 	}
-	if isUnsupportedHost(u.Hostname()) {
-		outcome = "unsupported_host"
-		return Metadata{}
-	}
 
 	select {
 	case s.slots <- struct{}{}:
@@ -159,6 +168,13 @@ func (s *Service) FetchMetadata(ctx context.Context, userID uuid.UUID, rawURL st
 
 	ctx, cancel := context.WithTimeout(ctx, metadataTimeout)
 	defer cancel()
+
+	if provider, ok := findOembedProvider(u.Hostname()); ok {
+		span.SetAttributes(attribute.String("metadata.source", "oembed"))
+		var metadata Metadata
+		metadata, outcome = s.fetchOembed(ctx, provider, u.String(), acceptLanguage)
+		return metadata
+	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
@@ -268,14 +284,74 @@ func isBlockedAddr(addr netip.Addr) bool {
 	return false
 }
 
-func isUnsupportedHost(host string) bool {
+func findOembedProvider(host string) (oembedProvider, bool) {
 	host = strings.ToLower(host)
-	for _, unsupported := range unsupportedHosts {
-		if host == unsupported || strings.HasSuffix(host, "."+unsupported) {
-			return true
+	for _, provider := range oembedProviders {
+		if host == provider.host || strings.HasSuffix(host, "."+provider.host) {
+			return provider, true
 		}
 	}
-	return false
+	return oembedProvider{}, false
+}
+
+// fetchOembed asks the provider for the title and author of rawURL. It uses the
+// same client as page fetches, so the address checks and redirect limits still
+// apply. It returns the metadata and the outcome to record on the span.
+func (s *Service) fetchOembed(ctx context.Context, provider oembedProvider, rawURL string, acceptLanguage string) (Metadata, string) {
+	endpoint, err := url.Parse(provider.endpoint)
+	if err != nil {
+		return Metadata{}, "error"
+	}
+	endpoint.RawQuery = url.Values{"format": {"json"}, "url": {rawURL}}.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint.String(), nil)
+	if err != nil {
+		return Metadata{}, "error"
+	}
+	req.Header.Set("User-Agent", metadataUserAgent)
+	req.Header.Set("Accept", "application/json")
+	if acceptLanguage != "" {
+		req.Header.Set("Accept-Language", acceptLanguage)
+	}
+
+	res, err := s.client.Do(req)
+	if err != nil {
+		var netErr net.Error
+		switch {
+		case errors.Is(err, errBlockedAddress):
+			return Metadata{}, "blocked_ip"
+		case errors.Is(err, context.DeadlineExceeded), errors.As(err, &netErr) && netErr.Timeout():
+			return Metadata{}, "timeout"
+		}
+		return Metadata{}, "error"
+	}
+	defer res.Body.Close()
+
+	trace.SpanFromContext(ctx).SetAttributes(attribute.Int("http.response.status_code", res.StatusCode))
+	if res.StatusCode != http.StatusOK {
+		return Metadata{}, "bad_status"
+	}
+
+	var body struct {
+		Title      string `json:"title"`
+		AuthorName string `json:"author_name"`
+	}
+	if err := json.UnmarshalRead(io.LimitReader(res.Body, metadataMaxBytes), &body); err != nil {
+		return Metadata{}, "error"
+	}
+
+	title := clean(body.Title, metadataMaxTitle)
+	if utf8.RuneCountInString(title) < metadataMinTitle {
+		title = ""
+	}
+	var description string
+	if author := clean(body.AuthorName, metadataMaxDesc); author != "" {
+		description = clean(provider.authorLabel+author, metadataMaxDesc)
+	}
+	if title == "" && description == "" {
+		return Metadata{}, "empty"
+	}
+	return Metadata{Title: title, Description: description}, "ok"
 }
 
 // extractMetadata reads tags from the <head> only, stopping at </head> or

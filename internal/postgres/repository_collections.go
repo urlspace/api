@@ -23,13 +23,14 @@ func NewCollectionRepository(queries db.Querier) collection.Repository {
 // statement, using one snapshot and an implicit transaction for atomicity.
 // The query returns the new collection with cloned=true on success, or the
 // source with cloned=false for an owned collection, without inserting anything.
-// An unavailable source returns no row; a duplicate destination name or slug
-// fails the statement. These outcomes map to ErrCloneOwnCollection, ErrNotFound and
+// An unavailable source returns no row; a duplicate destination name fails
+// the statement. These outcomes map to ErrCloneOwnCollection, ErrNotFound and
 // ErrConflict respectively.
-func (r *CollectionRepository) ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (collection.Collection, error) {
+func (r *CollectionRepository) ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string) (collection.Collection, error) {
 	row, err := r.queries.ClonePublicCollection(ctx, db.ClonePublicCollectionParams{
 		SourceID: sourceID,
 		UserID:   userID,
+		Name:     name,
 	})
 	if err != nil {
 		return collection.Collection{}, translateCollectionError(err)

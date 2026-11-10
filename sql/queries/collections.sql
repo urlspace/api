@@ -7,25 +7,12 @@ WITH source AS (
         AND c.public = TRUE
         AND (u.is_pro = TRUE OR u.is_admin = TRUE)
 ), cloned AS (
-    -- If the user already has a collection with the same name or slug, the
-    -- clone gets " (copy)" or "-copy" appended, shortened to stay within the
-    -- 128-character limits. If that is taken too, the insert fails.
+    -- A name the user already has fails the insert. Clones are private, so
+    -- they get a random slug like any other private collection.
     INSERT INTO collections (user_id, name, slug, description, public)
     SELECT sqlc.arg(user_id),
-        CASE
-            WHEN EXISTS (
-                SELECT 1 FROM collections
-                WHERE user_id = sqlc.arg(user_id) AND lower(name) = lower(s.name)
-            ) THEN left(s.name, 121) || ' (copy)'
-            ELSE s.name
-        END,
-        CASE
-            WHEN EXISTS (
-                SELECT 1 FROM collections
-                WHERE user_id = sqlc.arg(user_id) AND slug = s.slug
-            ) THEN rtrim(left(s.slug, 123), '-') || '-copy'
-            ELSE s.slug
-        END,
+        sqlc.arg(name)::text,
+        gen_random_uuid()::text,
         s.description,
         FALSE
     FROM source s

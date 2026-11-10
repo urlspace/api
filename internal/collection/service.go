@@ -63,7 +63,7 @@ type UpdateParams struct {
 }
 
 type Repository interface {
-	ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (Collection, error)
+	ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string) (Collection, error)
 	List(ctx context.Context, userID uuid.UUID) ([]CollectionWithLinkCount, error)
 	Count(ctx context.Context, userID uuid.UUID) (int, error)
 	GetCloneCounts(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (CloneCounts, error)
@@ -104,7 +104,12 @@ func (s *Service) GetPublic(ctx context.Context, username string, slug string) (
 	return s.repo.GetPublic(ctx, username, slug)
 }
 
-func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, unlimited bool) (Collection, error) {
+func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string, unlimited bool) (Collection, error) {
+	name, err := ValidateName(name)
+	if err != nil {
+		return Collection{}, err
+	}
+
 	if !unlimited {
 		counts, err := s.repo.GetCloneCounts(ctx, sourceID, userID)
 		if err != nil {
@@ -117,7 +122,7 @@ func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUI
 			return Collection{}, ErrLinkLimitReached
 		}
 	}
-	return s.repo.ClonePublic(ctx, sourceID, userID)
+	return s.repo.ClonePublic(ctx, sourceID, userID, name)
 }
 
 func (s *Service) Create(ctx context.Context, params CreateParams, unlimited bool) (Collection, error) {

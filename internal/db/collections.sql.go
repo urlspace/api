@@ -21,25 +21,12 @@ WITH source AS (
         AND c.public = TRUE
         AND (u.is_pro = TRUE OR u.is_admin = TRUE)
 ), cloned AS (
-    -- If the user already has a collection with the same name or slug, the
-    -- clone gets " (copy)" or "-copy" appended, shortened to stay within the
-    -- 128-character limits. If that is taken too, the insert fails.
+    -- A name the user already has fails the insert. Clones are private, so
+    -- they get a random slug like any other private collection.
     INSERT INTO collections (user_id, name, slug, description, public)
     SELECT $2,
-        CASE
-            WHEN EXISTS (
-                SELECT 1 FROM collections
-                WHERE user_id = $2 AND lower(name) = lower(s.name)
-            ) THEN left(s.name, 121) || ' (copy)'
-            ELSE s.name
-        END,
-        CASE
-            WHEN EXISTS (
-                SELECT 1 FROM collections
-                WHERE user_id = $2 AND slug = s.slug
-            ) THEN rtrim(left(s.slug, 123), '-') || '-copy'
-            ELSE s.slug
-        END,
+        $3::text,
+        gen_random_uuid()::text,
         s.description,
         FALSE
     FROM source s
@@ -67,6 +54,7 @@ WHERE user_id = $2
 type ClonePublicCollectionParams struct {
 	SourceID uuid.UUID
 	UserID   uuid.UUID
+	Name     string
 }
 
 type ClonePublicCollectionRow struct {
@@ -82,7 +70,7 @@ type ClonePublicCollectionRow struct {
 }
 
 func (q *Queries) ClonePublicCollection(ctx context.Context, arg ClonePublicCollectionParams) (ClonePublicCollectionRow, error) {
-	row := q.db.QueryRow(ctx, clonePublicCollection, arg.SourceID, arg.UserID)
+	row := q.db.QueryRow(ctx, clonePublicCollection, arg.SourceID, arg.UserID, arg.Name)
 	var i ClonePublicCollectionRow
 	err := row.Scan(
 		&i.ID,

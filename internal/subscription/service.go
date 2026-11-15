@@ -85,7 +85,7 @@ func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (st
 		Products:   s.productIDs,
 		CustomerID: customer.ID,
 		SuccessURL: s.siteURL + "/settings?payment=processing",
-		ReturnURL:  s.siteURL + "/pricing",
+		ReturnURL:  s.siteURL + "/#pricing",
 	})
 	if err != nil {
 		return "", err

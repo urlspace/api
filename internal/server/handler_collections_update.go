@@ -47,6 +47,7 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 		// instead of the false the client sends. Upgrading again restores public
 		// pages.
 		public := body.Public
+		slug := body.Slug
 		if !canPublish {
 			current, err := collectionSvc.Get(r.Context(), idUuid, userID)
 			if err != nil {
@@ -55,13 +56,18 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 				return
 			}
 			public = current.Public
+			// A collection that was public keeps its slug, so its address is the
+			// same when the user upgrades again.
+			if current.Public {
+				slug = current.Slug
+			}
 		}
 
 		result, err := collectionSvc.Update(r.Context(), collection.UpdateParams{
 			ID:          idUuid,
 			UserID:      userID,
 			Name:        body.Name,
-			Slug:        body.Slug,
+			Slug:        slug,
 			Description: body.Description,
 			Public:      public,
 		})

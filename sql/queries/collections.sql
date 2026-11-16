@@ -5,7 +5,7 @@ WITH source AS (
     JOIN users u ON u.id = c.user_id
     WHERE c.id = sqlc.arg(source_id)
         AND c.public = TRUE
-        AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+        AND (u.is_unlimited = TRUE OR u.is_admin = TRUE)
 ), cloned AS (
     -- A name the user already has fails the insert. Clones are private, so
     -- they get a random slug like any other private collection.
@@ -51,7 +51,7 @@ SELECT
         JOIN links l ON l.collection_id = c.id AND l.user_id = c.user_id
         WHERE c.id = sqlc.arg(source_id)
             AND c.public = TRUE
-            AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+            AND (u.is_unlimited = TRUE OR u.is_admin = TRUE)
     ) AS source_links_count;
 
 -- name: CreateCollection :one
@@ -106,5 +106,5 @@ LEFT JOIN links l ON l.collection_id = c.id AND l.user_id = c.user_id
 WHERE u.username = sqlc.arg(username)
     AND c.slug = sqlc.arg(slug)
     AND c.public = TRUE
-    AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+    AND (u.is_unlimited = TRUE OR u.is_admin = TRUE)
 ORDER BY l.created_at DESC, l.id DESC;

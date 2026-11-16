@@ -46,7 +46,7 @@ func toUser(u db.User) user.User {
 		Username:                        u.Username,
 		DisplayName:                     u.DisplayName,
 		IsAdmin:                         u.IsAdmin,
-		IsPro:                           u.IsPro,
+		IsUnlimited:                     u.IsUnlimited,
 		IsBlocked:                       u.IsBlocked,
 		CreatedAt:                       u.CreatedAt,
 		UpdatedAt:                       u.UpdatedAt,
@@ -149,7 +149,7 @@ func (r *UserRepository) Create(ctx context.Context, params user.CreateParams) (
 		Username:                        params.Username,
 		DisplayName:                     params.DisplayName,
 		IsAdmin:                         params.IsAdmin,
-		IsPro:                           params.IsPro,
+		IsUnlimited:                     params.IsUnlimited,
 	}
 
 	row, err := r.queries.CreateUser(ctx, args)
@@ -283,12 +283,12 @@ func (r *UserRepository) LockById(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r *UserRepository) UpdateIsPro(ctx context.Context, id uuid.UUID, isPro bool) (user.User, error) {
-	args := db.UpdateUserIsProParams{
-		ID:    id,
-		IsPro: isPro,
+func (r *UserRepository) UpdateIsUnlimited(ctx context.Context, id uuid.UUID, isUnlimited bool) (user.User, error) {
+	args := db.UpdateUserIsUnlimitedParams{
+		ID:          id,
+		IsUnlimited: isUnlimited,
 	}
-	row, err := r.queries.UpdateUserIsPro(ctx, args)
+	row, err := r.queries.UpdateUserIsUnlimited(ctx, args)
 	if err != nil {
 		return user.User{}, translateUserError(err)
 	}

@@ -32,10 +32,10 @@ func handleSubscriptionsCheckout(userSvc *user.Service, subscriptionSvc *subscri
 		}
 
 		url, err := subscriptionSvc.CreateCheckout(r.Context(), subscription.CheckoutParams{
-			UserID:  u.ID,
-			Email:   u.Email,
-			IsPro:   u.IsPro,
-			IsAdmin: u.IsAdmin,
+			UserID:      u.ID,
+			Email:       u.Email,
+			IsUnlimited: u.IsUnlimited,
+			IsAdmin:     u.IsAdmin,
 		})
 		if err != nil {
 			statusCode, errorMessage := subscription.MapErrorToHTTP(r.Context(), err)

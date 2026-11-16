@@ -41,7 +41,7 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		errors.Is(err, ErrValidationEmailChangeCodeRequired) ||
 		errors.Is(err, ErrValidationEmailChangeCodeFormat) ||
 		errors.Is(err, ErrValidationIsAdminRequired) ||
-		errors.Is(err, ErrValidationIsProRequired) ||
+		errors.Is(err, ErrValidationIsUnlimitedRequired) ||
 		errors.Is(err, ErrValidationTokenDescriptionRequired) ||
 		errors.Is(err, ErrValidationTokenDescriptionTooLong) {
 		return http.StatusBadRequest, err.Error()

@@ -20,7 +20,7 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		return 499, "request cancelled"
 	}
 
-	if errors.Is(err, ErrAlreadyPro) {
+	if errors.Is(err, ErrAlreadyUnlimited) {
 		return http.StatusConflict, err.Error()
 	}
 	if errors.Is(err, ErrAdmin) {

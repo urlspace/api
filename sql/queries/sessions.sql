@@ -4,7 +4,7 @@ VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetSessionByHash :one
-SELECT s.*, u.is_pro, u.is_admin, u.is_blocked
+SELECT s.*, u.is_unlimited, u.is_admin, u.is_blocked
 FROM sessions s
 JOIN users u ON u.id = s.user_id
 WHERE s.session_hash = $1

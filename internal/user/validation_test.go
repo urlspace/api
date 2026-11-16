@@ -626,7 +626,7 @@ func Test_validateIsAdmin(t *testing.T) {
 	}
 }
 
-func Test_validateIsPro(t *testing.T) {
+func Test_validateIsUnlimited(t *testing.T) {
 	boolTrue := true
 	boolFalse := false
 
@@ -638,41 +638,41 @@ func Test_validateIsPro(t *testing.T) {
 		wantErrMsg string
 	}{
 		{
-			name:    "Valid isPro true",
+			name:    "Valid isUnlimited true",
 			input:   &boolTrue,
 			want:    true,
 			wantErr: false,
 		},
 		{
-			name:    "Valid isPro false",
+			name:    "Valid isUnlimited false",
 			input:   &boolFalse,
 			want:    false,
 			wantErr: false,
 		},
 		{
-			name:       "Missing isPro",
+			name:       "Missing isUnlimited",
 			input:      nil,
 			wantErr:    true,
-			wantErrMsg: "isPro flag is required",
+			wantErrMsg: "isUnlimited flag is required",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := validateIsPro(tt.input)
+			got, gotErr := validateIsUnlimited(tt.input)
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("validateIsPro() failed: %v", gotErr)
+					t.Errorf("validateIsUnlimited() failed: %v", gotErr)
 				}
 				if gotErr.Error() != tt.wantErrMsg {
-					t.Errorf("validateIsPro() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+					t.Errorf("validateIsUnlimited() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("validateIsPro() succeeded unexpectedly")
+				t.Fatal("validateIsUnlimited() succeeded unexpectedly")
 			}
 			if got != tt.want {
-				t.Errorf("validateIsPro() = %v, want %v", got, tt.want)
+				t.Errorf("validateIsUnlimited() = %v, want %v", got, tt.want)
 			}
 		})
 	}

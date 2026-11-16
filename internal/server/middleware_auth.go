@@ -111,7 +111,7 @@ func authenticateSession(w http.ResponseWriter, r *http.Request, svc *user.Servi
 
 	ctx := context.WithValue(r.Context(), config.UserIDContextKey, sess.UserID)
 	ctx = context.WithValue(ctx, config.SessionIDContextKey, sess.ID)
-	ctx = context.WithValue(ctx, config.IsProContextKey, sess.IsPro)
+	ctx = context.WithValue(ctx, config.IsUnlimitedContextKey, sess.IsUnlimited)
 	ctx = context.WithValue(ctx, config.IsAdminContextKey, sess.IsAdmin)
 	next.ServeHTTP(w, r.WithContext(ctx))
 }
@@ -152,7 +152,7 @@ func authenticateToken(w http.ResponseWriter, r *http.Request, svc *user.Service
 	trace.SpanFromContext(r.Context()).SetAttributes(attribute.String("user.id", token.UserID.String()))
 
 	ctx := context.WithValue(r.Context(), config.UserIDContextKey, token.UserID)
-	ctx = context.WithValue(ctx, config.IsProContextKey, token.IsPro)
+	ctx = context.WithValue(ctx, config.IsUnlimitedContextKey, token.IsUnlimited)
 	ctx = context.WithValue(ctx, config.IsAdminContextKey, token.IsAdmin)
 	next.ServeHTTP(w, r.WithContext(ctx))
 }

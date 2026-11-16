@@ -84,7 +84,7 @@ func (q *Queries) DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) er
 }
 
 const getTokenByHash = `-- name: GetTokenByHash :one
-SELECT t.id, t.user_id, t.token_hash, t.token_suffix, t.description, t.last_used_at, t.created_at, t.updated_at, u.is_pro, u.is_admin, u.is_blocked
+SELECT t.id, t.user_id, t.token_hash, t.token_suffix, t.description, t.last_used_at, t.created_at, t.updated_at, u.is_unlimited, u.is_admin, u.is_blocked
 FROM tokens t
 JOIN users u ON u.id = t.user_id
 WHERE t.token_hash = $1
@@ -100,7 +100,7 @@ type GetTokenByHashRow struct {
 	LastUsedAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	IsPro       bool
+	IsUnlimited bool
 	IsAdmin     bool
 	IsBlocked   bool
 }
@@ -117,7 +117,7 @@ func (q *Queries) GetTokenByHash(ctx context.Context, tokenHash string) (GetToke
 		&i.LastUsedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.IsPro,
+		&i.IsUnlimited,
 		&i.IsAdmin,
 		&i.IsBlocked,
 	)

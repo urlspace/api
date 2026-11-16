@@ -35,7 +35,7 @@ type User struct {
 	Username                        string
 	DisplayName                     string
 	IsAdmin                         bool
-	IsPro                           bool
+	IsUnlimited                     bool
 	IsBlocked                       bool
 	CreatedAt                       time.Time
 	UpdatedAt                       time.Time
@@ -62,9 +62,9 @@ type Session struct {
 
 type AuthSession struct {
 	Session
-	IsPro     bool
-	IsAdmin   bool
-	IsBlocked bool
+	IsUnlimited bool
+	IsAdmin     bool
+	IsBlocked   bool
 }
 
 type Token struct {
@@ -80,7 +80,7 @@ type Token struct {
 
 type AuthToken struct {
 	Token
-	IsPro     bool
-	IsAdmin   bool
-	IsBlocked bool
+	IsUnlimited bool
+	IsAdmin     bool
+	IsBlocked   bool
 }

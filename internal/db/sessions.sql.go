@@ -81,7 +81,7 @@ func (q *Queries) DeleteSessionsByUserID(ctx context.Context, userID uuid.UUID) 
 }
 
 const getSessionByHash = `-- name: GetSessionByHash :one
-SELECT s.id, s.user_id, s.session_hash, s.description, s.expires_at, s.created_at, s.updated_at, u.is_pro, u.is_admin, u.is_blocked
+SELECT s.id, s.user_id, s.session_hash, s.description, s.expires_at, s.created_at, s.updated_at, u.is_unlimited, u.is_admin, u.is_blocked
 FROM sessions s
 JOIN users u ON u.id = s.user_id
 WHERE s.session_hash = $1
@@ -96,7 +96,7 @@ type GetSessionByHashRow struct {
 	ExpiresAt   time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	IsPro       bool
+	IsUnlimited bool
 	IsAdmin     bool
 	IsBlocked   bool
 }
@@ -112,7 +112,7 @@ func (q *Queries) GetSessionByHash(ctx context.Context, sessionHash string) (Get
 		&i.ExpiresAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.IsPro,
+		&i.IsUnlimited,
 		&i.IsAdmin,
 		&i.IsBlocked,
 	)

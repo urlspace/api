@@ -8,11 +8,11 @@ import (
 )
 
 type userCreateBody struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	IsAdmin  *bool  `json:"isAdmin"`
-	IsPro    *bool  `json:"isPro"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	IsAdmin     *bool  `json:"isAdmin"`
+	IsUnlimited *bool  `json:"isUnlimited"`
 }
 
 type usersCreateResponse struct {
@@ -33,7 +33,7 @@ func handleUsersCreate(svc *user.Service) http.HandlerFunc {
 			return
 		}
 
-		u, err := svc.AdminCreate(r.Context(), body.Username, body.Email, body.Password, body.IsAdmin, body.IsPro)
+		u, err := svc.AdminCreate(r.Context(), body.Username, body.Email, body.Password, body.IsAdmin, body.IsUnlimited)
 		if err != nil {
 			statusCode, errorMessage := user.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)

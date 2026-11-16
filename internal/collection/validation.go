@@ -231,6 +231,7 @@ var reservedUsernames = map[string]bool{
 	"plan":             true,
 	"upgrade":          true,
 	"pro":              true,
+	"unlimited":        true,
 	"premium":          true,
 	"plus":             true,
 	"checkout":         true,

@@ -83,9 +83,9 @@ func (r *TokenRepository) GetByHash(ctx context.Context, hash string) (user.Auth
 			CreatedAt:   row.CreatedAt,
 			UpdatedAt:   row.UpdatedAt,
 		},
-		IsPro:     row.IsPro,
-		IsAdmin:   row.IsAdmin,
-		IsBlocked: row.IsBlocked,
+		IsUnlimited: row.IsUnlimited,
+		IsAdmin:     row.IsAdmin,
+		IsBlocked:   row.IsBlocked,
 	}, nil
 }
 

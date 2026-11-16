@@ -286,6 +286,7 @@ var reservedUsernames = map[string]bool{
 	"plan":             true,
 	"upgrade":          true,
 	"pro":              true,
+	"unlimited":        true,
 	"premium":          true,
 	"plus":             true,
 	"checkout":         true,
@@ -519,10 +520,10 @@ func validateIsAdmin(isAdmin *bool) (bool, error) {
 	return *isAdmin, nil
 }
 
-func validateIsPro(isPro *bool) (bool, error) {
-	if isPro == nil {
-		return false, ErrValidationIsProRequired
+func validateIsUnlimited(isUnlimited *bool) (bool, error) {
+	if isUnlimited == nil {
+		return false, ErrValidationIsUnlimitedRequired
 	}
 
-	return *isPro, nil
+	return *isUnlimited, nil
 }

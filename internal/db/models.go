@@ -95,7 +95,7 @@ type User struct {
 	PasswordResetTokenHash          *string
 	PasswordResetTokenExpiresAt     *time.Time
 	IsAdmin                         bool
-	IsPro                           bool
+	IsUnlimited                     bool
 	IsBlocked                       bool
 	CreatedAt                       time.Time
 	UpdatedAt                       time.Time

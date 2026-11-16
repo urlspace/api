@@ -97,7 +97,7 @@ type responseUser struct {
 	Username    string    `json:"username"`
 	DisplayName string    `json:"displayName"`
 	IsAdmin     bool      `json:"isAdmin"`
-	IsPro       bool      `json:"isPro"`
+	IsUnlimited bool      `json:"isUnlimited"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
@@ -109,7 +109,7 @@ func newResponseUser(u user.User) responseUser {
 		Username:    u.Username,
 		DisplayName: u.DisplayName,
 		IsAdmin:     u.IsAdmin,
-		IsPro:       u.IsPro,
+		IsUnlimited: u.IsUnlimited,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,
 	}
@@ -149,7 +149,7 @@ type responseUserAdmin struct {
 	Username                        string     `json:"username"`
 	DisplayName                     string     `json:"displayName"`
 	IsAdmin                         bool       `json:"isAdmin"`
-	IsPro                           bool       `json:"isPro"`
+	IsUnlimited                     bool       `json:"isUnlimited"`
 	CreatedAt                       time.Time  `json:"createdAt"`
 	UpdatedAt                       time.Time  `json:"updatedAt"`
 }
@@ -164,7 +164,7 @@ func newResponseUserAdmin(u user.User) responseUserAdmin {
 		Username:                        u.Username,
 		DisplayName:                     u.DisplayName,
 		IsAdmin:                         u.IsAdmin,
-		IsPro:                           u.IsPro,
+		IsUnlimited:                     u.IsUnlimited,
 		CreatedAt:                       u.CreatedAt,
 		UpdatedAt:                       u.UpdatedAt,
 	}
@@ -204,7 +204,7 @@ func newResponseSubscription(s subscription.Subscription) responseSubscription {
 	return responseSubscription{
 		ID:                s.ID,
 		Status:            s.Status,
-		IsActive:          subscription.IsProStatus(s.Status),
+		IsActive:          subscription.IsUnlimitedStatus(s.Status),
 		CurrentPeriodEnd:  s.CurrentPeriodEnd,
 		CancelAtPeriodEnd: s.CancelAtPeriodEnd,
 		CreatedAt:         s.CreatedAt,
@@ -268,9 +268,9 @@ func getSessionIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 	return id, ok
 }
 
-func isProFromContext(ctx context.Context) bool {
-	isPro, _ := ctx.Value(config.IsProContextKey).(bool)
-	return isPro
+func isUnlimitedPlanFromContext(ctx context.Context) bool {
+	isUnlimited, _ := ctx.Value(config.IsUnlimitedContextKey).(bool)
+	return isUnlimited
 }
 
 func isAdminFromContext(ctx context.Context) bool {
@@ -279,11 +279,11 @@ func isAdminFromContext(ctx context.Context) bool {
 }
 
 func canPublishFromContext(ctx context.Context) bool {
-	return isProFromContext(ctx) || isAdminFromContext(ctx)
+	return isUnlimitedPlanFromContext(ctx) || isAdminFromContext(ctx)
 }
 
 func isUnlimitedFromContext(ctx context.Context) bool {
-	return isProFromContext(ctx) || isAdminFromContext(ctx)
+	return isUnlimitedPlanFromContext(ctx) || isAdminFromContext(ctx)
 }
 
 // Decision (future me): cookie Domain is derived from r.Host so the same code

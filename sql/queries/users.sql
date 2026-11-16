@@ -9,7 +9,7 @@ SELECT u.display_name,
 FROM users u
 LEFT JOIN collections c ON c.user_id = u.id AND c.public = TRUE
 WHERE u.username = $1
-    AND (u.is_pro = TRUE OR u.is_admin = TRUE)
+    AND (u.is_unlimited = TRUE OR u.is_admin = TRUE)
 ORDER BY c.name, c.id;
 
 -- name: GetUserById :one
@@ -56,7 +56,7 @@ INSERT INTO users (
     username,
     display_name,
     is_admin,
-    is_pro
+    is_unlimited
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
@@ -104,10 +104,10 @@ SELECT id FROM users
 WHERE id = $1
 FOR UPDATE;
 
--- name: UpdateUserIsPro :one
+-- name: UpdateUserIsUnlimited :one
 UPDATE users
 SET
-    is_pro = $2
+    is_unlimited = $2
 WHERE id = $1
 RETURNING *;
 

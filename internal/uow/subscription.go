@@ -16,7 +16,8 @@ func (s *Service) SyncSubscription(ctx context.Context, params subscription.Upse
 
 	err := s.uow.RunInTx(ctx, func(repos Repositories) error {
 		// Serialize syncs per user so concurrent webhooks for different
-		// subscriptions can't compute is_pro from each other's uncommitted rows.
+		// subscriptions can't compute is_unlimited from each other's uncommitted
+		// rows.
 		err := repos.Users.LockById(ctx, params.UserID)
 		if errors.Is(err, user.ErrNotFound) {
 			return subscription.ErrUserNotFound
@@ -38,15 +39,15 @@ func (s *Service) SyncSubscription(ctx context.Context, params subscription.Upse
 			return err
 		}
 
-		isPro := false
+		isUnlimited := false
 		for _, sub := range subs {
-			if subscription.IsProStatus(sub.Status) {
-				isPro = true
+			if subscription.IsUnlimitedStatus(sub.Status) {
+				isUnlimited = true
 				break
 			}
 		}
 
-		_, err = repos.Users.UpdateIsPro(ctx, params.UserID, isPro)
+		_, err = repos.Users.UpdateIsUnlimited(ctx, params.UserID, isUnlimited)
 		return err
 	})
 	if errors.Is(err, subscription.ErrUserNotFound) {

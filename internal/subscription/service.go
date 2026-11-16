@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	ErrAlreadyPro   = errors.New("already subscribed to pro")
-	ErrAdmin        = errors.New("admins already have pro features")
-	ErrUserNotFound = errors.New("user not found")
+	ErrAlreadyUnlimited = errors.New("already subscribed to unlimited")
+	ErrAdmin            = errors.New("admins already have unlimited features")
+	ErrUserNotFound     = errors.New("user not found")
 )
 
 type Repository interface {
@@ -47,7 +47,7 @@ func NewService(repo Repository, polarClient *polar.Client, productIDs []string,
 	}
 }
 
-func IsProStatus(status string) bool {
+func IsUnlimitedStatus(status string) bool {
 	switch status {
 	case "active", "trialing", "past_due":
 		return true
@@ -56,18 +56,18 @@ func IsProStatus(status string) bool {
 }
 
 type CheckoutParams struct {
-	UserID  uuid.UUID
-	Email   string
-	IsPro   bool
-	IsAdmin bool
+	UserID      uuid.UUID
+	Email       string
+	IsUnlimited bool
+	IsAdmin     bool
 }
 
 func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (string, error) {
 	if params.IsAdmin {
 		return "", ErrAdmin
 	}
-	if params.IsPro {
-		return "", ErrAlreadyPro
+	if params.IsUnlimited {
+		return "", ErrAlreadyUnlimited
 	}
 
 	customer, err := s.polarClient.GetCustomerByExternalID(ctx, params.UserID.String())

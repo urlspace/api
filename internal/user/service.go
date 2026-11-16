@@ -34,7 +34,7 @@ type CreateParams struct {
 	Username                        string
 	DisplayName                     string
 	IsAdmin                         bool
-	IsPro                           bool
+	IsUnlimited                     bool
 }
 
 type UpdateVerificationTokenParams struct {
@@ -74,7 +74,7 @@ type Repository interface {
 	UpdateDisplayName(ctx context.Context, id uuid.UUID, displayName string) (User, error)
 	UpdateUsername(ctx context.Context, id uuid.UUID, username string) (User, error)
 	LockById(ctx context.Context, id uuid.UUID) error
-	UpdateIsPro(ctx context.Context, id uuid.UUID, isPro bool) (User, error)
+	UpdateIsUnlimited(ctx context.Context, id uuid.UUID, isUnlimited bool) (User, error)
 	SetPendingEmail(ctx context.Context, params SetPendingEmailParams) (User, error)
 	ConfirmEmailChange(ctx context.Context, id uuid.UUID) (User, error)
 	Delete(ctx context.Context, id uuid.UUID) (User, error)
@@ -307,8 +307,8 @@ var (
 	// Admin flag validation errors.
 	ErrValidationIsAdminRequired = errors.New("isAdmin flag is required")
 
-	// Pro flag validation errors.
-	ErrValidationIsProRequired = errors.New("isPro flag is required")
+	// Unlimited flag validation errors.
+	ErrValidationIsUnlimitedRequired = errors.New("isUnlimited flag is required")
 
 	// API token description validation errors.
 	ErrValidationTokenDescriptionRequired = errors.New("token description is required")
@@ -389,7 +389,7 @@ func (s *Service) Signup(ctx context.Context, username, email, password string) 
 		Username:                        username,
 		DisplayName:                     username,
 		IsAdmin:                         false,
-		IsPro:                           false,
+		IsUnlimited:                     false,
 	})
 	if err != nil {
 		return err
@@ -851,7 +851,7 @@ func (s *Service) GetStats(ctx context.Context, u User) (Stats, error) {
 	if err != nil {
 		return Stats{}, err
 	}
-	if u.IsPro || u.IsAdmin {
+	if u.IsUnlimited || u.IsAdmin {
 		return stats, nil
 	}
 	stats.LinksLimit = new(config.FreeLinksLimit)
@@ -866,7 +866,7 @@ func (s *Service) List(ctx context.Context) ([]User, error) {
 }
 
 // AdminCreate creates a new user (admin operation — pre-verified, no email sent).
-func (s *Service) AdminCreate(ctx context.Context, username, email, password string, isAdmin, isPro *bool) (User, error) {
+func (s *Service) AdminCreate(ctx context.Context, username, email, password string, isAdmin, isUnlimited *bool) (User, error) {
 	username, err := validateUsername(username)
 	if err != nil {
 		return User{}, err
@@ -884,7 +884,7 @@ func (s *Service) AdminCreate(ctx context.Context, username, email, password str
 	if err != nil {
 		return User{}, err
 	}
-	isProValue, err := validateIsPro(isPro)
+	isUnlimitedValue, err := validateIsUnlimited(isUnlimited)
 	if err != nil {
 		return User{}, err
 	}
@@ -902,7 +902,7 @@ func (s *Service) AdminCreate(ctx context.Context, username, email, password str
 		Username:                        username,
 		DisplayName:                     username,
 		IsAdmin:                         isAdminValue,
-		IsPro:                           isProValue,
+		IsUnlimited:                     isUnlimitedValue,
 	})
 }
 

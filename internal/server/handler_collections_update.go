@@ -43,8 +43,9 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 			return
 		}
 
-		// Non-pro users can't change the flag, so keep the stored value instead
-		// of the false the client sends. Upgrading again restores public pages.
+		// Users without Unlimited can't change the flag, so keep the stored value
+		// instead of the false the client sends. Upgrading again restores public
+		// pages.
 		public := body.Public
 		if !canPublish {
 			current, err := collectionSvc.Get(r.Context(), idUuid, userID)

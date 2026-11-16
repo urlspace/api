@@ -1,11 +1,16 @@
 package server
 
 import (
+	"encoding/json/v2"
 	"net/http"
 
 	"github.com/urlspace/api/internal/subscription"
 	"github.com/urlspace/api/internal/user"
 )
+
+type subscriptionsCheckoutBody struct {
+	ReturnTo string `json:"returnTo"`
+}
 
 type responseSubscriptionsCheckout struct {
 	URL string `json:"url"`
@@ -24,6 +29,12 @@ func handleSubscriptionsCheckout(userSvc *user.Service, subscriptionSvc *subscri
 			return
 		}
 
+		var body subscriptionsCheckoutBody
+		if err := json.UnmarshalRead(r.Body, &body, json.RejectUnknownMembers(true)); err != nil {
+			handleClientError(r.Context(), w, err, "invalid request body")
+			return
+		}
+
 		u, err := userSvc.GetById(r.Context(), userID)
 		if err != nil {
 			statusCode, errorMessage := user.MapErrorToHTTP(r.Context(), err)
@@ -36,6 +47,7 @@ func handleSubscriptionsCheckout(userSvc *user.Service, subscriptionSvc *subscri
 			Email:       u.Email,
 			IsUnlimited: u.IsUnlimited,
 			IsAdmin:     u.IsAdmin,
+			ReturnTo:    body.ReturnTo,
 		})
 		if err != nil {
 			statusCode, errorMessage := subscription.MapErrorToHTTP(r.Context(), err)

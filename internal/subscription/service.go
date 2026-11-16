@@ -15,6 +15,10 @@ var (
 	ErrAlreadyUnlimited = errors.New("already subscribed to unlimited")
 	ErrAdmin            = errors.New("admins already have unlimited features")
 	ErrUserNotFound     = errors.New("user not found")
+
+	// Return destination validation errors.
+	ErrValidationReturnToRequired = errors.New("returnTo is required")
+	ErrValidationReturnToInvalid  = errors.New("returnTo must be one of home, dashboard or settings")
 )
 
 type Repository interface {
@@ -60,9 +64,15 @@ type CheckoutParams struct {
 	Email       string
 	IsUnlimited bool
 	IsAdmin     bool
+	ReturnTo    string
 }
 
 func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (string, error) {
+	returnPath, err := validateReturnTo(params.ReturnTo)
+	if err != nil {
+		return "", err
+	}
+
 	if params.IsAdmin {
 		return "", ErrAdmin
 	}
@@ -85,7 +95,7 @@ func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (st
 		Products:   s.productIDs,
 		CustomerID: customer.ID,
 		SuccessURL: s.siteURL + "/settings?payment=processing",
-		ReturnURL:  s.siteURL + "/#pricing",
+		ReturnURL:  s.siteURL + returnPath,
 	})
 	if err != nil {
 		return "", err

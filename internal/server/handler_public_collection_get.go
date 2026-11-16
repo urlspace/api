@@ -47,8 +47,8 @@ func handlePublicCollectionGet(collectionSvc *collection.Service) http.HandlerFu
 		// access logs and caches keyed by URL. It's percent-encoded, because
 		// headers only carry Latin-1. One that doesn't decode can't match.
 		var password *string
-		if values, ok := r.Header["X-Collection-Password"]; ok && len(values) > 0 {
-			decoded, err := url.PathUnescape(values[0])
+		if value := r.Header.Get("X-Collection-Password"); value != "" {
+			decoded, err := url.PathUnescape(value)
 			if err != nil {
 				writeJSONError(w, http.StatusUnauthorized, collection.ErrInvalidPassword.Error())
 				return
@@ -61,12 +61,9 @@ func handlePublicCollectionGet(collectionSvc *collection.Service) http.HandlerFu
 			handleNotFound(w, r)
 			return
 		}
-		if errors.Is(err, collection.ErrPasswordRequired) || errors.Is(err, collection.ErrInvalidPassword) {
-			writeJSONError(w, http.StatusUnauthorized, err.Error())
-			return
-		}
 		if err != nil {
-			handleServerError(r.Context(), w, err, "failed to get public collection")
+			statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)
+			writeJSONError(w, statusCode, errorMessage)
 			return
 		}
 

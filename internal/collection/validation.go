@@ -98,9 +98,9 @@ const (
 	collectionPasswordLengthMax = 64
 )
 
-// ValidatePassword returns the password to store. Only public collections can
+// validatePassword returns the password to store. Only public collections can
 // be password protected, so anything else clears it.
-func ValidatePassword(p *string, public bool) (*string, error) {
+func validatePassword(p *string, public bool) (*string, error) {
 	if !public || p == nil {
 		return nil, nil
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"errors"
+	"strings"
 
 	"github.com/urlspace/api/internal/config"
 	"uuid"
@@ -100,8 +101,9 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Coll
 	return s.repo.Get(ctx, id, userID)
 }
 
-// checkPassword compares in constant time, so response timing doesn't reveal
-// how much of a guess was right.
+// checkPassword trims the given password like validatePassword trims the
+// stored one, and compares in constant time, so response timing doesn't
+// reveal how much of a guess was right.
 func checkPassword(stored *string, given *string) error {
 	if stored == nil {
 		return nil
@@ -109,7 +111,7 @@ func checkPassword(stored *string, given *string) error {
 	if given == nil {
 		return ErrPasswordRequired
 	}
-	if subtle.ConstantTimeCompare([]byte(*stored), []byte(*given)) != 1 {
+	if subtle.ConstantTimeCompare([]byte(*stored), []byte(strings.TrimSpace(*given))) != 1 {
 		return ErrInvalidPassword
 	}
 	return nil
@@ -179,7 +181,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams, unlimited boo
 	if err != nil {
 		return Collection{}, err
 	}
-	password, err := ValidatePassword(params.Password, params.Public)
+	password, err := validatePassword(params.Password, params.Public)
 	if err != nil {
 		return Collection{}, err
 	}
@@ -217,7 +219,7 @@ func (s *Service) Update(ctx context.Context, params UpdateParams) (Collection, 
 	if err != nil {
 		return Collection{}, err
 	}
-	password, err := ValidatePassword(params.Password, params.Public)
+	password, err := validatePassword(params.Password, params.Public)
 	if err != nil {
 		return Collection{}, err
 	}

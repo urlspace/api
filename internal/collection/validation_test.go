@@ -386,7 +386,7 @@ func Test_validateUsername(t *testing.T) {
 	}
 }
 
-func Test_ValidatePassword(t *testing.T) {
+func Test_validatePassword(t *testing.T) {
 	ptr := func(s string) *string { return &s }
 
 	tests := []struct {
@@ -411,21 +411,21 @@ func Test_ValidatePassword(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := ValidatePassword(tt.input, tt.public)
+			got, gotErr := validatePassword(tt.input, tt.public)
 			if gotErr != nil {
 				if tt.wantErrMsg == "" {
-					t.Fatalf("ValidatePassword() failed: %v", gotErr)
+					t.Fatalf("validatePassword() failed: %v", gotErr)
 				}
 				if gotErr.Error() != tt.wantErrMsg {
-					t.Errorf("ValidatePassword() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+					t.Errorf("validatePassword() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
 				}
 				return
 			}
 			if tt.wantErrMsg != "" {
-				t.Fatal("ValidatePassword() succeeded unexpectedly")
+				t.Fatal("validatePassword() succeeded unexpectedly")
 			}
 			if (got == nil) != (tt.want == nil) || (got != nil && *got != *tt.want) {
-				t.Errorf("ValidatePassword() = %v, want %v", got, tt.want)
+				t.Errorf("validatePassword() = %v, want %v", got, tt.want)
 			}
 		})
 	}

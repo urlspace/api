@@ -7,7 +7,7 @@ SELECT u.display_name,
     c.created_at AS collection_created_at,
     c.updated_at AS collection_updated_at
 FROM users u
-LEFT JOIN collections c ON c.user_id = u.id AND c.public = TRUE
+LEFT JOIN collections c ON c.user_id = u.id AND c.public = TRUE AND c.password IS NULL
 WHERE u.username = $1
     AND (u.is_unlimited = TRUE OR u.is_admin = TRUE)
 ORDER BY c.name, c.id;

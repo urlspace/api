@@ -93,6 +93,34 @@ func ValidateDescription(d string) (string, error) {
 	return d, nil
 }
 
+const (
+	collectionPasswordLengthMin = 6
+	collectionPasswordLengthMax = 64
+)
+
+// ValidatePassword returns the password to store. Only public collections can
+// be password protected, so anything else clears it.
+func ValidatePassword(p *string, public bool) (*string, error) {
+	if !public || p == nil {
+		return nil, nil
+	}
+
+	password := strings.TrimSpace(*p)
+
+	for _, r := range password {
+		if unicode.IsControl(r) {
+			return nil, ErrValidationPasswordInvalidCharacters
+		}
+	}
+
+	count := utf8.RuneCountInString(password)
+	if count < collectionPasswordLengthMin || count > collectionPasswordLengthMax {
+		return nil, ErrValidationPasswordLength
+	}
+
+	return &password, nil
+}
+
 var reservedUsernames = map[string]bool{
 	// brand
 	"url":           true,

@@ -2,6 +2,7 @@ package collection
 
 import (
 	"context"
+	"crypto/subtle"
 	"errors"
 
 	"github.com/urlspace/api/internal/config"
@@ -31,12 +32,18 @@ var (
 	ErrValidationDescriptionLength            = errors.New("description must be at most 1024 characters")
 	ErrValidationDescriptionInvalidCharacters = errors.New("description must not contain control characters")
 
+	// Password validation errors.
+	ErrValidationPasswordLength            = errors.New("password must be between 6 and 64 characters")
+	ErrValidationPasswordInvalidCharacters = errors.New("password must not contain control characters")
+
 	ErrNotFound           = errors.New("not found")
 	ErrConflict           = errors.New("conflict")
 	ErrSlugConflict       = errors.New("slug is already taken")
 	ErrCloneOwnCollection = errors.New("you cannot clone your own collection")
 	ErrLimitReached       = errors.New("collection limit reached")
 	ErrLinkLimitReached   = errors.New("link limit reached")
+	ErrPasswordRequired   = errors.New("password required")
+	ErrInvalidPassword    = errors.New("invalid password")
 )
 
 type CloneCounts struct {
@@ -51,6 +58,7 @@ type CreateParams struct {
 	Slug        string
 	Description string
 	Public      bool
+	Password    *string
 }
 
 type UpdateParams struct {
@@ -60,6 +68,7 @@ type UpdateParams struct {
 	Slug        string
 	Description string
 	Public      bool
+	Password    *string
 }
 
 type Repository interface {
@@ -67,6 +76,7 @@ type Repository interface {
 	List(ctx context.Context, userID uuid.UUID) ([]CollectionWithLinkCount, error)
 	Count(ctx context.Context, userID uuid.UUID) (int, error)
 	GetCloneCounts(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (CloneCounts, error)
+	GetCloneSourcePassword(ctx context.Context, sourceID uuid.UUID) (*string, error)
 	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Collection, error)
 	GetPublic(ctx context.Context, username string, slug string) (PublicCollection, error)
 	Create(ctx context.Context, params CreateParams) (Collection, error)
@@ -90,9 +100,25 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Coll
 	return s.repo.Get(ctx, id, userID)
 }
 
+// checkPassword compares in constant time, so response timing doesn't reveal
+// how much of a guess was right.
+func checkPassword(stored *string, given *string) error {
+	if stored == nil {
+		return nil
+	}
+	if given == nil {
+		return ErrPasswordRequired
+	}
+	if subtle.ConstantTimeCompare([]byte(*stored), []byte(*given)) != 1 {
+		return ErrInvalidPassword
+	}
+	return nil
+}
+
 // Malformed usernames and slugs can't match any collection, so they are
-// reported as not found without querying the database.
-func (s *Service) GetPublic(ctx context.Context, username string, slug string) (PublicCollection, error) {
+// reported as not found without querying the database. A password protected
+// collection is only returned with the right password.
+func (s *Service) GetPublic(ctx context.Context, username string, slug string, password *string) (PublicCollection, error) {
 	username, err := validateUsername(username)
 	if err != nil {
 		return PublicCollection{}, ErrNotFound
@@ -101,12 +127,27 @@ func (s *Service) GetPublic(ctx context.Context, username string, slug string) (
 	if err != nil {
 		return PublicCollection{}, ErrNotFound
 	}
-	return s.repo.GetPublic(ctx, username, slug)
+	result, err := s.repo.GetPublic(ctx, username, slug)
+	if err != nil {
+		return PublicCollection{}, err
+	}
+	if err := checkPassword(result.Password, password); err != nil {
+		return PublicCollection{}, err
+	}
+	return result, nil
 }
 
-func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string, unlimited bool) (Collection, error) {
+func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string, password *string, unlimited bool) (Collection, error) {
 	name, err := ValidateName(name)
 	if err != nil {
+		return Collection{}, err
+	}
+
+	sourcePassword, err := s.repo.GetCloneSourcePassword(ctx, sourceID)
+	if err != nil {
+		return Collection{}, err
+	}
+	if err := checkPassword(sourcePassword, password); err != nil {
 		return Collection{}, err
 	}
 
@@ -138,6 +179,10 @@ func (s *Service) Create(ctx context.Context, params CreateParams, unlimited boo
 	if err != nil {
 		return Collection{}, err
 	}
+	password, err := ValidatePassword(params.Password, params.Public)
+	if err != nil {
+		return Collection{}, err
+	}
 
 	if !unlimited {
 		count, err := s.repo.Count(ctx, params.UserID)
@@ -155,6 +200,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams, unlimited boo
 		Slug:        slug,
 		Description: description,
 		Public:      params.Public,
+		Password:    password,
 	})
 }
 
@@ -171,6 +217,10 @@ func (s *Service) Update(ctx context.Context, params UpdateParams) (Collection, 
 	if err != nil {
 		return Collection{}, err
 	}
+	password, err := ValidatePassword(params.Password, params.Public)
+	if err != nil {
+		return Collection{}, err
+	}
 
 	return s.repo.Update(ctx, UpdateParams{
 		ID:          params.ID,
@@ -179,6 +229,7 @@ func (s *Service) Update(ctx context.Context, params UpdateParams) (Collection, 
 		Slug:        slug,
 		Description: description,
 		Public:      params.Public,
+		Password:    password,
 	})
 }
 

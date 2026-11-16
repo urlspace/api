@@ -8,10 +8,11 @@ import (
 )
 
 type collectionCreateBody struct {
-	Name        string `json:"name"`
-	Slug        string `json:"slug"`
-	Description string `json:"description"`
-	Public      bool   `json:"public"`
+	Name        string  `json:"name"`
+	Slug        string  `json:"slug"`
+	Description string  `json:"description"`
+	Public      bool    `json:"public"`
+	Password    *string `json:"password"`
 }
 
 type collectionCreateResponse struct {
@@ -40,6 +41,7 @@ func handleCollectionsCreate(collectionSvc *collection.Service) http.HandlerFunc
 			Slug:        body.Slug,
 			Description: body.Description,
 			Public:      body.Public,
+			Password:    body.Password,
 		}, isUnlimitedFromContext(r.Context()))
 		if err != nil {
 			statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)

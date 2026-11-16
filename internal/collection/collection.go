@@ -13,6 +13,7 @@ type Collection struct {
 	Slug        string
 	Description string
 	Public      bool
+	Password    *string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -27,6 +28,7 @@ type PublicCollection struct {
 	Name        string
 	Slug        string
 	Description string
+	Password    *string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Author      PublicAuthor

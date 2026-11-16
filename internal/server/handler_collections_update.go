@@ -9,10 +9,11 @@ import (
 )
 
 type collectionUpdateBody struct {
-	Name        string `json:"name"`
-	Slug        string `json:"slug"`
-	Description string `json:"description"`
-	Public      bool   `json:"public"`
+	Name        string  `json:"name"`
+	Slug        string  `json:"slug"`
+	Description string  `json:"description"`
+	Public      bool    `json:"public"`
+	Password    *string `json:"password"`
 }
 
 type collectionUpdateResponse struct {
@@ -48,6 +49,7 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 		// pages.
 		public := body.Public
 		slug := body.Slug
+		password := body.Password
 		if !canPublish {
 			current, err := collectionSvc.Get(r.Context(), idUuid, userID)
 			if err != nil {
@@ -56,10 +58,11 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 				return
 			}
 			public = current.Public
-			// A collection that was public keeps its slug, so its address is the
-			// same when the user upgrades again.
+			// A collection that was public keeps its slug and password, so its
+			// address and access are the same when the user upgrades again.
 			if current.Public {
 				slug = current.Slug
+				password = current.Password
 			}
 		}
 
@@ -70,6 +73,7 @@ func handleCollectionsUpdate(collectionSvc *collection.Service) http.HandlerFunc
 			Slug:        slug,
 			Description: body.Description,
 			Public:      public,
+			Password:    password,
 		})
 		if err != nil {
 			statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)

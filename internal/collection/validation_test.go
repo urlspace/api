@@ -385,3 +385,48 @@ func Test_validateUsername(t *testing.T) {
 		})
 	}
 }
+
+func Test_ValidatePassword(t *testing.T) {
+	ptr := func(s string) *string { return &s }
+
+	tests := []struct {
+		name       string
+		input      *string
+		public     bool
+		want       *string
+		wantErrMsg string
+	}{
+		{name: "Private clears the password", input: ptr("secret123"), public: false, want: nil},
+		{name: "Public without password", input: nil, public: true, want: nil},
+		{name: "Valid password", input: ptr("secret"), public: true, want: ptr("secret")},
+		{name: "Trims surrounding spaces", input: ptr("  open sesame  "), public: true, want: ptr("open sesame")},
+		{name: "Case is kept", input: ptr("SeCrEt"), public: true, want: ptr("SeCrEt")},
+		{name: "Exactly 64 characters", input: ptr(strings.Repeat("a", 64)), public: true, want: ptr(strings.Repeat("a", 64))},
+		{name: "Counts characters, not bytes", input: ptr("ąęłóśż"), public: true, want: ptr("ąęłóśż")},
+		{name: "Too short", input: ptr("abcde"), public: true, wantErrMsg: "password must be between 6 and 64 characters"},
+		{name: "Too short after trimming", input: ptr("  abc  "), public: true, wantErrMsg: "password must be between 6 and 64 characters"},
+		{name: "Empty", input: ptr(""), public: true, wantErrMsg: "password must be between 6 and 64 characters"},
+		{name: "Too long", input: ptr(strings.Repeat("a", 65)), public: true, wantErrMsg: "password must be between 6 and 64 characters"},
+		{name: "Control character", input: ptr("secret\tvalue"), public: true, wantErrMsg: "password must not contain control characters"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := ValidatePassword(tt.input, tt.public)
+			if gotErr != nil {
+				if tt.wantErrMsg == "" {
+					t.Fatalf("ValidatePassword() failed: %v", gotErr)
+				}
+				if gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("ValidatePassword() error message = %v, want %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErrMsg != "" {
+				t.Fatal("ValidatePassword() succeeded unexpectedly")
+			}
+			if (got == nil) != (tt.want == nil) || (got != nil && *got != *tt.want) {
+				t.Errorf("ValidatePassword() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

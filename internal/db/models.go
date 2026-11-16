@@ -19,6 +19,7 @@ type Collection struct {
 	Public      bool
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Password    *string
 }
 
 type Link struct {

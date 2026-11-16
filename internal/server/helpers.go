@@ -45,6 +45,7 @@ type responseCollection struct {
 	Slug        string    `json:"slug"`
 	Description string    `json:"description"`
 	Public      bool      `json:"public"`
+	Password    *string   `json:"password"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
@@ -73,12 +74,17 @@ func newResponseLink(r uow.EnrichedLink) responseLink {
 }
 
 func newResponseCollection(c collection.Collection, canPublish bool) responseCollection {
+	var password *string
+	if canPublish {
+		password = c.Password
+	}
 	return responseCollection{
 		ID:          c.ID,
 		Name:        c.Name,
 		Slug:        c.Slug,
 		Description: c.Description,
 		Public:      c.Public && canPublish,
+		Password:    password,
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
 	}

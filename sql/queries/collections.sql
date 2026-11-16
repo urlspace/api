@@ -36,6 +36,14 @@ SELECT id, user_id, name, slug, description, public, created_at, updated_at, FAL
 FROM source
 WHERE user_id = sqlc.arg(user_id);
 
+-- name: GetCloneSourcePassword :one
+SELECT c.password
+FROM collections c
+JOIN users u ON u.id = c.user_id
+WHERE c.id = $1
+    AND c.public = TRUE
+    AND (u.is_unlimited = TRUE OR u.is_admin = TRUE);
+
 -- name: CountCollections :one
 SELECT count(*) FROM collections
 WHERE user_id = $1;
@@ -55,8 +63,8 @@ SELECT
     ) AS source_links_count;
 
 -- name: CreateCollection :one
-INSERT INTO collections (user_id, name, slug, description, public)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO collections (user_id, name, slug, description, public, password)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetCollection :one
@@ -74,7 +82,7 @@ ORDER BY c.name;
 
 -- name: UpdateCollection :one
 UPDATE collections
-SET name = $3, slug = $4, description = $5, public = $6
+SET name = $3, slug = $4, description = $5, public = $6, password = $7
 WHERE id = $1 AND user_id = $2
 RETURNING *;
 
@@ -93,7 +101,7 @@ WHERE collections.id = $1 AND collections.user_id = $2
 RETURNING *;
 
 -- name: GetPublicCollection :many
-SELECT c.id, c.name, c.slug, c.description, c.created_at, c.updated_at,
+SELECT c.id, c.name, c.slug, c.description, c.password, c.created_at, c.updated_at,
     u.display_name, u.username,
     l.id AS link_id,
     l.title AS link_title,

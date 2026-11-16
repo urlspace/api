@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/urlspace/api/internal/collection"
@@ -42,9 +43,26 @@ func handlePublicCollectionGet(collectionSvc *collection.Service) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 
-		result, err := collectionSvc.GetPublic(r.Context(), r.PathValue("username"), r.PathValue("slug"))
+		// The password travels in a header, not the URL, so it stays out of
+		// access logs and caches keyed by URL. It's percent-encoded, because
+		// headers only carry Latin-1. One that doesn't decode can't match.
+		var password *string
+		if values, ok := r.Header["X-Collection-Password"]; ok && len(values) > 0 {
+			decoded, err := url.PathUnescape(values[0])
+			if err != nil {
+				writeJSONError(w, http.StatusUnauthorized, collection.ErrInvalidPassword.Error())
+				return
+			}
+			password = &decoded
+		}
+
+		result, err := collectionSvc.GetPublic(r.Context(), r.PathValue("username"), r.PathValue("slug"), password)
 		if errors.Is(err, collection.ErrNotFound) {
 			handleNotFound(w, r)
+			return
+		}
+		if errors.Is(err, collection.ErrPasswordRequired) || errors.Is(err, collection.ErrInvalidPassword) {
+			writeJSONError(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 		if err != nil {

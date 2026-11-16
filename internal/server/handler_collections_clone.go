@@ -9,7 +9,8 @@ import (
 )
 
 type collectionCloneBody struct {
-	Name string `json:"name"`
+	Name     string  `json:"name"`
+	Password *string `json:"password"`
 }
 
 func handleCollectionsClone(svc *collection.Service) http.HandlerFunc {
@@ -28,7 +29,7 @@ func handleCollectionsClone(svc *collection.Service) http.HandlerFunc {
 			return
 		}
 
-		result, err := svc.Clone(r.Context(), sourceID, userID, body.Name, isUnlimitedFromContext(r.Context()))
+		result, err := svc.Clone(r.Context(), sourceID, userID, body.Name, body.Password, isUnlimitedFromContext(r.Context()))
 		if err != nil {
 			statusCode, errorMessage := collection.MapErrorToHTTP(r.Context(), err)
 			writeJSONError(w, statusCode, errorMessage)

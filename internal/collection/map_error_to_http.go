@@ -25,7 +25,9 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		errors.Is(err, ErrValidationSlugLength) ||
 		errors.Is(err, ErrValidationSlugInvalidCharacters) ||
 		errors.Is(err, ErrValidationDescriptionLength) ||
-		errors.Is(err, ErrValidationDescriptionInvalidCharacters) {
+		errors.Is(err, ErrValidationDescriptionInvalidCharacters) ||
+		errors.Is(err, ErrValidationPasswordLength) ||
+		errors.Is(err, ErrValidationPasswordInvalidCharacters) {
 		return http.StatusBadRequest, err.Error()
 	}
 
@@ -33,6 +35,11 @@ func MapErrorToHTTP(ctx context.Context, err error) (int, string) {
 		errors.Is(err, ErrLimitReached) ||
 		errors.Is(err, ErrLinkLimitReached) {
 		return http.StatusForbidden, err.Error()
+	}
+
+	if errors.Is(err, ErrPasswordRequired) ||
+		errors.Is(err, ErrInvalidPassword) {
+		return http.StatusUnauthorized, err.Error()
 	}
 
 	if errors.Is(err, ErrNotFound) {

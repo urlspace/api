@@ -74,6 +74,7 @@ func toCollection(c db.Collection) collection.Collection {
 		Slug:        c.Slug,
 		Description: c.Description,
 		Public:      c.Public,
+		Password:    c.Password,
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
 	}
@@ -102,6 +103,14 @@ func (r *CollectionRepository) GetCloneCounts(ctx context.Context, sourceID uuid
 	}, nil
 }
 
+func (r *CollectionRepository) GetCloneSourcePassword(ctx context.Context, sourceID uuid.UUID) (*string, error) {
+	password, err := r.queries.GetCloneSourcePassword(ctx, sourceID)
+	if err != nil {
+		return nil, translateCollectionError(err)
+	}
+	return password, nil
+}
+
 func (r *CollectionRepository) List(ctx context.Context, userID uuid.UUID) ([]collection.CollectionWithLinkCount, error) {
 	rows, err := r.queries.ListCollections(ctx, userID)
 	if err != nil {
@@ -118,6 +127,7 @@ func (r *CollectionRepository) List(ctx context.Context, userID uuid.UUID) ([]co
 				Slug:        row.Slug,
 				Description: row.Description,
 				Public:      row.Public,
+				Password:    row.Password,
 				CreatedAt:   row.CreatedAt,
 				UpdatedAt:   row.UpdatedAt,
 			},
@@ -156,6 +166,7 @@ func (r *CollectionRepository) GetPublic(ctx context.Context, username string, s
 		Name:        first.Name,
 		Slug:        first.Slug,
 		Description: first.Description,
+		Password:    first.Password,
 		CreatedAt:   first.CreatedAt,
 		UpdatedAt:   first.UpdatedAt,
 		Author: collection.PublicAuthor{
@@ -186,6 +197,7 @@ func (r *CollectionRepository) Create(ctx context.Context, params collection.Cre
 		Slug:        params.Slug,
 		Description: params.Description,
 		Public:      params.Public,
+		Password:    params.Password,
 	})
 	if err != nil {
 		return collection.Collection{}, translateCollectionError(err)
@@ -201,6 +213,7 @@ func (r *CollectionRepository) Update(ctx context.Context, params collection.Upd
 		Slug:        params.Slug,
 		Description: params.Description,
 		Public:      params.Public,
+		Password:    params.Password,
 	})
 	if err != nil {
 		return collection.Collection{}, translateCollectionError(err)

@@ -37,7 +37,6 @@ type Querier interface {
 	DeleteTokensByUserID(ctx context.Context, userID uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) (User, error)
 	GetCloneCounts(ctx context.Context, arg GetCloneCountsParams) (GetCloneCountsRow, error)
-	GetCloneSourcePassword(ctx context.Context, id uuid.UUID) (*string, error)
 	GetCollection(ctx context.Context, arg GetCollectionParams) (Collection, error)
 	GetLink(ctx context.Context, arg GetLinkParams) (GetLinkRow, error)
 	GetPublicCollection(ctx context.Context, arg GetPublicCollectionParams) ([]GetPublicCollectionRow, error)

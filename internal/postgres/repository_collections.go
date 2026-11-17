@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -26,11 +27,16 @@ func NewCollectionRepository(queries db.Querier) collection.Repository {
 // An unavailable source returns no row; a duplicate destination name fails
 // the statement. These outcomes map to ErrCloneOwnCollection, ErrNotFound and
 // ErrConflict respectively.
-func (r *CollectionRepository) ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string) (collection.Collection, error) {
+func (r *CollectionRepository) ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string, password *string) (collection.Collection, error) {
+	if password != nil {
+		trimmed := strings.TrimSpace(*password)
+		password = &trimmed
+	}
 	row, err := r.queries.ClonePublicCollection(ctx, db.ClonePublicCollectionParams{
 		SourceID: sourceID,
 		UserID:   userID,
 		Name:     name,
+		Password: password,
 	})
 	if err != nil {
 		return collection.Collection{}, translateCollectionError(err)
@@ -101,14 +107,6 @@ func (r *CollectionRepository) GetCloneCounts(ctx context.Context, sourceID uuid
 		Links:       int(row.LinksCount),
 		SourceLinks: int(row.SourceLinksCount),
 	}, nil
-}
-
-func (r *CollectionRepository) GetCloneSourcePassword(ctx context.Context, sourceID uuid.UUID) (*string, error) {
-	password, err := r.queries.GetCloneSourcePassword(ctx, sourceID)
-	if err != nil {
-		return nil, translateCollectionError(err)
-	}
-	return password, nil
 }
 
 func (r *CollectionRepository) List(ctx context.Context, userID uuid.UUID) ([]collection.CollectionWithLinkCount, error) {

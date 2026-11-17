@@ -73,11 +73,10 @@ type UpdateParams struct {
 }
 
 type Repository interface {
-	ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string) (Collection, error)
+	ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string, password *string) (Collection, error)
 	List(ctx context.Context, userID uuid.UUID) ([]CollectionWithLinkCount, error)
 	Count(ctx context.Context, userID uuid.UUID) (int, error)
 	GetCloneCounts(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID) (CloneCounts, error)
-	GetCloneSourcePassword(ctx context.Context, sourceID uuid.UUID) (*string, error)
 	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (Collection, error)
 	GetPublic(ctx context.Context, username string, slug string) (PublicCollection, error)
 	Create(ctx context.Context, params CreateParams) (Collection, error)
@@ -145,14 +144,6 @@ func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUI
 		return Collection{}, err
 	}
 
-	sourcePassword, err := s.repo.GetCloneSourcePassword(ctx, sourceID)
-	if err != nil {
-		return Collection{}, err
-	}
-	if err := checkPassword(sourcePassword, password); err != nil {
-		return Collection{}, err
-	}
-
 	if !unlimited {
 		counts, err := s.repo.GetCloneCounts(ctx, sourceID, userID)
 		if err != nil {
@@ -165,7 +156,7 @@ func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUI
 			return Collection{}, ErrLinkLimitReached
 		}
 	}
-	return s.repo.ClonePublic(ctx, sourceID, userID, name)
+	return s.repo.ClonePublic(ctx, sourceID, userID, name, password)
 }
 
 func (s *Service) Create(ctx context.Context, params CreateParams, unlimited bool) (Collection, error) {

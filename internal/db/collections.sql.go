@@ -31,6 +31,7 @@ WITH source AS (
         FALSE
     FROM source s
     WHERE s.user_id <> $2
+        AND (s.password IS NULL OR s.password = $4::text)
     RETURNING id, user_id, name, slug, description, public, created_at, updated_at, password
 ), cloned_links AS (
     INSERT INTO links (
@@ -55,6 +56,7 @@ type ClonePublicCollectionParams struct {
 	SourceID uuid.UUID
 	UserID   uuid.UUID
 	Name     string
+	Password *string
 }
 
 type ClonePublicCollectionRow struct {
@@ -70,7 +72,12 @@ type ClonePublicCollectionRow struct {
 }
 
 func (q *Queries) ClonePublicCollection(ctx context.Context, arg ClonePublicCollectionParams) (ClonePublicCollectionRow, error) {
-	row := q.db.QueryRow(ctx, clonePublicCollection, arg.SourceID, arg.UserID, arg.Name)
+	row := q.db.QueryRow(ctx, clonePublicCollection,
+		arg.SourceID,
+		arg.UserID,
+		arg.Name,
+		arg.Password,
+	)
 	var i ClonePublicCollectionRow
 	err := row.Scan(
 		&i.ID,
@@ -228,22 +235,6 @@ func (q *Queries) GetCloneCounts(ctx context.Context, arg GetCloneCountsParams) 
 	var i GetCloneCountsRow
 	err := row.Scan(&i.CollectionsCount, &i.LinksCount, &i.SourceLinksCount)
 	return i, err
-}
-
-const getCloneSourcePassword = `-- name: GetCloneSourcePassword :one
-SELECT c.password
-FROM collections c
-JOIN users u ON u.id = c.user_id
-WHERE c.id = $1
-    AND c.public = TRUE
-    AND (u.is_unlimited = TRUE OR u.is_admin = TRUE)
-`
-
-func (q *Queries) GetCloneSourcePassword(ctx context.Context, id uuid.UUID) (*string, error) {
-	row := q.db.QueryRow(ctx, getCloneSourcePassword, id)
-	var password *string
-	err := row.Scan(&password)
-	return password, err
 }
 
 const getCollection = `-- name: GetCollection :one

@@ -17,6 +17,7 @@ WITH source AS (
         FALSE
     FROM source s
     WHERE s.user_id <> sqlc.arg(user_id)
+        AND (s.password IS NULL OR s.password = sqlc.narg(password)::text)
     RETURNING *
 ), cloned_links AS (
     INSERT INTO links (
@@ -35,14 +36,6 @@ UNION ALL
 SELECT id, user_id, name, slug, description, public, created_at, updated_at, FALSE AS cloned
 FROM source
 WHERE user_id = sqlc.arg(user_id);
-
--- name: GetCloneSourcePassword :one
-SELECT c.password
-FROM collections c
-JOIN users u ON u.id = c.user_id
-WHERE c.id = $1
-    AND c.public = TRUE
-    AND (u.is_unlimited = TRUE OR u.is_admin = TRUE);
 
 -- name: CountCollections :one
 SELECT count(*) FROM collections

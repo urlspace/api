@@ -24,14 +24,15 @@ type responsePublicLink struct {
 }
 
 type responsePublicCollection struct {
-	ID          uuid.UUID            `json:"id"`
-	Name        string               `json:"name"`
-	Slug        string               `json:"slug"`
-	Description string               `json:"description"`
-	CreatedAt   time.Time            `json:"createdAt"`
-	UpdatedAt   time.Time            `json:"updatedAt"`
-	Author      responsePublicAuthor `json:"author"`
-	Links       []responsePublicLink `json:"links"`
+	PasswordProtected bool                 `json:"passwordProtected"`
+	ID                uuid.UUID            `json:"id"`
+	Name              string               `json:"name"`
+	Slug              string               `json:"slug"`
+	Description       string               `json:"description"`
+	CreatedAt         time.Time            `json:"createdAt"`
+	UpdatedAt         time.Time            `json:"updatedAt"`
+	Author            responsePublicAuthor `json:"author"`
+	Links             []responsePublicLink `json:"links"`
 }
 
 type publicCollectionGetResponse struct {
@@ -81,12 +82,13 @@ func handlePublicCollectionGet(collectionSvc *collection.Service) http.HandlerFu
 		writeJSONSuccess(w, http.StatusOK, publicCollectionGetResponse{
 			Status: "ok",
 			Data: responsePublicCollection{
-				ID:          result.ID,
-				Name:        result.Name,
-				Slug:        result.Slug,
-				Description: result.Description,
-				CreatedAt:   result.CreatedAt,
-				UpdatedAt:   result.UpdatedAt,
+				PasswordProtected: result.Password != nil,
+				ID:                result.ID,
+				Name:              result.Name,
+				Slug:              result.Slug,
+				Description:       result.Description,
+				CreatedAt:         result.CreatedAt,
+				UpdatedAt:         result.UpdatedAt,
 				Author: responsePublicAuthor{
 					DisplayName: result.Author.DisplayName,
 					Username:    result.Author.Username,

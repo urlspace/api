@@ -21,6 +21,7 @@ WITH source AS (
         AND c.public = TRUE
         AND (u.is_unlimited = TRUE OR u.is_admin = TRUE)
 ), cloned AS (
+    -- Protected sources require a matching password in the same snapshot.
     -- A name the user already has fails the insert. Clones are private, so
     -- they get a random slug like any other private collection.
     INSERT INTO collections (user_id, name, slug, description, public)

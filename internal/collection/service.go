@@ -156,6 +156,10 @@ func (s *Service) Clone(ctx context.Context, sourceID uuid.UUID, userID uuid.UUI
 			return Collection{}, ErrLinkLimitReached
 		}
 	}
+	if password != nil {
+		trimmed := strings.TrimSpace(*password)
+		password = &trimmed
+	}
 	return s.repo.ClonePublic(ctx, sourceID, userID, name, password)
 }
 

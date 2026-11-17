@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -24,14 +23,11 @@ func NewCollectionRepository(queries db.Querier) collection.Repository {
 // statement, using one snapshot and an implicit transaction for atomicity.
 // The query returns the new collection with cloned=true on success, or the
 // source with cloned=false for an owned collection, without inserting anything.
-// An unavailable source returns no row; a duplicate destination name fails
-// the statement. These outcomes map to ErrCloneOwnCollection, ErrNotFound and
+// An unavailable source or a missing/incorrect password for another user's
+// protected collection returns no row; a duplicate destination name fails the
+// statement. These outcomes map to ErrCloneOwnCollection, ErrNotFound and
 // ErrConflict respectively.
 func (r *CollectionRepository) ClonePublic(ctx context.Context, sourceID uuid.UUID, userID uuid.UUID, name string, password *string) (collection.Collection, error) {
-	if password != nil {
-		trimmed := strings.TrimSpace(*password)
-		password = &trimmed
-	}
 	row, err := r.queries.ClonePublicCollection(ctx, db.ClonePublicCollectionParams{
 		SourceID: sourceID,
 		UserID:   userID,

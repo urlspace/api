@@ -39,7 +39,7 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.HandleFunc("POST /auth/reset-password-confirm", handleAuthResetPasswordConfirm(userSvc))
 	mux.Handle("POST /auth/signout", sessionAuth(handleAuthSignout(userSvc)))
 
-	// me (authenticated)
+	// me
 	mux.Handle("GET /me", sessionOrTokenAuth(handleMeGet(userSvc)))
 	mux.Handle("POST /me/update-display-name", sessionAuth(handleMeUpdateDisplayName(userSvc)))
 	mux.Handle("POST /me/update-username", sessionAuth(handleMeUpdateUsername(userSvc)))
@@ -69,7 +69,7 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.Handle("DELETE /collections/{id}", sessionOrTokenAuth(handleCollectionsDelete(collectionSvc)))
 
 	// tools (protected)
-	mux.Handle("POST /tools/import", sessionOrTokenAuth(handleToolsImport(uowSvc)))
+	mux.Handle("POST /tools/import", sessionAuth(handleToolsImport(uowSvc)))
 	mux.Handle("POST /tools/metadata", sessionOrTokenAuth(handleToolsMetadata(linkSvc)))
 
 	// sessions (session-only — session management requires an active session)
@@ -91,10 +91,10 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 	mux.HandleFunc("POST /subscriptions/webhook", handleSubscriptionsWebhook(subscriptionSvc, uowSvc))
 
 	// users (admin only)
-	mux.Handle("GET /admin/users", sessionAuth(handleUsersList(userSvc)))
-	mux.Handle("GET /admin/users/{id}", sessionAuth(handleUsersGet(userSvc)))
-	mux.Handle("POST /admin/users", sessionAuth(handleUsersCreate(userSvc)))
-	mux.Handle("DELETE /admin/users/{id}", sessionAuth(handleUsersDelete(userSvc)))
+	mux.Handle("GET /admin/users", sessionAuth(adminMiddleware(handleUsersList(userSvc))))
+	mux.Handle("GET /admin/users/{id}", sessionAuth(adminMiddleware(handleUsersGet(userSvc))))
+	mux.Handle("POST /admin/users", sessionAuth(adminMiddleware(handleUsersCreate(userSvc))))
+	mux.Handle("DELETE /admin/users/{id}", sessionAuth(adminMiddleware(handleUsersDelete(userSvc))))
 
 	// version api
 	v1 := http.NewServeMux()

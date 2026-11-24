@@ -1,37 +1,13 @@
 package server
 
-import (
-	"errors"
-	"net/http"
+import "net/http"
 
-	"github.com/urlspace/api/internal/user"
-)
-
-func adminMiddleware(svc *user.Service) middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userID, ok := getUserIDFromContext(r.Context())
-			if !ok {
-				writeJSONError(w, http.StatusUnauthorized, "unauthorized")
-				return
-			}
-
-			u, err := svc.GetById(r.Context(), userID)
-			if err != nil {
-				if errors.Is(err, user.ErrNotFound) {
-					writeJSONError(w, http.StatusUnauthorized, "unauthorized")
-					return
-				}
-				handleServerError(r.Context(), w, err, "failed to look up user")
-				return
-			}
-
-			if !u.IsAdmin {
-				writeJSONError(w, http.StatusForbidden, "forbidden")
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
-	}
+func adminMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !isAdminFromContext(r.Context()) {
+			writeJSONError(w, http.StatusForbidden, "forbidden")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

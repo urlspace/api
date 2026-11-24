@@ -22,11 +22,6 @@ type usersCreateResponse struct {
 
 func handleUsersCreate(svc *user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !isAdminFromContext(r.Context()) {
-			writeJSONError(w, http.StatusForbidden, "forbidden")
-			return
-		}
-
 		var body userCreateBody
 		if err := json.UnmarshalRead(r.Body, &body, json.RejectUnknownMembers(true)); err != nil {
 			handleClientError(r.Context(), w, err, "invalid request body")

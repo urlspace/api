@@ -1,6 +1,4 @@
-~ https://url.space
-
-Welcome to url.space! Verify your email address to get started.
+Welcome to url.space! Verify your email address to get started. This link will expire in 24 hours.
 
 Username
 
@@ -11,5 +9,3 @@ Email
 {{.Email}}
 
 Verify your email address {{.Url}}
-
-This link will expire in 24 hours.

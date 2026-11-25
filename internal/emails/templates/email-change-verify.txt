@@ -1,5 +1,3 @@
-~ https://url.space
-
 You requested to change the email address for your url.space account. Enter this code to confirm the change:
 
 {{.Code}}

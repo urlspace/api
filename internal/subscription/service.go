@@ -91,6 +91,16 @@ func (s *Service) CreateCheckout(ctx context.Context, params CheckoutParams) (st
 		return "", err
 	}
 
+	// Catches a failed email sync in ConfirmEmailChange. Extremely rare, but harmless.
+	if customer.Email != params.Email {
+		customer, err = s.polarClient.UpdateCustomerByExternalID(ctx, params.UserID.String(), polar.CustomerUpdateParams{
+			Email: params.Email,
+		})
+		if err != nil {
+			return "", err
+		}
+	}
+
 	checkout, err := s.polarClient.CreateCheckout(ctx, polar.CheckoutCreateParams{
 		Products:   s.productIDs,
 		CustomerID: customer.ID,

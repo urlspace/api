@@ -106,6 +106,7 @@ func New(port string, siteURL string, dashboardURL string, userSvc *user.Service
 		commonHeadersMiddleware(siteURL, dashboardURL),
 		recoveryMiddleware,
 		maxBodySizeMiddleware,
+		requireJSONMiddleware,
 	)
 
 	return &http.Server{

@@ -8,13 +8,11 @@ import "net/http"
 //     any cache from storing these responses, so there is no cache key for
 //     Vary to influence. Revisit if no-store is ever weakened or removed.
 //
-//   - No CSRF Origin-check middleware. SameSite=Lax on the session cookie
-//     blocks cross-site cookie-bearing POST/PUT/DELETE at the browser level,
-//     and all JSON endpoints are non-simple under CORS so they require a
-//     preflight that the Origin check below only approves for the site
-//     (siteURL) and the signed-in app (dashboardURL). An
-//     Origin-check middleware was prototyped and rejected because it broke
-//     the Bruno-based REST workflow (which can't set a custom Origin).
+//   - No CSRF Origin-check middleware. requireJSONMiddleware makes every
+//     request with a body non-simple, so browsers must preflight it, and the
+//     Origin check below only approves siteURL and dashboardURL. An
+//     Origin-check middleware broke the Bruno-based REST workflow (which
+//     can't set a custom Origin).
 func commonHeadersMiddleware(siteURL string, dashboardURL string) middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
